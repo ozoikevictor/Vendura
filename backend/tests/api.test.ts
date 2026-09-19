@@ -170,6 +170,22 @@ describe("Vendura API", () => {
       expect((await db.list<{ id: string; type: string }>("notifications")).filter((item) => item.type === "payout_processed")).toHaveLength(1);
     } finally { config.PAYSTACK_SECRET_KEY = originalKey; }
   });
+  it("protects the admin console and lets an admin manage accounts and stores", async () => {
+    const customer = await login("customer@vendura.test");
+    expect((await request(app).get("/api/admin/overview").set(auth(customer))).status).toBe(403);
+
+    const admin = await login("admin@vendura.test");
+    const overview = await request(app).get("/api/admin/overview").set(auth(admin));
+    expect(overview.status).toBe(200);
+    expect(overview.body.data).toMatchObject({ users: 3, vendors: 1, customers: 1, stores: 1 });
+
+    const suspended = await request(app).patch("/api/admin/users/user-cust-1/status").set(auth(admin)).send({ status: "suspended" });
+    expect(suspended.body.data.status).toBe("suspended");
+    expect((await request(app).post("/api/auth/login").send({ email: "customer@vendura.test", password: "Password123!" })).status).toBe(403);
+
+    const verified = await request(app).patch("/api/admin/stores/store-technaija/verification").set(auth(admin)).send({ verified: false });
+    expect(verified.body.data.verified).toBe(false);
+  });
   it("returns consistent 404 errors", async () => { const response = await request(app).get("/api/no-such-route"); expect(response.status).toBe(404); expect(response.body.error.message).toBe("Endpoint not found"); });
 
   it("supports the complete seller storefront and customer order journey", async () => {

@@ -38,7 +38,7 @@ function LoginPage() {
       setAuth(user);
       toast.success("Welcome back!");
       navigate({
-        to: user.role === "vendor" ? "/vendor" : hasCartItems ? "/checkout" : "/marketplace",
+        to: user.role === "admin" ? "/admin" : user.role === "vendor" ? "/vendor" : hasCartItems ? "/checkout" : "/marketplace",
       });
     } catch (error) {
       toast.error(getErrorMessage(error, "Invalid email or password"));

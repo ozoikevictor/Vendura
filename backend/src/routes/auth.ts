@@ -36,6 +36,7 @@ export const authRoutes = (db: Database) => {
     const input = loginSchema.parse(req.body);
     const user = await db.findOne<Entity>("users", { email: input.email });
     if (!user || typeof user.passwordHash !== "string" || !(await bcrypt.compare(input.password, user.passwordHash))) throw new ApiError(401, "Invalid email or password");
+    if (user.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendura support.");
     ok(res, { user: publicUser(user), token: signToken({ id: user.id, role: user.role as "customer" | "vendor" | "admin", storeId: user.storeId as string | undefined }) });
   }));
   router.get("/me", authenticate, asyncRoute(async (req: AuthRequest, res) => {

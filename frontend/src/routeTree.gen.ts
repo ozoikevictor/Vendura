@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -22,6 +23,12 @@ import { Route as VendorRouteRouteImport } from './routes/vendor/route'
 import { Route as VendorRegisterRouteImport } from './routes/vendor-register'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminDisputesRouteImport } from './routes/admin/disputes'
+import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
 import { Route as CategoriesSlugRouteImport } from './routes/categories/$slug'
 import { Route as CustomerNotificationsRouteImport } from './routes/customer/notifications'
@@ -52,6 +59,11 @@ import { Route as VendorProductsNewRouteImport } from './routes/vendor/products/
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CartRoute = CartRouteImport.update({
@@ -113,6 +125,36 @@ const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminDisputesRoute = AdminDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminVendorsRoute = AdminVendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const CategoriesIndexRoute = CategoriesIndexRouteImport.update({
   id: '/categories/',
@@ -248,6 +290,7 @@ const VendorProductsNewRoute = VendorProductsNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/vendor': typeof VendorRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -260,6 +303,11 @@ export interface FileRoutesByFullPath {
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
@@ -274,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/vendor/payouts': typeof VendorPayoutsRoute
   '/vendor/settings': typeof VendorSettingsRoute
   '/vendor/subscription': typeof VendorSubscriptionRoute
+  '/admin/': typeof AdminIndexRoute
   '/categories/': typeof CategoriesIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/vendor/': typeof VendorIndexRoute
@@ -300,6 +349,11 @@ export interface FileRoutesByTo {
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
@@ -314,6 +368,7 @@ export interface FileRoutesByTo {
   '/vendor/payouts': typeof VendorPayoutsRoute
   '/vendor/settings': typeof VendorSettingsRoute
   '/vendor/subscription': typeof VendorSubscriptionRoute
+  '/admin': typeof AdminIndexRoute
   '/categories': typeof CategoriesIndexRoute
   '/messages': typeof MessagesIndexRoute
   '/vendor': typeof VendorIndexRoute
@@ -330,6 +385,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/vendor': typeof VendorRouteRouteWithChildren
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
@@ -342,6 +398,11 @@ export interface FileRoutesById {
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
@@ -356,6 +417,7 @@ export interface FileRoutesById {
   '/vendor/payouts': typeof VendorPayoutsRoute
   '/vendor/settings': typeof VendorSettingsRoute
   '/vendor/subscription': typeof VendorSubscriptionRoute
+  '/admin/': typeof AdminIndexRoute
   '/categories/': typeof CategoriesIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/vendor/': typeof VendorIndexRoute
@@ -373,6 +435,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/vendor'
     | '/cart'
     | '/checkout'
@@ -385,6 +448,11 @@ export interface FileRouteTypes {
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
+    | '/admin/disputes'
+    | '/admin/finance'
+    | '/admin/orders'
+    | '/admin/users'
+    | '/admin/vendors'
     | '/categories/$slug'
     | '/customer/notifications'
     | '/messages/$conversationId'
@@ -399,6 +467,7 @@ export interface FileRouteTypes {
     | '/vendor/payouts'
     | '/vendor/settings'
     | '/vendor/subscription'
+    | '/admin/'
     | '/categories/'
     | '/messages/'
     | '/vendor/'
@@ -425,6 +494,11 @@ export interface FileRouteTypes {
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
+    | '/admin/disputes'
+    | '/admin/finance'
+    | '/admin/orders'
+    | '/admin/users'
+    | '/admin/vendors'
     | '/categories/$slug'
     | '/customer/notifications'
     | '/messages/$conversationId'
@@ -439,6 +513,7 @@ export interface FileRouteTypes {
     | '/vendor/payouts'
     | '/vendor/settings'
     | '/vendor/subscription'
+    | '/admin'
     | '/categories'
     | '/messages'
     | '/vendor'
@@ -454,6 +529,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/vendor'
     | '/cart'
     | '/checkout'
@@ -466,6 +542,11 @@ export interface FileRouteTypes {
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
+    | '/admin/disputes'
+    | '/admin/finance'
+    | '/admin/orders'
+    | '/admin/users'
+    | '/admin/vendors'
     | '/categories/$slug'
     | '/customer/notifications'
     | '/messages/$conversationId'
@@ -480,6 +561,7 @@ export interface FileRouteTypes {
     | '/vendor/payouts'
     | '/vendor/settings'
     | '/vendor/subscription'
+    | '/admin/'
     | '/categories/'
     | '/messages/'
     | '/vendor/'
@@ -496,6 +578,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   VendorRouteRoute: typeof VendorRouteRouteWithChildren
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -527,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cart': {
@@ -612,6 +702,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/disputes': {
+      id: '/admin/disputes'
+      path: '/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AdminDisputesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/vendors': {
+      id: '/admin/vendors'
+      path: '/vendors'
+      fullPath: '/admin/vendors'
+      preLoaderRoute: typeof AdminVendorsRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/categories/': {
       id: '/categories/'
@@ -798,6 +930,28 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteRouteChildren {
+  AdminDisputesRoute: typeof AdminDisputesRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminVendorsRoute: typeof AdminVendorsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminDisputesRoute: AdminDisputesRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminVendorsRoute: AdminVendorsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 interface VendorRouteRouteChildren {
   VendorAnalyticsRoute: typeof VendorAnalyticsRoute
   VendorCustomersRoute: typeof VendorCustomersRoute
@@ -842,6 +996,7 @@ const VendorRouteRouteWithChildren = VendorRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   VendorRouteRoute: VendorRouteRouteWithChildren,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,

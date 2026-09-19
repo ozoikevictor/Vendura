@@ -14,6 +14,7 @@ import { notificationRoutes } from "./routes/notifications.js";
 import { planRoutes, vendorRoutes } from "./routes/vendor.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { webhookRoutes } from "./routes/webhooks.js";
+import { adminRoutes } from "./routes/admin.js";
 import type { AuthRequest } from "./types.js";
 
 export function createApp(db: Database) {
@@ -42,6 +43,7 @@ export function createApp(db: Database) {
   app.use("/api", notificationRoutes(db));
   app.use("/api", planRoutes(db));
   app.use("/api/vendor", vendorRoutes(db));
+  app.use("/api/admin", adminRoutes(db));
   app.use(notFound);
   app.use(errorHandler);
   return app;
