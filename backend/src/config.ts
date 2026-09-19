@@ -9,7 +9,9 @@ const schema = z.object({
   JWT_SECRET: z.string().min(32).default("development-only-secret-change-me-now"),
   JWT_EXPIRES_IN: z.string().default("7d"),
   FRONTEND_URL: z.string().default("http://localhost:8080"),
-  PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional()
+  PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional(),
+  RESEND_API_KEY: z.string().startsWith("re_").optional(),
+  EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>")
 });
 
 export const config = schema.parse(process.env);

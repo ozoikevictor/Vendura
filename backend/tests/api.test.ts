@@ -16,6 +16,21 @@ beforeEach(async () => { await db.reset(); await seedDatabase(db); });
 describe("Vendura API", () => {
   it("reports health", async () => { const response = await request(app).get("/health"); expect(response.status).toBe(200); expect(response.body.status).toBe("ok"); });
   it("registers, logs in, and returns the current user", async () => { const registration = await request(app).post("/api/auth/register/customer").send({ fullName: "Ada User", email: "ada@example.com", phone: "+2348012345678", password: "Password123!" }); expect(registration.status).toBe(201); const response = await request(app).get("/api/auth/me").set(auth(registration.body.data.token)); expect(response.body.data.email).toBe("ada@example.com"); expect(response.body.data.passwordHash).toBeUndefined(); });
+  it("stores only hashed, expiring email-verification and password-reset secrets", async () => {
+    const registration = await request(app).post("/api/auth/register/customer").send({ fullName: "Secure User", email: "secure@example.com", phone: "+2348012345679", password: "Password123!" });
+    const stored = await db.findOne<{ id: string; email: string; verificationOtpHash?: string; verificationOtp?: string; verificationOtpExpiresAt?: string }>("users", { email: "secure@example.com" });
+    expect(stored?.verificationOtp).toBeUndefined();
+    expect(stored?.verificationOtpHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(Date.parse(stored!.verificationOtpExpiresAt!)).toBeGreaterThan(Date.now());
+    expect((await request(app).post("/api/auth/verify-email").set(auth(registration.body.data.token)).send({ otp: "000000" })).status).toBe(400);
+    expect((await request(app).post("/api/auth/resend-otp").set(auth(registration.body.data.token))).status).toBe(429);
+
+    expect((await request(app).post("/api/auth/forgot-password").send({ email: "secure@example.com" })).status).toBe(200);
+    const resetUser = await db.findOne<{ id: string; email: string; resetTokenHash?: string; resetToken?: string; resetTokenExpiresAt?: string }>("users", { email: "secure@example.com" });
+    expect(resetUser?.resetToken).toBeUndefined();
+    expect(resetUser?.resetTokenHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(Date.parse(resetUser!.resetTokenExpiresAt!)).toBeGreaterThan(Date.now());
+  });
   it("changes a signed-in user's password after checking the current password", async () => { const token = await login("customer@vendura.test"); expect((await request(app).post("/api/auth/change-password").set(auth(token)).send({ currentPassword: "wrong", newPassword: "NewPassword456!" })).status).toBe(400); expect((await request(app).post("/api/auth/change-password").set(auth(token)).send({ currentPassword: "Password123!", newPassword: "NewPassword456!" })).status).toBe(200); expect((await request(app).post("/api/auth/login").send({ email: "customer@vendura.test", password: "NewPassword456!" })).status).toBe(200); });
   it("rejects invalid login details", async () => { expect((await request(app).post("/api/auth/login").send({ email: "customer@vendura.test", password: "wrong" })).status).toBe(401); });
   it("lists, filters, and resolves catalog records", async () => { expect((await request(app).get("/api/categories")).body.data).toHaveLength(3); expect((await request(app).get("/api/stores/slug/technaija")).body.data.id).toBe("store-technaija"); const products = await request(app).get("/api/products?q=aurora&inStockOnly=true"); expect(products.body.data.total).toBe(1); expect((await request(app).get("/api/products/slug/aurora-5g-smartphone")).status).toBe(200); });

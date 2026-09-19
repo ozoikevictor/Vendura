@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import * as authService from "@/services/authService";
@@ -18,7 +18,6 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -58,14 +57,9 @@ function ForgotPasswordPage() {
               <h2 className="mt-4 text-lg font-semibold text-foreground">Check your email</h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
                 We've sent a reset link to <span className="font-medium text-foreground">{email}</span>.
-                The link expires in 30 minutes.
+                If an account exists for that address, the link will arrive shortly and expires in 30 minutes.
               </p>
-              <button
-                onClick={() => navigate({ to: "/reset-password" })}
-                className="mt-6 w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                Enter reset code
-              </button>
+              <Link to="/login" className="mt-6 inline-flex w-full justify-center rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Back to login</Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">

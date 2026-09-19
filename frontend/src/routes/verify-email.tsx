@@ -84,7 +84,7 @@ function VerifyEmailPage() {
     try {
       await authService.resendOtp();
       setError("");
-      toast.success(import.meta.env.DEV ? "Development code reset to 123456" : "New code sent");
+      toast.success("New code sent");
     } catch (requestError) {
       setError(getErrorMessage(requestError, "Could not resend code"));
     } finally {
@@ -174,11 +174,6 @@ function VerifyEmailPage() {
               {resending ? "Sending..." : "Resend code"}
             </button>
           </div>
-          {import.meta.env.DEV && (
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              Local development code: <span className="font-semibold text-foreground">123456</span>
-            </p>
-          )}
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

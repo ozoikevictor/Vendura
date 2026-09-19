@@ -12,6 +12,8 @@ Add these secret environment values in Render:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `PAYSTACK_SECRET_KEY`
 - `FRONTEND_URL` (use the Vercel URL after the frontend is deployed)
+- `RESEND_API_KEY`
+- `EMAIL_FROM` (for example `Vendura <no-reply@yourdomain.com>`)
 
 Render generates `JWT_SECRET`. Do not copy any `.env` file into GitHub.
 

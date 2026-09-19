@@ -21,6 +21,9 @@ services:
         value: 7d
       - key: FRONTEND_URL
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false
-
