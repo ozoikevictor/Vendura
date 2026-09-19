@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { BadgeDollarSign, Gavel, LayoutDashboard, LogOut, Menu, PackageCheck, ReceiptText, ShieldCheck, Store, Users, X } from "lucide-react";
+import { BadgeDollarSign, Gavel, LayoutDashboard, LockKeyhole, LogOut, Menu, PackageCheck, ReceiptText, ShieldCheck, Store, Users, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useUIStore } from "@/store/ui";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const nav = [
   { to: "/admin/orders", label: "Orders", icon: ReceiptText },
   { to: "/admin/finance", label: "Finance", icon: BadgeDollarSign },
   { to: "/admin/disputes", label: "Disputes", icon: Gavel },
+  { to: "/admin/security", label: "Security", icon: LockKeyhole },
 ] as const;
 
 export function AdminLayout() {

@@ -11,6 +11,7 @@
     "seed:victor-fashion": "tsx src/seed-victor-fashion.ts",
     "seed:victor-mixed": "tsx src/seed-victor-mixed.ts",
     "backfill:delivery-earnings": "tsx src/backfill-delivery-earnings.ts",
+    "create:admin": "tsx src/create-admin.ts",
     "test": "vitest run --configLoader runner",
     "test:watch": "vitest --configLoader runner",
     "lint": "tsc -p tsconfig.json --noEmit"

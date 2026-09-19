@@ -27,6 +27,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminDisputesRouteImport } from './routes/admin/disputes'
 import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as CategoriesIndexRouteImport } from './routes/categories/index'
@@ -144,6 +145,11 @@ const AdminFinanceRoute = AdminFinanceRouteImport.update({
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSecurityRoute = AdminSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
@@ -352,6 +359,7 @@ export interface FileRoutesByTo {
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/orders': typeof AdminOrdersRoute
+  '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/categories/$slug': typeof CategoriesSlugRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/orders'
+    | '/admin/security'
     | '/admin/users'
     | '/admin/vendors'
     | '/categories/$slug'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/orders'
+    | '/admin/security'
     | '/admin/users'
     | '/admin/vendors'
     | '/categories/$slug'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/orders'
+    | '/admin/security'
     | '/admin/users'
     | '/admin/vendors'
     | '/categories/$slug'
@@ -729,6 +741,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/admin/orders'
       preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/security': {
+      id: '/admin/security'
+      path: '/security'
+      fullPath: '/admin/security'
+      preLoaderRoute: typeof AdminSecurityRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/users': {
@@ -934,6 +953,7 @@ interface AdminRouteRouteChildren {
   AdminDisputesRoute: typeof AdminDisputesRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminSecurityRoute: typeof AdminSecurityRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -943,6 +963,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminDisputesRoute: AdminDisputesRoute,
   AdminFinanceRoute: AdminFinanceRoute,
   AdminOrdersRoute: AdminOrdersRoute,
+  AdminSecurityRoute: AdminSecurityRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVendorsRoute: AdminVendorsRoute,
   AdminIndexRoute: AdminIndexRoute,

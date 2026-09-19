@@ -45,6 +45,16 @@ export const authRoutes = (db: Database) => {
     ok(res, publicUser(user));
   }));
   router.post("/logout", authenticate, (_req, res) => res.status(204).end());
+  router.post("/change-password", authenticate, asyncRoute(async (req: AuthRequest, res) => {
+    const input = zChangePassword.parse(req.body);
+    const user = await db.get<Entity>("users", req.user!.id);
+    if (!user || typeof user.passwordHash !== "string" || !(await bcrypt.compare(input.currentPassword, user.passwordHash))) {
+      throw new ApiError(400, "Current password is incorrect");
+    }
+    if (await bcrypt.compare(input.newPassword, user.passwordHash)) throw new ApiError(400, "New password must be different from the current password");
+    await db.update("users", user.id, { passwordHash: await bcrypt.hash(input.newPassword, 12), passwordChangedAt: now(), updatedAt: now() });
+    ok(res, { message: "Password changed successfully" });
+  }));
   router.post("/forgot-password", asyncRoute(async (req, res) => {
     const parsed = email.safeParse(req.body.email);
     if (!parsed.success) throw parsed.error;
@@ -72,3 +82,4 @@ export const authRoutes = (db: Database) => {
 
 import { z } from "zod";
 const zReset = z.object({ token: z.string().min(1), password });
+const zChangePassword = z.object({ currentPassword: z.string().min(1), newPassword: password });

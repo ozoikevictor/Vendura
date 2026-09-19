@@ -74,5 +74,7 @@ export const verifyEmail = (otp: string) =>
   api<{ verified: boolean }>("/auth/verify-email", { method: "POST", ...json({ otp }) });
 export const resendOtp = () =>
   api<{ message: string }>("/auth/resend-otp", { method: "POST" }).then(() => undefined);
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  api<{ message: string }>("/auth/change-password", { method: "POST", ...json({ currentPassword, newPassword }) });
 
 export { nigerianStates };
