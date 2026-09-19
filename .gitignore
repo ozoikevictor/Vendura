@@ -1,0 +1,21 @@
+# Environment files and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies and generated output
+**/node_modules/
+**/dist/
+**/.output/
+**/.nitro/
+**/.vinxi/
+**/.wrangler/
+**/coverage/
+**/*.tsbuildinfo
+
+# Logs and editor files
+*.log
+.DS_Store
+.idea/
+.vscode/
+

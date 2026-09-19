@@ -1,0 +1,11 @@
+import { z } from "zod";
+
+export const idParam = z.object({ id: z.string().min(1) });
+export const email = z.string().email().transform((value) => value.toLowerCase());
+export const password = z.string().min(8).regex(/[A-Z]/, "Must contain an uppercase letter").regex(/[0-9]/, "Must contain a number");
+export const loginSchema = z.object({ email, password: z.string().min(1) });
+export const customerRegistration = z.object({ fullName: z.string().min(2), email, phone: z.string().min(7), password });
+export const vendorRegistration = customerRegistration.extend({ businessName: z.string().min(2), businessCategory: z.string().min(1), storeDescription: z.string().min(10), location: z.object({ city: z.string().min(2), state: z.string().min(2) }) });
+export const addressSchema = z.object({ label: z.string().optional(), fullName: z.string().min(2), phone: z.string().min(7), street: z.string().min(3), city: z.string().min(2), state: z.string().min(2), landmark: z.string().optional(), isDefault: z.boolean().optional() });
+export const productSchema = z.object({ name: z.string().min(2), description: z.string().min(5), images: z.array(z.string()).default([]), price: z.number().nonnegative(), oldPrice: z.number().nonnegative().optional(), categoryId: z.string(), subcategoryId: z.string().optional(), sku: z.string().min(1), stock: z.number().int().nonnegative(), lowStockThreshold: z.number().int().nonnegative().default(5), status: z.enum(["active", "draft", "out_of_stock", "archived"]).default("draft"), negotiable: z.boolean().default(false), variantOptions: z.array(z.unknown()).default([]), variants: z.array(z.unknown()).default([]), specifications: z.array(z.unknown()).default([]), deliveryOptions: z.array(z.unknown()).default([]), tags: z.array(z.string()).default([]) });
+export const orderSchema = z.object({ items: z.array(z.object({ productId: z.string(), variantId: z.string().optional(), quantity: z.number().int().positive(), negotiated: z.object({ offerId: z.string(), agreedPrice: z.number().positive() }).optional() })).min(1), deliveryAddress: addressSchema, deliveryMethod: z.string().min(1), paymentMethod: z.enum(["card", "bank_transfer", "pay_on_delivery", "wallet"]) });
