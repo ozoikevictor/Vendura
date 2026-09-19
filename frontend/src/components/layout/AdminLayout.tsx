@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { BadgeDollarSign, Gavel, LayoutDashboard, LogOut, Menu, PackageCheck, ReceiptText, ShieldCheck, Store, Users, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
@@ -18,12 +18,17 @@ export function AdminLayout() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const { vendorSidebarOpen: open, setVendorSidebarOpen: setOpen } = useUIStore();
+  const [hydrated, setHydrated] = useState(useAuthStore.persist.hasHydrated());
+
+  useEffect(() => useAuthStore.persist.onFinishHydration(() => setHydrated(true)), []);
 
   useEffect(() => {
-    if (!useAuthStore.persist.hasHydrated()) return;
+    if (!hydrated) return;
     if (!user) navigate({ to: "/login", replace: true });
     else if (user.role !== "admin") navigate({ to: "/marketplace", replace: true });
-  }, [navigate, user]);
+  }, [hydrated, navigate, user]);
+
+  if (!hydrated || user?.role !== "admin") return <div className="min-h-screen bg-background" />;
 
   return <div className="min-h-screen bg-background">
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-card lg:block"><AdminSidebar /></aside>
