@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Store, X, Home, LayoutGrid, Heart, ShoppingBasket,
-  Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell,
+  Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell, LogOut,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
@@ -11,6 +11,8 @@ import { categories } from "@/data/categories";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
+import { logout } from "@/services/authService";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * Mobile navigation drawer.
@@ -29,6 +31,9 @@ export function MobileDrawer() {
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const clearAuth = useAuthStore((state) => state.clear);
+  const queryClient = useQueryClient();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Scroll lock with guaranteed cleanup — never freezes the page
   useEffect(() => {
@@ -56,6 +61,20 @@ export function MobileDrawer() {
     e.preventDefault();
     close();
     navigate({ to: "/search", search: { q: searchValue } });
+  };
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      clearAuth();
+      queryClient.clear();
+      close();
+      navigate({ to: "/login", replace: true });
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -163,12 +182,10 @@ export function MobileDrawer() {
           <div className="mt-6 border-t border-border pt-4">
             <p className="eyebrow mb-2">Account</p>
             <div className="space-y-1">
-              <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>
-                Log in
-              </DrawerLink>
-              <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>
-                Create account
-              </DrawerLink>
+              {user ? <button type="button" onClick={handleLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-60"><LogOut className="h-4 w-4" />{loggingOut ? "Logging out..." : "Log out"}</button> : <>
+                <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>Log in</DrawerLink>
+                <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create account</DrawerLink>
+              </>}
               <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>
                 Become a Seller
               </DrawerLink>

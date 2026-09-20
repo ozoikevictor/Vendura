@@ -12,6 +12,8 @@ import { MobileDrawer } from "./MobileDrawer";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { getNotifications } from "@/services/notificationService";
+import { logout } from "@/services/authService";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function MarketplaceHeader() {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
@@ -21,6 +23,8 @@ export function MarketplaceHeader() {
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
   const [accountOpen, setAccountOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: () => getNotifications(user!.id),
@@ -34,6 +38,20 @@ export function MarketplaceHeader() {
     e.preventDefault();
     if (searchValue.trim()) {
       navigate({ to: "/search", search: { q: searchValue.trim() } });
+    }
+  };
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      clearAuth();
+      queryClient.clear();
+      setAccountOpen(false);
+      navigate({ to: "/login", replace: true });
+      setLoggingOut(false);
     }
   };
 
@@ -173,7 +191,7 @@ export function MarketplaceHeader() {
               </button>
               {accountOpen && (
                 <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost z-50">
-                  <div className="px-3 py-2 border-b border-border mb-1">
+                  {user ? <><div className="px-3 py-2 border-b border-border mb-1">
                     <p className="text-sm font-semibold text-foreground">{user?.fullName}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                     {user?.role === "customer" && (
@@ -190,15 +208,17 @@ export function MarketplaceHeader() {
                   <div className="my-1 border-t border-border" />
                   <button
                     type="button"
-                    onClick={() => {
-                      clearAuth();
-                      navigate({ to: "/" });
-                    }}
+                    onClick={handleLogout}
+                    disabled={loggingOut}
                     className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
                   >
                     <LogOut className="h-4 w-4" />
-                    Log out
+                    {loggingOut ? "Logging out..." : "Log out"}
                   </button>
+                  </> : <>
+                    <MenuItem to="/login" icon={<User className="h-4 w-4" />}>Log in</MenuItem>
+                    <MenuItem to="/register" icon={<User className="h-4 w-4" />}>Create account</MenuItem>
+                  </>}
                 </div>
               )}
             </div>
