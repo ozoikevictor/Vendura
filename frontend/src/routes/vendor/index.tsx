@@ -271,15 +271,15 @@ function VendorOverviewPage() {
         </div>
 
         {/* Recent orders */}
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex h-80 min-h-0 flex-col rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Recent Orders</h2>
             <Link to="/vendor/orders" className="text-sm font-medium text-primary hover:underline">
               View all
             </Link>
           </div>
-          <div className="mt-3 space-y-2">
-            {orders?.slice(0, 5).map((order) => (
+          <div className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {orders?.map((order) => (
               <Link
                 key={order.id}
                 to="/vendor/orders/$orderId"
@@ -310,11 +310,11 @@ function VendorOverviewPage() {
       </div>
 
       {/* Top products */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="flex h-80 min-h-0 flex-col rounded-xl border border-border bg-card p-5">
         <h2 className="text-base font-semibold text-foreground">Top Products</h2>
-        <div className="mt-3 overflow-x-auto">
+        <div className="mt-3 min-h-0 flex-1 overflow-auto overscroll-contain pr-1">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-card">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="pb-2 pr-4">Product</th>
                 <th className="pb-2 pr-4">Sales</th>
