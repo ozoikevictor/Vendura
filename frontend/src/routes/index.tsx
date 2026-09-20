@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   ArrowRight, Store, ShieldCheck, Truck, Wallet,
   MessageSquare, BarChart3, ShoppingBasket, CheckCircle2,
@@ -11,6 +12,7 @@ import { categories, popularCategorySlugs } from "@/data/categories";
 import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
+import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -27,6 +29,12 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
+
+  useEffect(() => {
+    clearActiveStore();
+  }, [clearActiveStore]);
+
   return (
     <div className="min-h-screen lagoon-wash">
       <PublicHeader />
