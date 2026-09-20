@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Store, Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useUIStore } from "@/store/ui";
 import { MobileDrawer } from "./MobileDrawer";
 
@@ -8,10 +9,18 @@ import { MobileDrawer } from "./MobileDrawer";
  */
 export function PublicHeader() {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   return (
     <>
-    <header className="sticky top-0 z-40 frost-strong border-b border-border">
+    <header className={`sticky top-0 z-40 border-b border-[#cdbc9f] bg-[#eadcc4] transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.55)]" : "shadow-sm"}`}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
