@@ -93,7 +93,10 @@ const storeSettingsSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   tagline: z.string().trim().max(160).optional(),
   description: z.string().trim().min(10).max(2000).optional(),
-  logoUrl: z.string().url().or(z.literal("")).optional(),
+  logoUrl: z.string().refine(
+    (value) => value === "" || /^https?:\/\//i.test(value) || /^data:image\/(jpeg|png|webp);base64,/i.test(value),
+    "Logo must be an HTTP image URL or an uploaded JPG, PNG, or WebP image"
+  ).optional(),
   bannerUrl: z.string().url().or(z.literal("")).optional(),
   allowNegotiation: z.boolean().optional(),
   policies: z.object({ returns: z.string().max(1000), shipping: z.string().max(1000), warranty: z.string().max(1000).optional() }).optional(),

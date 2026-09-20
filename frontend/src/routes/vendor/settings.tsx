@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, KeyRound, Shield, Store, Truck, User } from "lucide-react";
+import { Bell, ImagePlus, KeyRound, Link as LinkIcon, Shield, Store, Truck, User, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { changePassword, updateProfile } from "@/services/authService";
@@ -56,6 +56,8 @@ function VendorSettingsPage() {
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
   const [preferences, setPreferences] = useState(defaultPreferences);
+  const [logoUrlInput, setLogoUrlInput] = useState("");
+  const [logoError, setLogoError] = useState("");
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["vendor-store", user?.storeId],
@@ -104,7 +106,7 @@ function VendorSettingsPage() {
       await updateVendorStore({
         name: storeForm.name,
         description: storeForm.description,
-        logoUrl: storeForm.logoUrl || undefined,
+        logoUrl: storeForm.logoUrl,
         allowNegotiation: storeForm.allowNegotiation,
         policies: { returns: storeForm.returnPolicy, shipping: storeForm.shippingPolicy },
       });
@@ -115,6 +117,38 @@ function VendorSettingsPage() {
     } finally {
       setSaving(null);
     }
+  }
+
+  async function uploadLogo(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setLogoError("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoError("Choose an image smaller than 5 MB.");
+      return;
+    }
+    try {
+      const logoUrl = await resizeImage(file, 512);
+      setStoreForm((value) => ({ ...value, logoUrl }));
+      setLogoUrlInput("");
+      setLogoError("");
+    } catch {
+      setLogoError("This picture could not be opened. Try another image.");
+    }
+  }
+
+  function applyLogoUrl() {
+    const logoUrl = logoUrlInput.trim();
+    if (!/^https?:\/\//i.test(logoUrl)) {
+      setLogoError("Enter a complete link beginning with http:// or https://.");
+      return;
+    }
+    setStoreForm((value) => ({ ...value, logoUrl }));
+    setLogoError("");
   }
 
   async function savePassword() {
@@ -187,7 +221,28 @@ function VendorSettingsPage() {
         {storeLoading ? <p className="text-sm text-muted-foreground">Loading your store...</p> : <>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Store name" value={storeForm.name} onChange={(name) => setStoreForm((value) => ({ ...value, name }))} />
-            <Field label="Logo image URL" type="url" value={storeForm.logoUrl} onChange={(logoUrl) => setStoreForm((value) => ({ ...value, logoUrl }))} placeholder="https://..." />
+          </div>
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">Store logo</p>
+            {storeForm.logoUrl ? <div className="relative h-28 w-28 overflow-hidden rounded-lg border border-border bg-background">
+              <img src={storeForm.logoUrl} alt="Store logo preview" className="h-full w-full object-cover" onLoad={() => setLogoError("")} onError={() => setLogoError("This logo link could not be loaded. Upload a picture or try another link.")} />
+              <button type="button" aria-label="Remove logo" onClick={() => { setStoreForm((value) => ({ ...value, logoUrl: "" })); setLogoUrlInput(""); setLogoError(""); }} className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 shadow"><X className="h-4 w-4" /></button>
+            </div> : <div className="flex h-28 w-28 items-center justify-center rounded-lg border border-dashed border-border bg-background text-muted-foreground"><Store className="h-8 w-8" /></div>}
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
+                <ImagePlus className="h-4 w-4" /> Upload picture
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadLogo} className="sr-only" />
+              </label>
+            </div>
+            <div className="flex max-w-xl flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input type="url" value={logoUrlInput} onChange={(event) => { setLogoUrlInput(event.target.value); setLogoError(""); }} placeholder="Or paste an image link" className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <button type="button" onClick={applyLogoUrl} className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent">Use URL</button>
+            </div>
+            {logoError && <p role="alert" className="text-xs text-destructive">{logoError}</p>}
+            <p className="text-xs text-muted-foreground">Upload from your phone or computer, or paste a direct JPG, PNG, or WebP link. Click Save Changes when the preview looks right.</p>
           </div>
           <TextArea label="Description" value={storeForm.description} onChange={(description) => setStoreForm((value) => ({ ...value, description }))} />
           <div className="grid gap-4 sm:grid-cols-2">
@@ -256,4 +311,31 @@ function Toggle({ label, description, checked, onChange }: { label: string; desc
 
 function SaveButton({ label = "Save Changes", saving, onClick }: { label?: string; saving: boolean; onClick: () => void }) {
   return <button type="button" onClick={onClick} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : label}</button>;
+}
+
+function resizeImage(file: File, maxSize: number) {
+  return new Promise<string>((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Canvas is unavailable"));
+        return;
+      }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(objectUrl);
+      resolve(canvas.toDataURL("image/webp", 0.82));
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Invalid image"));
+    };
+    image.src = objectUrl;
+  });
 }
