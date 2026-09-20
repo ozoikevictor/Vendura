@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -13,7 +13,6 @@ import { getCategories } from "@/services/categoryService";
 import { getStores } from "@/services/storeService";
 import type { ProductQuery } from "@/types";
 import { formatNaira } from "@/utils/format";
-import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -38,11 +37,6 @@ const SORTS: { value: NonNullable<ProductQuery["sort"]>; label: string }[] = [
 ];
 
 function MarketplacePage() {
-  const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
-
-  useEffect(() => {
-    clearActiveStore();
-  }, [clearActiveStore]);
   const [query, setQuery] = useState<ProductQuery>({ page: 1, pageSize: 24 });
   const [showFilters, setShowFilters] = useState(false);
 
