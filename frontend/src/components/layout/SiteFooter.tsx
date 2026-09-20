@@ -73,15 +73,21 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
             </ul>
           </div>
 
-          {/* Stores */}
+          {/* Seller resources */}
           <div>
-            <h3 className="font-semibold text-foreground text-sm">Top Stores</h3>
+            <h3 className="font-semibold text-foreground text-sm">{publicMode ? "For Sellers" : "Top Stores"}</h3>
             <ul className="mt-3 space-y-2">
-              {popularStores.map((s) => (
+              {publicMode ? (
+                <>
+                  <li><Link to="/vendor-register" className="text-sm text-muted-foreground hover:text-primary">Start selling</Link></li>
+                  <li><Link to="/login" className="text-sm text-muted-foreground hover:text-primary">Seller login</Link></li>
+                  <li><Link to="/explore" className="text-sm text-muted-foreground hover:text-primary">Open a store</Link></li>
+                </>
+              ) : popularStores.map((s) => (
                 <li key={s.slug}>
                   <Link
-                    to={publicMode ? "/explore" : "/store/$storeSlug"}
-                    params={publicMode ? undefined : { storeSlug: s.slug }}
+                    to="/store/$storeSlug"
+                    params={{ storeSlug: s.slug }}
                     className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {s.name}

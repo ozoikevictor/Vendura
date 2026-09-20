@@ -24,10 +24,10 @@ export function PublicHeader() {
 
         <nav className="hidden items-center gap-6 md:flex">
           <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-            Marketplace
+            Open a Store
           </Link>
           <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-            Categories
+            View Demo
           </Link>
           <Link to="/vendor-register" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Become a Seller
