@@ -181,6 +181,23 @@
     overflow-x: hidden;
   }
 
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Mobile browsers zoom forms whose text is smaller than 16px. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
   h1,
   h2,
   h3,
