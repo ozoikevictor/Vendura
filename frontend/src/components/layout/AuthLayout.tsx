@@ -15,7 +15,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className={`sticky top-0 z-40 border-b border-[#cdbc9f] bg-[#eadcc4] transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.55)]" : "shadow-sm"}`}>
+      <header className={`fixed inset-x-0 top-0 z-50 border-b border-border bg-white transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm"}`}>
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2 text-foreground">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -29,10 +29,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
       </header>
+      <div className="h-16 shrink-0" aria-hidden="true" />
 
       <main className="flex-1">
-        <div className="grid min-h-[calc(100vh-65px)] lg:grid-cols-[minmax(380px,0.9fr)_minmax(560px,1.1fr)]">
-          <aside className="relative min-h-64 overflow-hidden lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:min-h-0 lg:self-start">
+        <div className="min-h-[calc(100vh-4rem)] lg:relative">
+          <aside className="relative min-h-64 overflow-hidden lg:fixed lg:bottom-0 lg:left-0 lg:top-16 lg:w-[44%] lg:min-h-0">
             <img src={authBanner} alt="A Vendura seller preparing products for customers" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-foreground/70" />
             <div className="relative flex h-full min-h-64 flex-col justify-end px-6 py-8 text-white sm:px-10 lg:px-12 lg:py-14">
@@ -47,13 +48,13 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </aside>
-          <section className="flex items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:px-10">
+          <section className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:ml-[44%] lg:px-10">
             <div className="w-full animate-rise">{children}</div>
           </section>
         </div>
       </main>
 
-      <footer className="border-t border-border bg-card/75">
+      <footer className="border-t border-border bg-card lg:ml-[44%]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-center text-xs text-muted-foreground sm:flex-row sm:px-6 sm:text-left lg:px-8">
           <span>© 2026 Vendura. Secure shopping and selling across Nigeria.</span>
           <span className="inline-flex items-center gap-1.5">
