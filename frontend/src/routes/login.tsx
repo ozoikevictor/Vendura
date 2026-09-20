@@ -7,6 +7,7 @@ import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { useStorefrontStore } from "@/store/storefront";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -52,13 +53,10 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center lagoon-wash px-4 py-12">
+    <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">
-            Vendura
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold text-foreground">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Log in to shop or manage your store.
           </p>
@@ -142,6 +140,6 @@ function LoginPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

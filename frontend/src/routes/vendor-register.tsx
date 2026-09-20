@@ -11,6 +11,8 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  CreditCard,
+  PackageCheck,
 } from "lucide-react";
 import * as authService from "@/services/authService";
 import { useAuthStore } from "@/store/auth";
@@ -18,6 +20,7 @@ import { categories } from "@/data/categories";
 import { nigerianStates } from "@/data/users";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/vendor-register")({
   head: () => ({
@@ -121,16 +124,27 @@ function VendorRegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center lagoon-wash px-4 py-12">
+    <AuthLayout>
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">
-            Vendura
-          </Link>
-          <h1 className="mt-4 text-2xl font-bold text-foreground">Start Selling on Vendura</h1>
+          <h1 className="text-2xl font-bold text-foreground">Start Selling on Vendura</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Open your store and reach customers across Nigeria.
           </p>
+        </div>
+
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          {[
+            { icon: Store, title: "Your storefront", text: "A shareable store link for your customers." },
+            { icon: PackageCheck, title: "Simple management", text: "Manage products, stock, and orders in one place." },
+            { icon: CreditCard, title: "Secure payments", text: "Track sales, fees, balances, and payouts." },
+          ].map((benefit) => (
+            <div key={benefit.title} className="rounded-lg border border-border bg-card/80 p-4">
+              <benefit.icon className="h-5 w-5 text-primary" />
+              <h2 className="mt-2 text-sm font-semibold text-foreground">{benefit.title}</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{benefit.text}</p>
+            </div>
+          ))}
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8">
@@ -336,7 +350,7 @@ function VendorRegisterPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
