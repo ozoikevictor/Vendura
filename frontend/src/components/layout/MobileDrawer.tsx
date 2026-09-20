@@ -25,7 +25,7 @@ import { useStorefrontStore } from "@/store/storefront";
  *  - Never freezes the page (body scroll lock is cleaned up on unmount)
  *  - No invisible overlay (pointer-events-none when closed)
  */
-export function MobileDrawer() {
+export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const { drawerOpen, setDrawerOpen } = useUIStore();
   const cartCount = useCartStore((s) => s.getActiveItems().length);
   const wishlistCount = useWishlistStore((s) => s.ids.length);
@@ -35,7 +35,8 @@ export function MobileDrawer() {
   const clearAuth = useAuthStore((state) => state.clear);
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
-  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
+  const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
+  const activeStoreSlug = publicMode ? null : rememberedStoreSlug;
 
   // Scroll lock with guaranteed cleanup — never freezes the page
   useEffect(() => {
@@ -144,23 +145,28 @@ export function MobileDrawer() {
             <DrawerLink to="/marketplace" onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>
               Marketplace
             </DrawerLink>
-            <DrawerLink to="/cart" onClick={close} icon={<ShoppingBasket className="h-4 w-4" />} badge={cartCount}>
-              Cart
+            <DrawerLink to="/categories" onClick={close} icon={<Package className="h-4 w-4" />}>
+              Categories
             </DrawerLink>
-            <DrawerLink to="/wishlist" onClick={close} icon={<Heart className="h-4 w-4" />} badge={wishlistCount}>
-              Wishlist
-            </DrawerLink>
-            <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
-              My Orders
-            </DrawerLink>
-            {user?.role === "customer" && <DrawerLink to="/customer/notifications" onClick={close} icon={<Bell className="h-4 w-4" />}>Notifications</DrawerLink>}
-            <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
-              Messages
-            </DrawerLink>
+            {!publicMode && <>
+              <DrawerLink to="/cart" onClick={close} icon={<ShoppingBasket className="h-4 w-4" />} badge={cartCount}>
+                Cart
+              </DrawerLink>
+              <DrawerLink to="/wishlist" onClick={close} icon={<Heart className="h-4 w-4" />} badge={wishlistCount}>
+                Wishlist
+              </DrawerLink>
+              <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
+                My Orders
+              </DrawerLink>
+              {user?.role === "customer" && <DrawerLink to="/customer/notifications" onClick={close} icon={<Bell className="h-4 w-4" />}>Notifications</DrawerLink>}
+              <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
+                Messages
+              </DrawerLink>
+            </>}
           </nav>
 
           {/* Categories */}
-          <div className="mt-6">
+          {!publicMode && <div className="mt-6">
             <p className="eyebrow mb-2">Categories</p>
             <div className="space-y-0.5">
               {categories.slice(0, 12).map((c) => (
@@ -182,13 +188,17 @@ export function MobileDrawer() {
                 View all →
               </Link>
             </div>
-          </div>
+          </div>}
 
           {/* Account */}
           <div className="mt-6 border-t border-border pt-4">
             <p className="eyebrow mb-2">Account</p>
             <div className="space-y-1">
-              {user ? <>
+              {publicMode ? <>
+                <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>Log in</DrawerLink>
+                <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
+                <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Start selling</DrawerLink>
+              </> : user ? <>
                 <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
                   <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
                   <p className="text-xs capitalize text-muted-foreground">{user.role} account</p>

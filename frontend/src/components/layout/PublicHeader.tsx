@@ -58,7 +58,7 @@ export function PublicHeader() {
         </div>
       </div>
     </header>
-    <MobileDrawer />
+    <MobileDrawer publicMode />
     </>
   );
 }
