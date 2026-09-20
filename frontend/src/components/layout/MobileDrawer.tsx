@@ -146,7 +146,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
               <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
                 <LayoutGrid className="h-4 w-4" /> Marketplace
               </Link>
-              <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+              <Link to="/categories" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
                 <Package className="h-4 w-4" /> Categories
               </Link>
             </> : <>

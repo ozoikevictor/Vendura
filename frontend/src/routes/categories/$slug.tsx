@@ -13,6 +13,8 @@ import { getCategoryBySlug } from "@/services/categoryService";
 import { categories } from "@/data/categories";
 import { stores } from "@/data/stores";
 import { NotFoundError } from "@/services/_mock";
+import { useStorefrontStore } from "@/store/storefront";
+import { getStoreBySlug } from "@/services/storeService";
 
 export const Route = createFileRoute("/categories/$slug")({
   head: ({ params }) => {
@@ -33,6 +35,13 @@ export const Route = createFileRoute("/categories/$slug")({
 function CategoryDetailPage() {
   const { slug } = Route.useParams();
   const [subSlug, setSubSlug] = useState<string | undefined>(undefined);
+  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
+
+  const { data: activeStore } = useQuery({
+    queryKey: ["category-active-store", activeStoreSlug],
+    queryFn: () => getStoreBySlug(activeStoreSlug!),
+    enabled: Boolean(activeStoreSlug),
+  });
 
   const { data: category } = useQuery({
     queryKey: ["category", slug],
@@ -40,14 +49,15 @@ function CategoryDetailPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["category-products", slug, subSlug],
-    queryFn: () => queryProducts({ categorySlug: slug, ...(subSlug ? { subcategorySlug: subSlug } : {}), pageSize: 48 }),
+    queryKey: ["category-products", slug, subSlug, activeStore?.id],
+    queryFn: () => queryProducts({ categorySlug: slug, ...(subSlug ? { subcategorySlug: subSlug } : {}), ...(activeStore ? { storeId: activeStore.id } : {}), pageSize: 48 }),
+    enabled: !activeStoreSlug || Boolean(activeStore),
   });
 
   if (!category) {
     return (
       <div className="min-h-screen lagoon-wash">
-        <MarketplaceHeader publicMode />
+        <MarketplaceHeader publicMode={!activeStoreSlug} />
         <div className="mx-auto max-w-7xl px-4 py-12">
           <EmptyState title="Category not found" description="This category doesn't exist." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">All categories</Link>} />
         </div>
@@ -61,7 +71,7 @@ function CategoryDetailPage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <MarketplaceHeader publicMode />
+      <MarketplaceHeader publicMode={!activeStoreSlug} />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
@@ -110,11 +120,11 @@ function CategoryDetailPage() {
               {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
           ) : products.length === 0 ? (
-            <EmptyState title="No products in this category" description="Check back later or browse other categories." action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse marketplace</Link>} />
+            <EmptyState title="No products in this category" description="Check back later or browse other categories." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">Browse categories</Link>} />
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {products.map((p) => {
-                const store = stores.find((s) => s.id === p.storeId);
+                const store = activeStore ?? stores.find((s) => s.id === p.storeId);
                 return (
                   <ProductCard
                     key={p.id}

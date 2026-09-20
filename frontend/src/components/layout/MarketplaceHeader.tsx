@@ -113,9 +113,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 Marketplace
               </Link>
               <Link
-                to="/store/$storeSlug"
-                params={{ storeSlug: storefrontSlug }}
-                hash="store-products"
+                to="/categories"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
               >
                 Categories
