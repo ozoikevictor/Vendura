@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight, Store, ShieldCheck, Truck, Wallet,
   MessageSquare, BarChart3, ShoppingBasket, CheckCircle2,
@@ -13,6 +14,8 @@ import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
 import { useStorefrontStore } from "@/store/storefront";
+import { getFeaturedStores } from "@/services/storeService";
+import { VerifiedStoreCard } from "@/components/landing/VerifiedStoreCard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -30,6 +33,12 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
+  const { data: stores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ["featured-stores"],
+    queryFn: () => getFeaturedStores(6),
+    staleTime: 60_000,
+  });
+  const verifiedStores = stores.filter((store) => store.verified);
 
   useEffect(() => {
     clearActiveStore();
@@ -112,6 +121,31 @@ function Index() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-card/70" id="verified-stores">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <SectionHeader
+            eyebrow="Trusted sellers"
+            title="Shop Verified Stores"
+            description="Discover approved Vendura businesses. Choose a store, then log in or create a customer account to start shopping."
+          />
+          {storesLoading ? (
+            <div className="verified-store-grid mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-64 animate-pulse rounded-xl border border-border bg-muted" />)}
+            </div>
+          ) : verifiedStores.length > 0 ? (
+            <div className="verified-store-grid mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {verifiedStores.map((store) => <VerifiedStoreCard key={store.id} store={store} />)}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-xl border border-border bg-background px-6 py-10 text-center">
+              <Store className="mx-auto h-8 w-8 text-primary" />
+              <p className="mt-3 font-semibold text-foreground">Verified stores are coming soon</p>
+              <p className="mt-1 text-sm text-muted-foreground">Approved sellers will appear here automatically.</p>
+            </div>
+          )}
         </div>
       </section>
 
