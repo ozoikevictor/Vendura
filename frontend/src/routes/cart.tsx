@@ -9,6 +9,7 @@ import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types";
+import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
+  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const items = useCartStore((s) => s.items);
   const remove = useCartStore((s) => s.remove);
   const updateQty = useCartStore((s) => s.updateQty);
@@ -49,14 +51,11 @@ function CartPage() {
           icon={<ShoppingBasket className="h-7 w-7" />}
           title="Your cart is empty"
           description="Browse the marketplace and add items to your cart."
-          action={
-            <Link
-              to="/marketplace"
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              Browse Marketplace
-            </Link>
-          }
+          action={activeStoreSlug ? (
+            <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse this store</Link>
+          ) : (
+            <Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>
+          )}
         />
         <SiteFooter />
       </div>

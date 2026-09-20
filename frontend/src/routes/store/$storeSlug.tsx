@@ -156,7 +156,7 @@ function StorePage() {
         </div>
 
         {/* Products */}
-        <div className="mt-8">
+        <div id="store-products" className="mt-8 scroll-mt-28">
           <h2 className="font-display text-lg font-bold text-foreground">Products</h2>
           {productsLoading ? (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">

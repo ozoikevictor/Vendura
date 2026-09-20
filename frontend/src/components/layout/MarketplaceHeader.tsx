@@ -102,19 +102,30 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
           {/* Nav links */}
           <nav className="hidden items-center gap-1 lg:flex">
-            <Link
-              to="/marketplace"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <LayoutGrid className="mr-1 inline h-4 w-4" />
-              Marketplace
-            </Link>
-            <Link
-              to="/categories"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              Categories
-            </Link>
+            {storefrontSlug ? <>
+              <Link
+                to="/store/$storeSlug"
+                params={{ storeSlug: storefrontSlug }}
+                hash="store-products"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <LayoutGrid className="mr-1 inline h-4 w-4" />
+                Marketplace
+              </Link>
+              <Link
+                to="/store/$storeSlug"
+                params={{ storeSlug: storefrontSlug }}
+                hash="store-products"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                Categories
+              </Link>
+            </> : <>
+              <Link to="/marketplace" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
+                <LayoutGrid className="mr-1 inline h-4 w-4" /> Marketplace
+              </Link>
+              <Link to="/categories" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">Categories</Link>
+            </>}
           </nav>
 
           {/* Actions */}
@@ -199,7 +210,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
                   {user?.fullName?.split(" ").map((n) => n[0]).join("").slice(0, 2) ?? "?"}
                 </span>
-                {user?.role === "customer" && (
+                {user && (
                   <span className="hidden max-w-24 truncate sm:inline">{user.fullName}</span>
                 )}
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />

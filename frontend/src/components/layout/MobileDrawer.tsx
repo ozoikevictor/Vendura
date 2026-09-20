@@ -142,12 +142,17 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
             ) : (
               <DrawerLink to="/" onClick={close} icon={<Home className="h-4 w-4" />}>Home</DrawerLink>
             )}
-            <DrawerLink to={publicMode ? "/explore" : "/marketplace"} onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>
-              Marketplace
-            </DrawerLink>
-            <DrawerLink to={publicMode ? "/explore" : "/categories"} onClick={close} icon={<Package className="h-4 w-4" />}>
-              Categories
-            </DrawerLink>
+            {activeStoreSlug ? <>
+              <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+                <LayoutGrid className="h-4 w-4" /> Marketplace
+              </Link>
+              <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+                <Package className="h-4 w-4" /> Categories
+              </Link>
+            </> : <>
+              <DrawerLink to={publicMode ? "/explore" : "/marketplace"} onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>Marketplace</DrawerLink>
+              <DrawerLink to={publicMode ? "/explore" : "/categories"} onClick={close} icon={<Package className="h-4 w-4" />}>Categories</DrawerLink>
+            </>}
             {!publicMode && <>
               <DrawerLink to="/cart" onClick={close} icon={<ShoppingBasket className="h-4 w-4" />} badge={cartCount}>
                 Cart
