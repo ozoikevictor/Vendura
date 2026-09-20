@@ -4,17 +4,15 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { useQuery } from "@tanstack/react-query";
-import { queryProducts } from "@/services/productService";
 import { getCategories } from "@/services/categoryService";
-import { getStores } from "@/services/storeService";
 import type { ProductQuery } from "@/types";
 import { formatNaira } from "@/utils/format";
 import { products as demoProducts } from "@/data/products";
 import { stores as demoStores } from "@/data/stores";
+import { categories as demoCategories } from "@/data/categories";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -42,31 +40,30 @@ function MarketplacePage() {
   const [query, setQuery] = useState<ProductQuery>({ page: 1, pageSize: 24 });
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["marketplace", query],
-    queryFn: () => queryProducts(query),
-  });
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
   });
-  const { data: stores = [] } = useQuery({
-    queryKey: ["stores"],
-    queryFn: getStores,
-  });
-
-  const liveProducts = data?.items ?? [];
-  const hasActiveFilters = Boolean(
-    query.categorySlug ||
-    query.minPrice != null ||
-    query.maxPrice != null ||
-    query.negotiableOnly ||
-    query.inStockOnly,
-  );
-  const showingDemo = liveProducts.length === 0 && !hasActiveFilters;
-  const products = showingDemo ? demoProducts.slice(0, 24) : liveProducts;
-  const total = showingDemo ? products.length : (data?.total ?? 0);
+  const catalogCategories = categories?.length ? categories : demoCategories;
+  const filteredProducts = useMemo(() => {
+    let items = [...demoProducts];
+    const category = catalogCategories.find((item) => item.slug === query.categorySlug);
+    if (category) items = items.filter((product) => product.categoryId === category.id);
+    if (query.minPrice != null) items = items.filter((product) => product.price >= query.minPrice!);
+    if (query.maxPrice != null) items = items.filter((product) => product.price <= query.maxPrice!);
+    if (query.negotiableOnly) items = items.filter((product) => product.negotiable);
+    if (query.inStockOnly) items = items.filter((product) => product.stock > 0);
+    if (query.sort === "newest") items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    if (query.sort === "price_asc") items.sort((a, b) => a.price - b.price);
+    if (query.sort === "price_desc") items.sort((a, b) => b.price - a.price);
+    if (query.sort === "rating") items.sort((a, b) => b.rating - a.rating);
+    if (query.sort === "popular") items.sort((a, b) => b.soldCount - a.soldCount);
+    return items;
+  }, [catalogCategories, query]);
+  const total = filteredProducts.length;
   const totalPages = Math.ceil(total / (query.pageSize ?? 24));
+  const start = ((query.page ?? 1) - 1) * (query.pageSize ?? 24);
+  const products = filteredProducts.slice(start, start + (query.pageSize ?? 24));
 
   function update(patch: Record<string, unknown>) {
     setQuery((q) => {
@@ -110,7 +107,7 @@ function MarketplacePage() {
                   >
                     All categories
                   </button>
-                  {categories?.map((c) => (
+                  {catalogCategories.map((c) => (
                     <button
                       key={c.id}
                       onClick={() => update({ categorySlug: c.slug })}
@@ -188,11 +185,7 @@ function MarketplacePage() {
             </div>
 
             {/* Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-              </div>
-            ) : products.length === 0 ? (
+            {products.length === 0 ? (
               <EmptyState
                 title="No products found"
                 description="Try adjusting your filters or search for something else."
@@ -202,7 +195,7 @@ function MarketplacePage() {
               <>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                   {products.map((p) => {
-                    const store = stores.find((s) => s.id === p.storeId) ?? demoStores.find((s) => s.id === p.storeId);
+                    const store = demoStores.find((s) => s.id === p.storeId);
                     return (
                       <ProductCard
                         key={p.id}
