@@ -56,7 +56,14 @@ function MarketplacePage() {
   });
 
   const liveProducts = data?.items ?? [];
-  const showingDemo = !isLoading && liveProducts.length === 0 && Object.keys(query).every((key) => key === "page" || key === "pageSize");
+  const hasActiveFilters = Boolean(
+    query.categorySlug ||
+    query.minPrice != null ||
+    query.maxPrice != null ||
+    query.negotiableOnly ||
+    query.inStockOnly,
+  );
+  const showingDemo = liveProducts.length === 0 && !hasActiveFilters;
   const products = showingDemo ? demoProducts.slice(0, 24) : liveProducts;
   const total = showingDemo ? products.length : (data?.total ?? 0);
   const totalPages = Math.ceil(total / (query.pageSize ?? 24));
