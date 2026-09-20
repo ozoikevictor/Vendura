@@ -148,6 +148,19 @@ export interface Product {
   updatedAt: ISODate;
 }
 
+export interface ProductReview {
+  id: ID;
+  productId: ID;
+  storeId: ID;
+  orderId: ID;
+  customerId: ID;
+  customerName: string;
+  rating: number;
+  comment: string;
+  verifiedPurchase: boolean;
+  createdAt: ISODate;
+}
+
 /* ------------------------- Cart & Wishlist ----------------------- */
 
 export interface CartItem {

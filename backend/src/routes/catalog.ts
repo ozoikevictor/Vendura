@@ -68,6 +68,36 @@ export const catalogRoutes = (db: Database) => {
   router.get("/products/slug/:slug", asyncRoute(async (req, res) => { const item = await db.findOne("products", { slug: req.params.slug }); if (!item) throw new ApiError(404, "Product not found"); ok(res, item); }));
   router.get("/products/:id", asyncRoute(async (req, res) => { const item = await db.get("products", String(req.params.id)); if (!item) throw new ApiError(404, "Product not found"); ok(res, item); }));
   router.get("/products/:id/related", asyncRoute(async (req, res) => { const item = await db.get<Entity>("products", String(req.params.id)); if (!item) throw new ApiError(404, "Product not found"); const all = await db.list<Entity>("products"); ok(res, all.filter((p) => p.id !== item.id && p.categoryId === item.categoryId).slice(0, Number(req.query.limit ?? 4))); }));
+  router.get("/products/:id/reviews", asyncRoute(async (req, res) => {
+    const product = await db.get<Entity>("products", String(req.params.id));
+    if (!product) throw new ApiError(404, "Product not found");
+    const reviews = (product.reviews as Entity[] | undefined) ?? [];
+    ok(res, reviews.sort((a, b) => +new Date(String(b.createdAt)) - +new Date(String(a.createdAt))));
+  }));
+  router.post("/products/:id/reviews", authenticate, authorize("customer", "admin"), asyncRoute(async (req: AuthRequest, res) => {
+    const input = z.object({ orderId: z.string().min(1), rating: z.number().int().min(1).max(5), comment: z.string().trim().min(5).max(1000) }).parse(req.body);
+    const product = await db.get<Entity>("products", String(req.params.id));
+    if (!product) throw new ApiError(404, "Product not found");
+    const order = await db.get<Entity>("orders", input.orderId);
+    if (!order || (req.user!.role !== "admin" && order.customerId !== req.user!.id)) throw new ApiError(404, "Delivered order not found");
+    if (order.status !== "delivered") throw new ApiError(409, "You can review this product after the order is delivered");
+    const items = order.items as Entity[];
+    if (!items.some((item) => item.productId === product.id)) throw new ApiError(400, "This product is not part of that order");
+    const reviews = (product.reviews as Entity[] | undefined) ?? [];
+    if (reviews.some((review) => review.orderId === order.id && review.customerId === req.user!.id)) throw new ApiError(409, "You already reviewed this product from this order");
+    const customer = await db.get<Entity>("users", req.user!.id);
+    const review = { id: id("review"), productId: product.id, storeId: product.storeId, orderId: order.id, customerId: req.user!.id, customerName: customer?.fullName ?? "Verified customer", rating: input.rating, comment: input.comment, verifiedPurchase: true, createdAt: now() };
+    const nextReviews = [...reviews, review];
+    const rating = nextReviews.reduce((sum, item) => sum + Number(item.rating), 0) / nextReviews.length;
+    await db.update("products", product.id, { reviews: nextReviews, rating: Number(rating.toFixed(1)), reviewCount: nextReviews.length, updatedAt: now() });
+    const storeProducts = (await db.list<Entity>("products")).filter((item) => item.storeId === product.storeId);
+    const storeReviews = storeProducts.flatMap((item) => item.id === product.id ? nextReviews : ((item.reviews as Entity[] | undefined) ?? []));
+    if (storeReviews.length > 0) {
+      const storeRating = storeReviews.reduce((sum, item) => sum + Number(item.rating), 0) / storeReviews.length;
+      await db.update("stores", String(product.storeId), { rating: Number(storeRating.toFixed(1)), reviewCount: storeReviews.length });
+    }
+    created(res, review);
+  }));
   router.post("/vendor/products", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => {
     const input = productSchema.parse(req.body); const storeId = req.user!.storeId ?? String(req.body.storeId ?? ""); if (!storeId) throw new ApiError(400, "Vendor has no store");
     const product = await db.create("products", { id: id("product"), ...input, slug: `${slugify(input.name)}-${Date.now().toString().slice(-5)}`, currency: "NGN", storeId, rating: 0, reviewCount: 0, soldCount: 0, createdAt: now(), updatedAt: now() });

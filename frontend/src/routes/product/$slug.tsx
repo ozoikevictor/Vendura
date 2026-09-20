@@ -12,8 +12,8 @@ import { PriceTag } from "@/components/shared/PriceTag";
 import { QuantityStepper } from "@/components/shared/QuantityStepper";
 import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { useQuery } from "@tanstack/react-query";
-import { getProductBySlug, getRelatedProducts } from "@/services/productService";
-import { getStoreBySlug } from "@/services/storeService";
+import { getProductBySlug, getProductReviews, getRelatedProducts } from "@/services/productService";
+import { getStoreById } from "@/services/storeService";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { stores } from "@/data/stores";
@@ -54,6 +54,18 @@ function ProductDetailPage() {
     enabled: !!product,
   });
 
+  const { data: reviews = [] } = useQuery({
+    queryKey: ["product-reviews", product?.id],
+    queryFn: () => getProductReviews(product!.id),
+    enabled: Boolean(product),
+  });
+
+  const { data: liveStore } = useQuery({
+    queryKey: ["store", product?.storeId],
+    queryFn: () => getStoreById(product!.storeId),
+    enabled: Boolean(product),
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen lagoon-wash">
@@ -88,7 +100,7 @@ function ProductDetailPage() {
     );
   }
 
-  const store = stores.find((s) => s.id === product.storeId);
+  const store = liveStore ?? stores.find((s) => s.id === product.storeId);
   const isWishlisted = wishlist.has(product.id);
   const outOfStock = product.stock === 0;
   const lowStock = product.stock > 0 && product.stock <= product.lowStockThreshold;
@@ -327,6 +339,35 @@ function ProductDetailPage() {
             </div>
           )}
         </div>
+
+        <section className="mt-8 rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="font-display text-lg font-bold text-foreground">Customer Reviews</h2>
+              <p className="text-sm text-muted-foreground">Reviews can only be posted from delivered Vendura orders.</p>
+            </div>
+            <div className="flex items-center gap-2"><RatingStars rating={product.rating} size={16} showValue /><span className="text-sm text-muted-foreground">({reviews.length})</span></div>
+          </div>
+          {reviews.length === 0 ? (
+            <p className="mt-4 rounded-lg bg-accent/30 p-4 text-sm text-muted-foreground">No verified reviews yet.</p>
+          ) : (
+            <div className="mt-4 divide-y divide-border">
+              {reviews.map((review) => (
+                <article key={review.id} className="py-4 first:pt-0 last:pb-0">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{review.customerName}</span>
+                      {review.verifiedPurchase && <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">Verified purchase</span>}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  </div>
+                  <div className="mt-1"><RatingStars rating={review.rating} size={13} /></div>
+                  <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{review.comment}</p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Related products */}
         {related && related.length > 0 && (

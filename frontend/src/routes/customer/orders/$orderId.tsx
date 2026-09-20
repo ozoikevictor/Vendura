@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Circle, Package, Truck, Home, XCircle, MapPin } from "lucide-react";
+import { CheckCircle2, Circle, Package, Truck, Home, XCircle, MapPin, Star } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
@@ -8,11 +8,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getOrder, ORDER_STATUS_FLOW } from "@/services/orderService";
 import { initializePaystackPayment } from "@/services/paymentService";
 import { getErrorMessage } from "@/services/api";
+import { createProductReview } from "@/services/productService";
 import { ORDER_STATUS_LABEL } from "@/data/orders";
 import { formatNaira, formatDate, formatDateTime } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import type { OrderStatus } from "@/types";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/customer/orders/$orderId")({
   head: () => ({
@@ -42,6 +44,11 @@ function OrderDetailPage() {
   const queryClient = useQueryClient();
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [reviewingProductId, setReviewingProductId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewedProducts, setReviewedProducts] = useState<string[]>([]);
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => getOrder(orderId),
@@ -95,6 +102,24 @@ function OrderDetailPage() {
     } catch (error) {
       setPaymentError(getErrorMessage(error, "Could not open Paystack. Please try again."));
       setPaymentLoading(false);
+    }
+  };
+
+  const submitReview = async (productId: string) => {
+    if (reviewComment.trim().length < 5) return toast.error("Write at least 5 characters about the product");
+    setReviewSubmitting(true);
+    try {
+      await createProductReview(productId, { orderId: order.id, rating: reviewRating, comment: reviewComment.trim() });
+      setReviewedProducts((items) => [...items, productId]);
+      setReviewingProductId(null);
+      setReviewComment("");
+      setReviewRating(5);
+      await queryClient.invalidateQueries({ queryKey: ["product-reviews", productId] });
+      toast.success("Your verified review is now published");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Could not publish your review"));
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -192,7 +217,7 @@ function OrderDetailPage() {
           <h2 className="text-base font-semibold text-foreground">Items</h2>
           <div className="mt-3 divide-y divide-border">
             {order.items.map((item) => (
-              <div key={item.id} className="flex gap-3 py-3">
+              <div key={item.id} className="flex flex-wrap gap-3 py-3">
                 <img
                   src={item.productImage}
                   alt=""
@@ -213,6 +238,27 @@ function OrderDetailPage() {
                 <p className="text-sm font-semibold text-foreground">
                   {formatNaira(item.subtotal)}
                 </p>
+                {order.status === "delivered" && !reviewedProducts.includes(item.productId) && (
+                  <button type="button" onClick={() => { setReviewingProductId(reviewingProductId === item.productId ? null : item.productId); setReviewComment(""); setReviewRating(5); }} className="self-center rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
+                    Review
+                  </button>
+                )}
+                {reviewedProducts.includes(item.productId) && <span className="self-center text-xs font-semibold text-success">Reviewed</span>}
+                {reviewingProductId === item.productId && (
+                  <div className="basis-full space-y-3 rounded-lg border border-border bg-background p-3">
+                    <div>
+                      <p className="text-xs font-medium text-foreground">Your rating</p>
+                      <div className="mt-1 flex gap-1">
+                        {[1, 2, 3, 4, 5].map((value) => <button key={value} type="button" aria-label={`${value} star rating`} onClick={() => setReviewRating(value)}><Star className={cn("h-6 w-6", value <= reviewRating ? "fill-warning text-warning" : "text-muted-foreground")} /></button>)}
+                      </div>
+                    </div>
+                    <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} rows={3} maxLength={1000} placeholder="How was the product?" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => submitReview(item.productId)} disabled={reviewSubmitting} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60">{reviewSubmitting ? "Publishing..." : "Publish Review"}</button>
+                      <button type="button" onClick={() => setReviewingProductId(null)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cancel</button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

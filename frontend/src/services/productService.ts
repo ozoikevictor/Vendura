@@ -1,4 +1,4 @@
-import type { Product, ProductQuery, Paginated, ID } from "@/types";
+import type { Product, ProductQuery, ProductReview, Paginated, ID } from "@/types";
 import { api, json } from "./api";
 
 const queryString = (query: ProductQuery) => {
@@ -20,6 +20,10 @@ export const getFeaturedProducts = (limit = 8) =>
   api<Product[]>(`/products/featured?limit=${limit}`);
 export const getRelatedProducts = (product: Product, limit = 4) =>
   api<Product[]>(`/products/${encodeURIComponent(product.id)}/related?limit=${limit}`);
+export const getProductReviews = (productId: ID) =>
+  api<ProductReview[]>(`/products/${encodeURIComponent(productId)}/reviews`);
+export const createProductReview = (productId: ID, input: { orderId: ID; rating: number; comment: string }) =>
+  api<ProductReview>(`/products/${encodeURIComponent(productId)}/reviews`, { method: "POST", ...json(input) });
 export async function getProductsByStore(storeId: ID, limit?: number) {
   const result = await queryProducts({ storeId, pageSize: limit ?? 100 });
   return result.items;
