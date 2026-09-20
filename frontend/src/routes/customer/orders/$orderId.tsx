@@ -153,8 +153,48 @@ function OrderDetailPage() {
 
         <EscrowPanel
           order={order}
-          onUpdated={(updated) => queryClient.setQueryData(["order", orderId], updated)}
+          onUpdated={(updated) => {
+            queryClient.setQueryData(["order", orderId], updated);
+            if (updated.status === "delivered" && updated.items[0]) {
+              setReviewingProductId(updated.items[0].productId);
+            }
+          }}
         />
+
+        {order.status === "delivered" ? (
+          <section className="mt-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-5" aria-labelledby="rate-products-heading">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Star className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 id="rate-products-heading" className="text-base font-semibold text-foreground">Rate your products</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Tell other shoppers about the products you received.</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {order.items.map((item) => reviewedProducts.includes(item.productId) ? (
+                <span key={item.id} className="inline-flex items-center gap-1.5 rounded-lg border border-success/30 bg-card px-3 py-2 text-sm font-semibold text-success">
+                  <CheckCircle2 className="h-4 w-4" /> {item.productName} reviewed
+                </span>
+              ) : (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { setReviewingProductId(item.productId); setReviewComment(""); setReviewRating(5); }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <Star className="h-4 w-4" /> Rate {item.productName}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : !isCancelled ? (
+          <div className="mt-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Product ratings unlock after delivery.</span>{" "}
+            Once the order is marked delivered, the rating buttons will appear here.
+          </div>
+        ) : null}
 
         {/* Timeline */}
         <div className="mt-6 rounded-xl border border-border bg-card p-5">
@@ -214,7 +254,10 @@ function OrderDetailPage() {
 
         {/* Items */}
         <div className="mt-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Items</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-foreground">Items</h2>
+            {order.status === "delivered" && <span className="text-xs font-semibold text-primary">Ready to review</span>}
+          </div>
           <div className="mt-3 divide-y divide-border">
             {order.items.map((item) => (
               <div key={item.id} className="flex flex-wrap gap-3 py-3">
@@ -239,8 +282,8 @@ function OrderDetailPage() {
                   {formatNaira(item.subtotal)}
                 </p>
                 {order.status === "delivered" && !reviewedProducts.includes(item.productId) && (
-                  <button type="button" onClick={() => { setReviewingProductId(reviewingProductId === item.productId ? null : item.productId); setReviewComment(""); setReviewRating(5); }} className="self-center rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">
-                    Review
+                  <button type="button" onClick={() => { setReviewingProductId(reviewingProductId === item.productId ? null : item.productId); setReviewComment(""); setReviewRating(5); }} className="inline-flex self-center items-center gap-1 rounded-lg border border-primary px-3 py-2 text-xs font-semibold text-primary hover:bg-primary-soft">
+                    <Star className="h-3.5 w-3.5" /> Rate product
                   </button>
                 )}
                 {reviewedProducts.includes(item.productId) && <span className="self-center text-xs font-semibold text-success">Reviewed</span>}
