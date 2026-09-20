@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ShieldCheck, MapPin, Package, Star, Truck, RotateCcw,
 } from "lucide-react";
@@ -14,6 +14,7 @@ import { getStoreBySlug } from "@/services/storeService";
 import { getProductsByStore } from "@/services/productService";
 import { products as allProducts } from "@/data/products";
 import { formatNaira } from "@/utils/format";
+import fallbackBanner from "@/assets/store-banner-1.jpg";
 
 export const Route = createFileRoute("/store/$storeSlug")({
   head: ({ params }) => ({
@@ -30,6 +31,8 @@ export const Route = createFileRoute("/store/$storeSlug")({
 
 function StorePage() {
   const { storeSlug } = Route.useParams();
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", storeSlug],
@@ -45,6 +48,8 @@ function StorePage() {
   useEffect(() => {
     if (!store) return;
     document.title = `${store.name} - Vendura`;
+    setBannerFailed(false);
+    setLogoFailed(false);
   }, [store]);
 
   if (storeLoading) {
@@ -80,15 +85,17 @@ function StorePage() {
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden sm:h-56">
-        <img src={store.bannerUrl ?? "/store-banner-1.jpg"} alt={store.name} className="h-full w-full object-cover" />
+        <img src={!bannerFailed && store.bannerUrl ? store.bannerUrl : fallbackBanner} onError={() => setBannerFailed(true)} alt={`${store.name} banner`} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Store header */}
         <div className="relative -mt-12 flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="flex h-20 w-20 items-center justify-center rounded-xl border-4 border-background bg-primary-soft text-2xl font-bold text-primary shadow-card sm:h-24 sm:w-24">
-            {store.name.charAt(0)}
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-4 border-background bg-primary-soft text-2xl font-bold text-primary shadow-card sm:h-24 sm:w-24">
+            {store.logoUrl && !logoFailed ? (
+              <img src={store.logoUrl} onError={() => setLogoFailed(true)} alt={`${store.name} logo`} className="h-full w-full object-cover" />
+            ) : store.name.charAt(0)}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
