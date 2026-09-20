@@ -31,11 +31,11 @@ export function AdminLayout() {
 
   if (!hydrated || user?.role !== "admin") return <div className="min-h-screen bg-background" />;
 
-  return <div className="min-h-screen bg-background">
+  return <div className="h-screen overflow-hidden bg-background">
     <aside className={cn("fixed inset-y-0 left-0 z-30 hidden border-r border-border bg-card transition-[width] duration-300 lg:block", collapsed ? "w-20" : "w-60")}><AdminSidebar collapsed={collapsed} /></aside>
     <div className={cn("fixed inset-0 z-40 bg-foreground/40 transition-opacity lg:hidden", open ? "opacity-100" : "pointer-events-none opacity-0")} onClick={() => setOpen(false)} />
     <aside className={cn("fixed inset-y-0 left-0 z-50 w-[82vw] max-w-xs bg-card shadow-xl transition-transform lg:hidden", open ? "translate-x-0" : "-translate-x-full")}><AdminSidebar close={() => setOpen(false)} /></aside>
-    <div className={cn("transition-[padding] duration-300", collapsed ? "lg:pl-20" : "lg:pl-60")}>
+    <div className={cn("h-screen overflow-hidden transition-[padding] duration-300", collapsed ? "lg:pl-20" : "lg:pl-60")}>
       <header className={cn("fixed left-0 right-0 top-0 z-20 flex h-16 items-center border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", collapsed ? "lg:left-20" : "lg:left-60")}>
         <button className="mr-3 flex h-9 w-9 items-center justify-center rounded-md border border-border lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="h-5 w-5" /></button>
         <Link to="/admin" className="mr-3 flex items-center gap-2 lg:hidden"><span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground"><ShieldCheck className="h-4 w-4" /></span><span className="font-display font-bold">Vendura</span></Link>
@@ -44,7 +44,7 @@ export function AdminLayout() {
         <div className="ml-auto flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-xs font-bold text-background">{(user?.fullName ?? "Admin").split(" ").map((part) => part[0]).join("").slice(0, 2)}</span><div className="hidden sm:block"><p className="text-sm font-medium">{user?.fullName ?? "Administrator"}</p><p className="text-xs text-muted-foreground">Super admin</p></div></div>
       </header>
       <div className="h-16" aria-hidden="true" />
-      <main className="p-4 sm:p-6 lg:p-8"><Outlet /></main>
+      <main className="h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8"><Outlet /></main>
     </div>
   </div>;
 }

@@ -116,7 +116,7 @@ export function VendorLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen overflow-hidden bg-background">
       {/* Desktop sidebar */}
       <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
         <VendorSidebar collapsed={vendorSidebarCollapsed} storeSlug={store?.slug} />
@@ -142,7 +142,7 @@ export function VendorLayout() {
       </aside>
 
       {/* Main content */}
-      <div className={cn("transition-[padding] duration-300", vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
+      <div className={cn("h-screen overflow-hidden transition-[padding] duration-300", vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         {/* Top bar */}
         <header className={cn("fixed left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64")}>
           <button
@@ -216,7 +216,7 @@ export function VendorLayout() {
         <div className="h-16" aria-hidden="true" />
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>
