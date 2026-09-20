@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Store, Search, Heart, ShoppingBasket, Menu, User, Bell,
@@ -25,6 +25,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const navigate = useNavigate();
   const [accountOpen, setAccountOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const queryClient = useQueryClient();
   const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const { data: notifications = [] } = useQuery({
@@ -36,6 +37,13 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
   const storefrontSlug = publicMode ? null : activeStoreSlug;
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -60,7 +68,10 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
   return (
     <>
-      <header className="sticky top-0 z-40 frost-strong border-b border-border">
+      <header className={cn(
+        "fixed inset-x-0 top-0 z-40 border-b border-border bg-white transition-shadow duration-300",
+        scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm",
+      )}>
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
           {/* Mobile menu button */}
           <button
@@ -264,6 +275,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
           </div>
         </form>
       </header>
+      <div className="h-[7.25rem] md:h-16" aria-hidden="true" />
 
       <MobileDrawer publicMode={publicMode} />
     </>
