@@ -22,7 +22,7 @@ export const Route = createFileRoute("/categories/")({
 function CategoriesPage() {
   return (
     <div className="min-h-screen lagoon-wash">
-      <MarketplaceHeader />
+      <MarketplaceHeader publicMode />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <SectionHeader eyebrow="Browse" title="All Categories" description="Shop across 22 categories from trusted Nigerian sellers." />

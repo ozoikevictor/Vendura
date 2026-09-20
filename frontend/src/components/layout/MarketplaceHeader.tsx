@@ -16,7 +16,7 @@ import { logout } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStorefrontStore } from "@/store/storefront";
 
-export function MarketplaceHeader() {
+export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean }) {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
   const cartCount = useCartStore((s) => s.getActiveItems().length);
   const wishlistCount = useWishlistStore((s) => s.ids.length);
@@ -30,11 +30,12 @@ export function MarketplaceHeader() {
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: () => getNotifications(user!.id),
-    enabled: user?.role === "customer",
+    enabled: !publicMode && user?.role === "customer",
     refetchInterval: 10_000,
     refetchOnWindowFocus: "always",
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
+  const storefrontSlug = publicMode ? null : activeStoreSlug;
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -73,8 +74,8 @@ export function MarketplaceHeader() {
 
           {/* Logo */}
           <Link
-            to={activeStoreSlug ? "/store/$storeSlug" : "/"}
-            params={activeStoreSlug ? { storeSlug: activeStoreSlug } : undefined}
+            to={storefrontSlug ? "/store/$storeSlug" : "/"}
+            params={storefrontSlug ? { storeSlug: storefrontSlug } : undefined}
             className="flex shrink-0 items-center gap-2"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -118,6 +119,14 @@ export function MarketplaceHeader() {
 
           {/* Actions */}
           <div className="ml-auto flex items-center gap-1">
+            {publicMode ? <>
+              <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
+                Log in
+              </Link>
+              <Link to="/vendor-register" className="hidden rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:inline-flex">
+                Start selling
+              </Link>
+            </> : <>
             {/* Wishlist */}
             <Link
               to="/wishlist"
@@ -228,6 +237,7 @@ export function MarketplaceHeader() {
                 </div>
               )}
             </div>
+            </>}
           </div>
         </div>
 
@@ -246,7 +256,7 @@ export function MarketplaceHeader() {
         </form>
       </header>
 
-      <MobileDrawer />
+      <MobileDrawer publicMode={publicMode} />
     </>
   );
 }

@@ -47,7 +47,7 @@ function CategoryDetailPage() {
   if (!category) {
     return (
       <div className="min-h-screen lagoon-wash">
-        <MarketplaceHeader />
+        <MarketplaceHeader publicMode />
         <div className="mx-auto max-w-7xl px-4 py-12">
           <EmptyState title="Category not found" description="This category doesn't exist." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">All categories</Link>} />
         </div>
@@ -61,7 +61,7 @@ function CategoryDetailPage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <MarketplaceHeader />
+      <MarketplaceHeader publicMode />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}

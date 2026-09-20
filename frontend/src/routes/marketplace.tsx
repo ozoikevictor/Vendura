@@ -13,6 +13,8 @@ import { getCategories } from "@/services/categoryService";
 import { getStores } from "@/services/storeService";
 import type { ProductQuery } from "@/types";
 import { formatNaira } from "@/utils/format";
+import { products as demoProducts } from "@/data/products";
+import { stores as demoStores } from "@/data/stores";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -53,8 +55,10 @@ function MarketplacePage() {
     queryFn: getStores,
   });
 
-  const products = data?.items ?? [];
-  const total = data?.total ?? 0;
+  const liveProducts = data?.items ?? [];
+  const showingDemo = !isLoading && liveProducts.length === 0 && Object.keys(query).every((key) => key === "page" || key === "pageSize");
+  const products = showingDemo ? demoProducts.slice(0, 24) : liveProducts;
+  const total = showingDemo ? products.length : (data?.total ?? 0);
   const totalPages = Math.ceil(total / (query.pageSize ?? 24));
 
   function update(patch: Record<string, unknown>) {
@@ -73,7 +77,7 @@ function MarketplacePage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <MarketplaceHeader />
+      <MarketplaceHeader publicMode />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <SectionHeader eyebrow="Shop" title="Marketplace" description={`${total} products from verified vendors`} />
@@ -191,7 +195,7 @@ function MarketplacePage() {
               <>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                   {products.map((p) => {
-                    const store = stores.find((s) => s.id === p.storeId);
+                    const store = stores.find((s) => s.id === p.storeId) ?? demoStores.find((s) => s.id === p.storeId);
                     return (
                       <ProductCard
                         key={p.id}
