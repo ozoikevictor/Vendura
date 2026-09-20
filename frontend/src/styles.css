@@ -276,6 +276,18 @@
   overflow: hidden;
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 650ms var(--ease-lagoon), transform 650ms var(--ease-lagoon);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .scroll-reveal { opacity: 1; transform: none; transition: none; }
 }

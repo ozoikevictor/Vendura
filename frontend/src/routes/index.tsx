@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import {
   ArrowRight, Store, ShieldCheck, Truck, Wallet,
   MessageSquare, BarChart3, ShoppingBasket, CheckCircle2,
+  UserPlus, PackagePlus, Share2, Link as LinkIcon, LogIn,
 } from "lucide-react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -13,6 +14,7 @@ import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
 import { useStorefrontStore } from "@/store/storefront";
+import { ScrollReveal } from "@/components/shared/ScrollReveal";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -116,6 +118,7 @@ function Index() {
       </section>
 
       {/* Popular Categories */}
+      <ScrollReveal>
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <SectionHeader
           eyebrow="Browse"
@@ -149,21 +152,58 @@ function Index() {
             ))}
         </div>
       </section>
+      </ScrollReveal>
+
+      {/* Seller Account Steps */}
+      <ScrollReveal>
+      <section className="border-y border-border bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <SectionHeader
+            eyebrow="Start selling"
+            title="Create Your Seller Account"
+            description="Go from registration to a shareable online store in four clear steps."
+            className="justify-center text-center [&_div]:items-center"
+          />
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: UserPlus, title: "Create your account", desc: "Enter your personal and business details to open a secure seller account." },
+              { icon: Store, title: "Set up your store", desc: "Add your store name, description, location, logo, and delivery information." },
+              { icon: PackagePlus, title: "Add your products", desc: "Upload product photos, prices, stock, categories, and negotiation settings." },
+              { icon: Share2, title: "Share and sell", desc: "Copy your unique storefront link and send it to customers anywhere." },
+            ].map((step, index) => (
+              <div key={step.title} className="relative rounded-xl border border-border bg-background p-5 shadow-card transition-transform duration-300 hover:-translate-y-1">
+                <span className="absolute right-4 top-4 font-mono text-2xl font-bold text-primary/20">0{index + 1}</span>
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-soft text-primary"><step.icon className="h-5 w-5" /></div>
+                <h3 className="mt-4 font-semibold text-foreground">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link to="/vendor-register" className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+              Create seller account <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+      </ScrollReveal>
 
       {/* How Vendura Works */}
+      <ScrollReveal>
       <section className="bg-card border-y border-border">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="How it works"
-            title="How Vendura Works"
-            description="Buy and sell in three simple steps."
+            title="How Customers Shop"
+            description="Customers can browse first, then create an account when they are ready to order."
             className="justify-center text-center [&_div]:items-center"
           />
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: ShoppingBasket, title: "Browse & Buy", desc: "Search across thousands of products from verified vendors. Filter by category, price, and location." },
-              { icon: MessageSquare, title: "Negotiate & Chat", desc: "Message sellers directly. Make offers, counter, and agree on a price — all within the chat." },
-              { icon: Truck, title: "Delivered to You", desc: "Track every order with real-time status updates. Pay with card, bank transfer, or on delivery." },
+              { icon: LinkIcon, title: "Open the store link", desc: "Open the unique storefront link shared by the seller." },
+              { icon: ShoppingBasket, title: "Browse and add items", desc: "View products and prepare a cart without creating an account first." },
+              { icon: LogIn, title: "Create or log in", desc: "At checkout, create a customer account or log in. Your cart remains ready." },
+              { icon: Truck, title: "Pay and track", desc: "Complete payment, follow delivery updates, and rate the order after completion." },
             ].map((step, i) => (
               <div key={i} className="relative rounded-xl border border-border bg-background p-6">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary">
@@ -179,8 +219,10 @@ function Index() {
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* Why Sell With Vendura */}
+      <ScrollReveal>
       <section className="bg-primary text-primary-foreground">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="grid gap-8 lg:grid-cols-2">
@@ -220,8 +262,38 @@ function Index() {
           </div>
         </div>
       </section>
+      </ScrollReveal>
+
+      {/* Trust and Protection */}
+      <ScrollReveal>
+      <section className="border-y border-border bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <SectionHeader
+            eyebrow="Built for trust"
+            title="Protection at Every Step"
+            description="Practical safeguards for sellers, customers, orders, and payments."
+            className="justify-center text-center [&_div]:items-center"
+          />
+          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: ShieldCheck, title: "Verified sellers", desc: "Store verification helps customers recognize approved Vendura businesses." },
+              { icon: Wallet, title: "Protected payments", desc: "Payment status, fees, balances, and seller earnings remain visible and traceable." },
+              { icon: MessageSquare, title: "Clear communication", desc: "Customers and sellers can keep order conversations together in one place." },
+              { icon: Truck, title: "Order tracking", desc: "Both sides can follow every order from confirmation through delivery." },
+            ].map((item) => (
+              <div key={item.title} className="border-l-2 border-primary px-5 py-2">
+                <item.icon className="h-6 w-6 text-primary" />
+                <h3 className="mt-3 font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      </ScrollReveal>
 
       {/* Pricing Preview */}
+      <ScrollReveal>
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeader
           eyebrow="Pricing"
@@ -263,6 +335,7 @@ function Index() {
           ))}
         </div>
       </section>
+      </ScrollReveal>
 
       <SiteFooter publicMode />
     </div>
