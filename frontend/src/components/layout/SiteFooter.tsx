@@ -13,7 +13,7 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
   ];
 
   return (
-    <footer className="border-t border-border bg-card mt-16">
+    <footer className="mt-20 border-t-4 border-primary/30 bg-[#17211b] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
@@ -22,11 +22,11 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Store className="h-5 w-5" />
               </div>
-              <span className="font-display text-xl font-bold tracking-tight text-foreground">
+              <span className="font-display text-xl font-bold tracking-tight text-white">
                 Vendura
               </span>
             </Link>
-            <p className="mt-3 max-w-xs text-sm text-muted-foreground">
+            <p className="mt-3 max-w-xs text-sm leading-6 text-white/65">
               Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere —
               from phones to fashion, building materials to baby products.
             </p>
@@ -34,21 +34,21 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
               <a
                 href="#"
                 aria-label="Twitter"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
               >
                 𝕏
               </a>
               <a
                 href="#"
                 aria-label="Instagram"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
               >
                 ◎
               </a>
               <a
                 href="#"
                 aria-label="Facebook"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-primary"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
               >
                 f
               </a>
@@ -57,14 +57,14 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
 
           {/* Categories */}
           <div>
-            <h3 className="font-semibold text-foreground text-sm">Categories</h3>
+            <h3 className="text-sm font-semibold text-white">Categories</h3>
             <ul className="mt-3 space-y-2">
               {popularCats.map((c) => (
                 <li key={c.id}>
                   <Link
                     to={publicMode ? "/explore" : "/categories/$slug"}
                     params={publicMode ? undefined : { slug: c.slug }}
-                    className="text-sm text-muted-foreground hover:text-primary"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
                   >
                     {c.name}
                   </Link>
@@ -75,20 +75,20 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
 
           {/* Seller resources */}
           <div>
-            <h3 className="font-semibold text-foreground text-sm">{publicMode ? "For Sellers" : "Top Stores"}</h3>
+            <h3 className="text-sm font-semibold text-white">{publicMode ? "For Sellers" : "Top Stores"}</h3>
             <ul className="mt-3 space-y-2">
               {publicMode ? (
                 <>
-                  <li><Link to="/vendor-register" className="text-sm text-muted-foreground hover:text-primary">Start selling</Link></li>
-                  <li><Link to="/login" className="text-sm text-muted-foreground hover:text-primary">Seller login</Link></li>
-                  <li><Link to="/explore" className="text-sm text-muted-foreground hover:text-primary">Open a store</Link></li>
+                  <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>
+                  <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>
+                  <li><Link to="/explore" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
                 </>
               ) : popularStores.map((s) => (
                 <li key={s.slug}>
                   <Link
                     to="/store/$storeSlug"
                     params={{ storeSlug: s.slug }}
-                    className="text-sm text-muted-foreground hover:text-primary"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
                   >
                     {s.name}
                   </Link>
@@ -99,22 +99,22 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
 
           {/* Links */}
           <div>
-            <h3 className="font-semibold text-foreground text-sm">Company</h3>
+            <h3 className="text-sm font-semibold text-white">Company</h3>
             <ul className="mt-3 space-y-2">
-              <li><Link to="/vendor-register" className="text-sm text-muted-foreground hover:text-primary">Become a Seller</Link></li>
-              <li><Link to={publicMode ? "/explore" : "/marketplace"} className="text-sm text-muted-foreground hover:text-primary">Marketplace</Link></li>
-              <li><Link to={publicMode ? "/explore" : "/categories"} className="text-sm text-muted-foreground hover:text-primary">All Categories</Link></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Help Center</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Privacy</a></li>
+              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Become a Seller</Link></li>
+              <li><Link to={publicMode ? "/explore" : "/marketplace"} className="text-sm text-white/65 transition-colors hover:text-primary">Marketplace</Link></li>
+              <li><Link to={publicMode ? "/explore" : "/categories"} className="text-sm text-white/65 transition-colors hover:text-primary">All Categories</Link></li>
+              <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Help Center</a></li>
+              <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Privacy</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row">
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
+          <p className="text-xs text-white/50">
             © 2026 Vendura. Made in Lagos, Nigeria.
           </p>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-4 text-xs text-white/50">
             <span>Paystack</span>
             <span>·</span>
             <span>Flutterwave</span>
