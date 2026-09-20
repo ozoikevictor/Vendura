@@ -32,7 +32,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
       <main className="flex-1">
         <div className="grid min-h-[calc(100vh-65px)] lg:grid-cols-[minmax(380px,0.9fr)_minmax(560px,1.1fr)]">
-          <aside className="relative min-h-64 overflow-hidden lg:min-h-full">
+          <aside className="relative min-h-64 overflow-hidden lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:min-h-0 lg:self-start">
             <img src={authBanner} alt="A Vendura seller preparing products for customers" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-foreground/70" />
             <div className="relative flex h-full min-h-64 flex-col justify-end px-6 py-8 text-white sm:px-10 lg:px-12 lg:py-14">
