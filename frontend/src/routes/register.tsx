@@ -5,6 +5,7 @@ import * as authService from "@/services/authService";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
+import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.set);
+  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -55,7 +57,8 @@ function RegisterPage() {
       setAuth(user);
       if (user.emailVerified) {
         toast.success("Account created successfully!");
-        navigate({ to: "/marketplace" });
+        if (activeStoreSlug) navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug } });
+        else navigate({ to: "/marketplace" });
       } else {
         toast.success("Account created! Verify your email.");
         navigate({ to: "/verify-email" });

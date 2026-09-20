@@ -6,14 +6,8 @@ import {
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { ProductCard } from "@/components/shared/ProductCard";
-import { StoreCard } from "@/components/shared/StoreCard";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
-import { useQuery } from "@tanstack/react-query";
-import { getFeaturedProducts } from "@/services/productService";
-import { getFeaturedStores } from "@/services/storeService";
 import { categories, popularCategorySlugs } from "@/data/categories";
-import { stores } from "@/data/stores";
 import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
@@ -33,15 +27,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { data: featuredProducts } = useQuery({
-    queryKey: ["featured-products"],
-    queryFn: () => getFeaturedProducts(10),
-  });
-  const { data: featuredStores } = useQuery({
-    queryKey: ["featured-stores"],
-    queryFn: () => getFeaturedStores(6),
-  });
-
   return (
     <div className="min-h-screen lagoon-wash">
       <PublicHeader />
@@ -112,8 +97,8 @@ function Index() {
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-foreground">Order delivered</p>
-                    <p className="text-xs text-muted-foreground">TechNaija · Aurora 5G</p>
+                    <p className="text-xs font-semibold text-foreground">Built for every seller</p>
+                    <p className="text-xs text-muted-foreground">Your store, products, and customers</p>
                   </div>
                 </div>
               </div>
@@ -158,32 +143,6 @@ function Index() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <SectionHeader
-          eyebrow="Handpicked"
-          title="Featured Products"
-          description="Top-rated items from verified vendors."
-          action={
-            <Link to="/marketplace" className="hidden text-sm font-semibold text-primary hover:underline sm:block">
-              View all →
-            </Link>
-          }
-        />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-          {featuredProducts?.map((p) => {
-            const store = stores.find((s) => s.id === p.storeId);
-            return (
-              <ProductCard
-                key={p.id}
-                product={p}
-                {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
-              />
-            );
-          })}
-        </div>
-      </section>
-
       {/* How Vendura Works */}
       <section className="bg-card border-y border-border">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -211,20 +170,6 @@ function Index() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Featured Stores */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <SectionHeader
-          eyebrow="Trusted sellers"
-          title="Featured Stores"
-          description="Verified vendors delivering quality across Nigeria."
-        />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredStores?.map((s) => (
-            <StoreCard key={s.id} store={s} />
-          ))}
         </div>
       </section>
 

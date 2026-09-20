@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Store, Menu } from "lucide-react";
 import { useUIStore } from "@/store/ui";
+import { MobileDrawer } from "./MobileDrawer";
 
 /**
  * Minimal header for the landing page and auth screens.
@@ -9,6 +10,7 @@ export function PublicHeader() {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
 
   return (
+    <>
     <header className="sticky top-0 z-40 frost-strong border-b border-border">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
@@ -56,5 +58,7 @@ export function PublicHeader() {
         </div>
       </div>
     </header>
+    <MobileDrawer />
+    </>
   );
 }

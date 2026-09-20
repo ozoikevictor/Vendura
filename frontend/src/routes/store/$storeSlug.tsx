@@ -15,6 +15,7 @@ import { getProductsByStore } from "@/services/productService";
 import { products as allProducts } from "@/data/products";
 import { formatNaira } from "@/utils/format";
 import fallbackBanner from "@/assets/store-banner-1.jpg";
+import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/store/$storeSlug")({
   head: ({ params }) => ({
@@ -33,6 +34,7 @@ function StorePage() {
   const { storeSlug } = Route.useParams();
   const [bannerFailed, setBannerFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const setActiveStore = useStorefrontStore((state) => state.setActiveStore);
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["store", storeSlug],
@@ -44,6 +46,10 @@ function StorePage() {
     queryFn: () => store ? getProductsByStore(store.id) : Promise.resolve([]),
     enabled: !!store,
   });
+
+  useEffect(() => {
+    setActiveStore(storeSlug);
+  }, [setActiveStore, storeSlug]);
 
   useEffect(() => {
     if (!store) return;

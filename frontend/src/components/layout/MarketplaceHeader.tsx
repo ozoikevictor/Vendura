@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getNotifications } from "@/services/notificationService";
 import { logout } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
+import { useStorefrontStore } from "@/store/storefront";
 
 export function MarketplaceHeader() {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
@@ -25,6 +26,7 @@ export function MarketplaceHeader() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const queryClient = useQueryClient();
+  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: () => getNotifications(user!.id),
@@ -70,7 +72,11 @@ export function MarketplaceHeader() {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex shrink-0 items-center gap-2">
+          <Link
+            to={activeStoreSlug ? "/store/$storeSlug" : "/"}
+            params={activeStoreSlug ? { storeSlug: activeStoreSlug } : undefined}
+            className="flex shrink-0 items-center gap-2"
+          >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-5 w-5" />
             </div>
