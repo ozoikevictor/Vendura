@@ -93,11 +93,15 @@ const storeSettingsSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   tagline: z.string().trim().max(160).optional(),
   description: z.string().trim().min(10).max(2000).optional(),
+  location: z.object({ city: z.string().trim().min(2).max(100), state: z.string().trim().min(2).max(100) }).optional(),
   logoUrl: z.string().refine(
     (value) => value === "" || /^https?:\/\//i.test(value) || /^data:image\/(jpeg|png|webp);base64,/i.test(value),
     "Logo must be an HTTP image URL or an uploaded JPG, PNG, or WebP image"
   ).optional(),
-  bannerUrl: z.string().url().or(z.literal("")).optional(),
+  bannerUrl: z.string().refine(
+    (value) => value === "" || /^https?:\/\//i.test(value) || /^data:image\/(jpeg|png|webp);base64,/i.test(value),
+    "Banner must be an HTTP image URL or an uploaded JPG, PNG, or WebP image"
+  ).optional(),
   allowNegotiation: z.boolean().optional(),
   policies: z.object({ returns: z.string().max(1000), shipping: z.string().max(1000), warranty: z.string().max(1000).optional() }).optional(),
   contact: z.object({ phone: z.string().optional(), email: z.string().email().optional(), whatsapp: z.string().optional() }).optional()

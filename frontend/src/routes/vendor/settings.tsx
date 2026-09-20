@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Bell, ImagePlus, KeyRound, Link as LinkIcon, Shield, Store, Truck, User, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { changePassword, updateProfile } from "@/services/authService";
+import { changePassword, nigerianStates, updateProfile } from "@/services/authService";
 import { updateVendorStore, getVendorStore } from "@/services/storeService";
 import {
   getBankAccount,
@@ -49,6 +49,9 @@ function VendorSettingsPage() {
     name: "",
     description: "",
     logoUrl: "",
+    bannerUrl: "",
+    city: "",
+    state: "",
     allowNegotiation: true,
     returnPolicy: "",
     shippingPolicy: "",
@@ -58,6 +61,8 @@ function VendorSettingsPage() {
   const [preferences, setPreferences] = useState(defaultPreferences);
   const [logoUrlInput, setLogoUrlInput] = useState("");
   const [logoError, setLogoError] = useState("");
+  const [bannerUrlInput, setBannerUrlInput] = useState("");
+  const [bannerError, setBannerError] = useState("");
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["vendor-store", user?.storeId],
@@ -80,6 +85,9 @@ function VendorSettingsPage() {
       name: store.name,
       description: store.description,
       logoUrl: store.logoUrl ?? "",
+      bannerUrl: store.bannerUrl ?? "",
+      city: store.location.city,
+      state: store.location.state,
       allowNegotiation: store.allowNegotiation,
       returnPolicy: store.policies?.returns ?? "",
       shippingPolicy: store.policies?.shipping ?? "",
@@ -107,6 +115,8 @@ function VendorSettingsPage() {
         name: storeForm.name,
         description: storeForm.description,
         logoUrl: storeForm.logoUrl,
+        bannerUrl: storeForm.bannerUrl,
+        location: { city: storeForm.city, state: storeForm.state },
         allowNegotiation: storeForm.allowNegotiation,
         policies: { returns: storeForm.returnPolicy, shipping: storeForm.shippingPolicy },
       });
@@ -149,6 +159,38 @@ function VendorSettingsPage() {
     }
     setStoreForm((value) => ({ ...value, logoUrl }));
     setLogoError("");
+  }
+
+  async function uploadBanner(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setBannerError("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setBannerError("Choose an image smaller than 8 MB.");
+      return;
+    }
+    try {
+      const bannerUrl = await resizeImage(file, 1600, 0.78);
+      setStoreForm((value) => ({ ...value, bannerUrl }));
+      setBannerUrlInput("");
+      setBannerError("");
+    } catch {
+      setBannerError("This picture could not be opened. Try another image.");
+    }
+  }
+
+  function applyBannerUrl() {
+    const bannerUrl = bannerUrlInput.trim();
+    if (!/^https?:\/\//i.test(bannerUrl)) {
+      setBannerError("Enter a complete link beginning with http:// or https://.");
+      return;
+    }
+    setStoreForm((value) => ({ ...value, bannerUrl }));
+    setBannerError("");
   }
 
   async function savePassword() {
@@ -246,6 +288,32 @@ function VendorSettingsPage() {
           </div>
           <TextArea label="Description" value={storeForm.description} onChange={(description) => setStoreForm((value) => ({ ...value, description }))} />
           <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="City" value={storeForm.city} onChange={(city) => setStoreForm((value) => ({ ...value, city }))} placeholder="e.g. Kaduna" />
+            <label className="space-y-1 text-sm font-medium text-foreground">State
+              <select value={storeForm.state} onChange={(event) => setStoreForm((value) => ({ ...value, state: event.target.value }))} className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+                <option value="">Select a state</option>
+                {nigerianStates.map((state) => <option key={state} value={state}>{state}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="space-y-3 border-t border-border pt-4">
+            <p className="text-sm font-medium text-foreground">Storefront cover image</p>
+            {storeForm.bannerUrl ? <div className="relative aspect-[3/1] w-full max-w-3xl overflow-hidden rounded-lg border border-border bg-background">
+              <img src={storeForm.bannerUrl} alt="Store cover preview" className="h-full w-full object-cover" onLoad={() => setBannerError("")} onError={() => setBannerError("This cover-image link could not be loaded. Upload a picture or try another link.")} />
+              <button type="button" aria-label="Remove cover image" onClick={() => { setStoreForm((value) => ({ ...value, bannerUrl: "" })); setBannerUrlInput(""); setBannerError(""); }} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 shadow"><X className="h-4 w-4" /></button>
+            </div> : <div className="flex aspect-[3/1] w-full max-w-3xl items-center justify-center rounded-lg border border-dashed border-border bg-background text-muted-foreground"><ImagePlus className="h-8 w-8" /></div>}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
+              <ImagePlus className="h-4 w-4" /> Upload cover image
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadBanner} className="sr-only" />
+            </label>
+            <div className="flex max-w-3xl flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1"><LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input type="url" value={bannerUrlInput} onChange={(event) => { setBannerUrlInput(event.target.value); setBannerError(""); }} placeholder="Or paste a cover image link" className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring" /></div>
+              <button type="button" onClick={applyBannerUrl} className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent">Use URL</button>
+            </div>
+            {bannerError && <p role="alert" className="text-xs text-destructive">{bannerError}</p>}
+            <p className="text-xs text-muted-foreground">Use a wide picture at least 1600 × 500 pixels for the clearest full-width storefront cover.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
             <TextArea label="Return policy" value={storeForm.returnPolicy} onChange={(returnPolicy) => setStoreForm((value) => ({ ...value, returnPolicy }))} />
             <TextArea label="Shipping policy" value={storeForm.shippingPolicy} onChange={(shippingPolicy) => setStoreForm((value) => ({ ...value, shippingPolicy }))} />
           </div>
@@ -313,7 +381,7 @@ function SaveButton({ label = "Save Changes", saving, onClick }: { label?: strin
   return <button type="button" onClick={onClick} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : label}</button>;
 }
 
-function resizeImage(file: File, maxSize: number) {
+function resizeImage(file: File, maxSize: number, quality = 0.82) {
   return new Promise<string>((resolve, reject) => {
     const image = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -330,7 +398,7 @@ function resizeImage(file: File, maxSize: number) {
       }
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(objectUrl);
-      resolve(canvas.toDataURL("image/webp", 0.82));
+      resolve(canvas.toDataURL("image/webp", quality));
     };
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
