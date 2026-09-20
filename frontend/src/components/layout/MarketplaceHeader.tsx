@@ -37,6 +37,8 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
   const storefrontSlug = publicMode ? null : activeStoreSlug;
+  const isCustomer = user?.role === "customer";
+  const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 8);
@@ -64,6 +66,33 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
       navigate({ to: "/login", replace: true });
       setLoggingOut(false);
     }
+  };
+
+  const handleCustomerLogin = async () => {
+    if (isSellerPreview) {
+      await handleLogout();
+      return;
+    }
+    setAccountOpen(false);
+    navigate({ to: "/login" });
+  };
+
+  const handleCustomerRegistration = async () => {
+    if (isSellerPreview) {
+      setLoggingOut(true);
+      try {
+        await logout();
+      } finally {
+        clearAuth();
+        queryClient.clear();
+        setAccountOpen(false);
+        navigate({ to: "/register", replace: true });
+        setLoggingOut(false);
+      }
+      return;
+    }
+    setAccountOpen(false);
+    navigate({ to: "/register" });
   };
 
   return (
@@ -176,13 +205,13 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
             </Link>
 
             {/* Orders */}
-            <Link
-              to="/customer/orders"
-              aria-label="Orders"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:flex"
-            >
-              <Package className="h-5 w-5" />
-            </Link>
+            {isCustomer && <Link
+                to="/customer/orders"
+                aria-label="Orders"
+                className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:flex"
+              >
+                <Package className="h-5 w-5" />
+              </Link>}
 
             {user?.role === "customer" && (
               <Link
@@ -200,13 +229,13 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
             )}
 
             {/* Messages */}
-            <Link
-              to="/messages"
-              aria-label="Messages"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:flex"
-            >
-              <MessageSquare className="h-5 w-5" />
-            </Link>
+            {isCustomer && <Link
+                to="/messages"
+                aria-label="Messages"
+                className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:flex"
+              >
+                <MessageSquare className="h-5 w-5" />
+              </Link>}
 
             {/* Account */}
             <div className="relative">
@@ -217,29 +246,24 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                  {user?.fullName?.split(" ").map((n) => n[0]).join("").slice(0, 2) ?? "?"}
+                  {isCustomer ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2) : <User className="h-4 w-4" />}
                 </span>
-                {user && (
+                {isCustomer && (
                   <span className="hidden max-w-24 truncate sm:inline">{user.fullName}</span>
                 )}
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
               {accountOpen && (
                 <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost z-50">
-                  {user ? <><div className="px-3 py-2 border-b border-border mb-1">
+                  {isCustomer ? <><div className="px-3 py-2 border-b border-border mb-1">
                     <p className="text-sm font-semibold text-foreground">{user?.fullName}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    {user?.role === "customer" && (
-                      <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
-                    )}
+                    <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
                   <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />}>My Orders</MenuItem>
-                  {user?.role === "customer" && <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>}
+                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>
                   <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />}>Messages</MenuItem>
                   <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />}>Wishlist</MenuItem>
-                  {(user?.role === "vendor" || user?.role === "admin") && (
-                    <MenuItem to="/vendor" icon={<Store className="h-4 w-4" />}>Vendor Dashboard</MenuItem>
-                  )}
                   <div className="my-1 border-t border-border" />
                   <button
                     type="button"
@@ -250,8 +274,22 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     <LogOut className="h-4 w-4" />
                     {loggingOut ? "Logging out..." : "Log out"}
                   </button>
+                  </> : isSellerPreview ? <>
+                    <div className="mb-1 border-b border-border px-3 py-2">
+                      <p className="text-sm font-semibold text-foreground">Storefront preview</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">Customers sign in with their own account.</p>
+                    </div>
+                    <MenuItem to="/vendor" icon={<Store className="h-4 w-4" />}>Vendor Dashboard</MenuItem>
+                    <button type="button" onClick={handleCustomerLogin} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+                      <User className="h-4 w-4" /> Customer login
+                    </button>
+                    <button type="button" onClick={handleCustomerRegistration} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+                      <User className="h-4 w-4" /> Create customer account
+                    </button>
                   </> : <>
-                    <MenuItem to="/login" icon={<User className="h-4 w-4" />}>Log in</MenuItem>
+                    <button type="button" onClick={handleCustomerLogin} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+                      <User className="h-4 w-4" /> Customer login
+                    </button>
                     <MenuItem to="/register" icon={<User className="h-4 w-4" />}>Create account</MenuItem>
                   </>}
                 </div>

@@ -37,6 +37,8 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const activeStoreSlug = publicMode ? null : rememberedStoreSlug;
+  const isCustomer = user?.role === "customer";
+  const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
   // Scroll lock with guaranteed cleanup — never freezes the page
   useEffect(() => {
@@ -78,6 +80,33 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
       navigate({ to: "/login", replace: true });
       setLoggingOut(false);
     }
+  };
+
+  const handleCustomerLogin = async () => {
+    if (isSellerPreview) {
+      await handleLogout();
+      return;
+    }
+    close();
+    navigate({ to: "/login" });
+  };
+
+  const handleCustomerRegistration = async () => {
+    if (isSellerPreview) {
+      setLoggingOut(true);
+      try {
+        await logout();
+      } finally {
+        clearAuth();
+        queryClient.clear();
+        close();
+        navigate({ to: "/register", replace: true });
+        setLoggingOut(false);
+      }
+      return;
+    }
+    close();
+    navigate({ to: "/register" });
   };
 
   return (
@@ -160,13 +189,13 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
               <DrawerLink to="/wishlist" onClick={close} icon={<Heart className="h-4 w-4" />} badge={wishlistCount}>
                 Wishlist
               </DrawerLink>
-              <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
-                My Orders
-              </DrawerLink>
+              {isCustomer && <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
+                  My Orders
+                </DrawerLink>}
               {user?.role === "customer" && <DrawerLink to="/customer/notifications" onClick={close} icon={<Bell className="h-4 w-4" />}>Notifications</DrawerLink>}
-              <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
-                Messages
-              </DrawerLink>
+              {isCustomer && <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
+                  Messages
+                </DrawerLink>}
             </>}
           </nav>
 
@@ -203,16 +232,23 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>Log in</DrawerLink>
                 <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
                 <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Start selling</DrawerLink>
-              </> : user ? <>
+              </> : isCustomer ? <>
                 <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
                   <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
-                  <p className="text-xs capitalize text-muted-foreground">{user.role} account</p>
+                  <p className="text-xs text-muted-foreground">Customer account</p>
                 </div>
-                {(user.role === "vendor" || user.role === "admin") && <DrawerLink to="/vendor" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Vendor Dashboard</DrawerLink>}
-                {user.role === "customer" && <DrawerLink to="/customer/orders" onClick={close} icon={<User className="h-4 w-4" />}>Customer Account</DrawerLink>}
+                <DrawerLink to="/customer/orders" onClick={close} icon={<User className="h-4 w-4" />}>Customer Account</DrawerLink>
                 <button type="button" onClick={handleLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-60"><LogOut className="h-4 w-4" />{loggingOut ? "Logging out..." : "Log out"}</button>
+              </> : isSellerPreview ? <>
+                <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
+                  <p className="text-sm font-semibold text-foreground">Storefront preview</p>
+                  <p className="text-xs text-muted-foreground">Customers use their own account here.</p>
+                </div>
+                <DrawerLink to="/vendor" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Vendor Dashboard</DrawerLink>
+                <button type="button" onClick={handleCustomerLogin} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"><LogIn className="h-4 w-4" />{loggingOut ? "Switching..." : "Customer login"}</button>
+                <button type="button" onClick={handleCustomerRegistration} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"><User className="h-4 w-4" />Create customer account</button>
               </> : <>
-                <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>Customer login</DrawerLink>
+                <button type="button" onClick={handleCustomerLogin} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"><LogIn className="h-4 w-4" />Customer login</button>
                 <DrawerLink to="/login" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Vendor login</DrawerLink>
                 <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
                 <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Create seller account</DrawerLink>
