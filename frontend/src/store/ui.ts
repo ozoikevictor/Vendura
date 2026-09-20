@@ -7,6 +7,10 @@ interface UIState {
   /** Vendor sidebar mobile state */
   vendorSidebarOpen: boolean;
   setVendorSidebarOpen: (open: boolean) => void;
+  vendorSidebarCollapsed: boolean;
+  setVendorSidebarCollapsed: (collapsed: boolean) => void;
+  adminSidebarCollapsed: boolean;
+  setAdminSidebarCollapsed: (collapsed: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -14,4 +18,8 @@ export const useUIStore = create<UIState>((set) => ({
   setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
   vendorSidebarOpen: false,
   setVendorSidebarOpen: (vendorSidebarOpen) => set({ vendorSidebarOpen }),
+  vendorSidebarCollapsed: false,
+  setVendorSidebarCollapsed: (vendorSidebarCollapsed) => set({ vendorSidebarCollapsed }),
+  adminSidebarCollapsed: false,
+  setAdminSidebarCollapsed: (adminSidebarCollapsed) => set({ adminSidebarCollapsed }),
 }));

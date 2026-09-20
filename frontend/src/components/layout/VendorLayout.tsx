@@ -19,6 +19,8 @@ import {
   Menu,
   X,
   Search,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useAuthStore } from "@/store/auth";
@@ -44,7 +46,12 @@ const navItems = [
 ] as const;
 
 export function VendorLayout() {
-  const { vendorSidebarOpen, setVendorSidebarOpen } = useUIStore();
+  const {
+    vendorSidebarOpen,
+    setVendorSidebarOpen,
+    vendorSidebarCollapsed,
+    setVendorSidebarCollapsed,
+  } = useUIStore();
   const navigate = useNavigate();
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
@@ -111,8 +118,8 @@ export function VendorLayout() {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <VendorSidebar />
+      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
+        <VendorSidebar collapsed={vendorSidebarCollapsed} storeSlug={store?.slug} />
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -135,9 +142,9 @@ export function VendorLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={cn("transition-[padding] duration-300", vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         {/* Top bar */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md sm:px-6">
+        <header className={cn("fixed left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64")}>
           <button
             type="button"
             aria-label="Open menu"
@@ -145,6 +152,21 @@ export function VendorLayout() {
             className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
           >
             <Menu className="h-5 w-5" />
+          </button>
+
+          <Link to="/vendor" className="flex min-w-0 items-center gap-2 lg:hidden">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Store className="h-4 w-4" /></span>
+            <span className="font-display text-base font-bold">Vendura</span>
+          </Link>
+
+          <button
+            type="button"
+            aria-label={vendorSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={vendorSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            onClick={() => setVendorSidebarCollapsed(!vendorSidebarCollapsed)}
+            className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground lg:flex"
+          >
+            {vendorSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           </button>
 
           <div className="relative hidden flex-1 max-w-md sm:block">
@@ -191,6 +213,7 @@ export function VendorLayout() {
             </div>
           </div>
         </header>
+        <div className="h-16" aria-hidden="true" />
 
         {/* Page content */}
         <main className="p-4 sm:p-6 lg:p-8">
@@ -201,7 +224,7 @@ export function VendorLayout() {
   );
 }
 
-function VendorSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigate?: () => void; collapsed?: boolean; storeSlug?: string }) {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const clearAuth = useAuthStore((state) => state.clear);
@@ -214,16 +237,16 @@ function VendorSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-4">
-        <Link to="/vendor" onClick={onNavigate} className="flex items-center gap-2">
+      <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "justify-between px-4")}>
+        <Link to="/vendor" onClick={onNavigate} className={cn("flex items-center", collapsed ? "flex-col gap-0.5" : "gap-2")} title={collapsed ? "Vendura dashboard" : undefined}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Store className="h-4 w-4" />
           </div>
-          <div>
-            <span className="font-display text-base font-bold tracking-tight text-sidebar-foreground">
+          <div className={cn(collapsed && "text-center")}>
+            <span className={cn("font-display font-bold tracking-tight text-sidebar-foreground", collapsed ? "text-[10px]" : "text-base")}>
               Vendura
             </span>
-            <p className="text-xs text-muted-foreground">Vendor Panel</p>
+            {!collapsed && <p className="text-xs text-muted-foreground">Vendor Panel</p>}
           </div>
         </Link>
         {onNavigate && (
@@ -251,28 +274,45 @@ function VendorSidebar({ onNavigate }: { onNavigate?: () => void }) {
               key={item.to}
               to={item.to}
               onClick={onNavigate}
+              title={collapsed ? item.label : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                collapsed && "justify-center gap-0 px-0",
                 active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              {!collapsed && item.label}
             </Link>
           );
         })}
       </nav>
 
+      {storeSlug && (
+        <div className="border-t border-sidebar-border p-2">
+          <Link
+            to="/store/$storeSlug"
+            params={{ storeSlug }}
+            title={collapsed ? "Storefront" : undefined}
+            className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground", collapsed && "justify-center gap-0 px-0")}
+          >
+            <Store className="h-4 w-4 shrink-0" />
+            {!collapsed && "Storefront"}
+          </Link>
+        </div>
+      )}
+
       {/* Logout */}
       <div className="border-t border-sidebar-border p-2">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive-soft hover:text-destructive"
+          title={collapsed ? "Logout" : undefined}
+          className={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive-soft hover:text-destructive", collapsed && "justify-center gap-0 px-0")}
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {!collapsed && "Logout"}
         </button>
       </div>
     </div>
