@@ -53,8 +53,13 @@ function RegisterPage() {
         password: form.password,
       });
       setAuth(user);
-      toast.success("Account created! Verify your email.");
-      navigate({ to: "/verify-email" });
+      if (user.emailVerified) {
+        toast.success("Account created successfully!");
+        navigate({ to: "/marketplace" });
+      } else {
+        toast.success("Account created! Verify your email.");
+        navigate({ to: "/verify-email" });
+      }
     } catch (error) {
       toast.error(getErrorMessage(error, "Could not create account"));
     } finally {

@@ -104,8 +104,13 @@ function VendorRegisterPage() {
         location: { city: form.city, state: form.state },
       });
       setAuth(user);
-      toast.success("Store created! Verify your email to continue.");
-      navigate({ to: "/verify-email" });
+      if (user.emailVerified) {
+        toast.success("Store created successfully!");
+        navigate({ to: "/vendor" });
+      } else {
+        toast.success("Store created! Verify your email to continue.");
+        navigate({ to: "/verify-email" });
+      }
     } catch (error) {
       const message = getErrorMessage(error, "Could not create store");
       setErrors({ form: message });

@@ -14,9 +14,11 @@ export const authRoutes = (db: Database) => {
   router.post("/register/customer", asyncRoute(async (req, res) => {
     const input = customerRegistration.parse(req.body);
     if (await db.findOne("users", { email: input.email })) throw new ApiError(409, "An account with that email already exists");
-    const verification = createVerification();
-    const user = await db.create("users", { id: id("user-customer"), ...input, passwordHash: await bcrypt.hash(input.password, 12), password: undefined, role: "customer", emailVerified: false, ...verification.patch, createdAt: now() } as Entity);
-    try { await sendVerification(user, verification.code); } catch { await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
+    const verification = config.REQUIRE_EMAIL_VERIFICATION ? createVerification() : undefined;
+    const user = await db.create("users", { id: id("user-customer"), ...input, passwordHash: await bcrypt.hash(input.password, 12), password: undefined, role: "customer", emailVerified: !config.REQUIRE_EMAIL_VERIFICATION, ...verification?.patch, createdAt: now() } as Entity);
+    if (verification) {
+      try { await sendVerification(user, verification.code); } catch { await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
+    }
     created(res, { user: publicUser(user), token: signToken({ id: user.id, role: "customer" }) });
   }));
   router.post("/register/vendor", asyncRoute(async (req, res) => {
@@ -28,10 +30,12 @@ export const authRoutes = (db: Database) => {
     const slug = await db.findOne("stores", { slug: baseSlug })
       ? `${baseSlug}-${storeId.slice(-6)}`
       : baseSlug;
-    const verification = createVerification();
-    const user = await db.create("users", { id: userId, fullName: input.fullName, email: input.email, phone: input.phone, passwordHash: await bcrypt.hash(input.password, 12), role: "vendor", storeId, emailVerified: false, ...verification.patch, createdAt: now() } as Entity);
+    const verification = config.REQUIRE_EMAIL_VERIFICATION ? createVerification() : undefined;
+    const user = await db.create("users", { id: userId, fullName: input.fullName, email: input.email, phone: input.phone, passwordHash: await bcrypt.hash(input.password, 12), role: "vendor", storeId, emailVerified: !config.REQUIRE_EMAIL_VERIFICATION, ...verification?.patch, createdAt: now() } as Entity);
     const store = await db.create("stores", { id: storeId, slug, name: input.businessName, description: input.storeDescription, ownerId: userId, categoryIds: [input.businessCategory], location: input.location, rating: 0, reviewCount: 0, productCount: 0, followers: 0, verified: false, allowNegotiation: false, policies: { returns: "", shipping: "" }, contact: { phone: input.phone, email: input.email }, joinedAt: now() });
-    try { await sendVerification(user, verification.code); } catch { await db.remove("stores", store.id); await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
+    if (verification) {
+      try { await sendVerification(user, verification.code); } catch { await db.remove("stores", store.id); await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
+    }
     created(res, {
       user: publicUser(user),
       store,

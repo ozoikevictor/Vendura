@@ -11,7 +11,8 @@ const schema = z.object({
   FRONTEND_URL: z.string().default("http://localhost:8080"),
   PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional(),
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
-  EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>")
+  EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>"),
+  REQUIRE_EMAIL_VERIFICATION: z.string().default("false").transform((value) => value.toLowerCase() === "true")
 });
 
 export const config = schema.parse(process.env);
