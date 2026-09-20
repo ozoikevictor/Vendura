@@ -23,10 +23,10 @@ export function PublicHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
-          <Link to="/marketplace" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Marketplace
           </Link>
-          <Link to="/categories" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Categories
           </Link>
           <Link to="/vendor-register" className="text-sm font-medium text-muted-foreground hover:text-foreground">

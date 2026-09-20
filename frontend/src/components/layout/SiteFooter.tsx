@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { categories } from "@/data/categories";
 
-export function SiteFooter() {
+export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
   const popularCats = categories.slice(0, 6);
   const popularStores = [
     { name: "TechNaija", slug: "technaija" },
@@ -62,8 +62,8 @@ export function SiteFooter() {
               {popularCats.map((c) => (
                 <li key={c.id}>
                   <Link
-                    to="/categories/$slug"
-                    params={{ slug: c.slug }}
+                    to={publicMode ? "/explore" : "/categories/$slug"}
+                    params={publicMode ? undefined : { slug: c.slug }}
                     className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {c.name}
@@ -80,8 +80,8 @@ export function SiteFooter() {
               {popularStores.map((s) => (
                 <li key={s.slug}>
                   <Link
-                    to="/store/$storeSlug"
-                    params={{ storeSlug: s.slug }}
+                    to={publicMode ? "/explore" : "/store/$storeSlug"}
+                    params={publicMode ? undefined : { storeSlug: s.slug }}
                     className="text-sm text-muted-foreground hover:text-primary"
                   >
                     {s.name}
@@ -96,8 +96,8 @@ export function SiteFooter() {
             <h3 className="font-semibold text-foreground text-sm">Company</h3>
             <ul className="mt-3 space-y-2">
               <li><Link to="/vendor-register" className="text-sm text-muted-foreground hover:text-primary">Become a Seller</Link></li>
-              <li><Link to="/marketplace" className="text-sm text-muted-foreground hover:text-primary">Marketplace</Link></li>
-              <li><Link to="/categories" className="text-sm text-muted-foreground hover:text-primary">All Categories</Link></li>
+              <li><Link to={publicMode ? "/explore" : "/marketplace"} className="text-sm text-muted-foreground hover:text-primary">Marketplace</Link></li>
+              <li><Link to={publicMode ? "/explore" : "/categories"} className="text-sm text-muted-foreground hover:text-primary">All Categories</Link></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Help Center</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Privacy</a></li>
             </ul>

@@ -57,7 +57,7 @@ function Index() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  to="/marketplace"
+                  to="/explore"
                   className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost"
                 >
                   Explore Marketplace
@@ -122,7 +122,7 @@ function Index() {
           title="Popular Categories"
           description="Shop across 22 categories from trusted Nigerian sellers."
           action={
-            <Link to="/categories" className="hidden text-sm font-semibold text-primary hover:underline sm:block">
+            <Link to="/explore" className="hidden text-sm font-semibold text-primary hover:underline sm:block">
               All categories →
             </Link>
           }
@@ -133,8 +133,7 @@ function Index() {
             .map((c) => (
               <Link
                 key={c.id}
-                to="/categories/$slug"
-                params={{ slug: c.slug }}
+                to="/explore"
                 className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-card transition-all hover:shadow-frost hover:border-primary/30"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
@@ -265,7 +264,7 @@ function Index() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter publicMode />
     </div>
   );
 }

@@ -142,10 +142,10 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
             ) : (
               <DrawerLink to="/" onClick={close} icon={<Home className="h-4 w-4" />}>Home</DrawerLink>
             )}
-            <DrawerLink to="/marketplace" onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>
+            <DrawerLink to={publicMode ? "/explore" : "/marketplace"} onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>
               Marketplace
             </DrawerLink>
-            <DrawerLink to="/categories" onClick={close} icon={<Package className="h-4 w-4" />}>
+            <DrawerLink to={publicMode ? "/explore" : "/categories"} onClick={close} icon={<Package className="h-4 w-4" />}>
               Categories
             </DrawerLink>
             {!publicMode && <>
