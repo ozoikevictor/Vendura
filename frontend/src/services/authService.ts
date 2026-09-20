@@ -54,6 +54,8 @@ export async function registerVendor(input: VendorRegisterInput): Promise<Vendor
 }
 
 export const getCurrentUser = () => api<User>("/auth/me");
+export const updateProfile = (input: Partial<Pick<User, "fullName" | "email" | "phone" | "avatarUrl" | "notificationPreferences">>) =>
+  api<User>("/users/me", { method: "PATCH", ...json(input) });
 export async function logout() {
   try {
     await api<void>("/auth/logout", { method: "POST" });

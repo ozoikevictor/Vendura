@@ -1,60 +1,163 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Store, KeyRound, Bell, Truck, Shield, User } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Bell, KeyRound, Shield, Store, Truck, User } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getBankAccount, updateBankAccount } from "@/services/vendorService";
-import { getDeliverySettings, updateDeliverySettings } from "@/services/vendorService";
-import { mockVendor } from "@/data/users";
 import { toast } from "sonner";
+import { changePassword, updateProfile } from "@/services/authService";
+import { updateVendorStore, getVendorStore } from "@/services/storeService";
+import {
+  getBankAccount,
+  getDeliverySettings,
+  getNigerianBanks,
+  updateBankAccount,
+} from "@/services/vendorService";
+import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/vendor/settings")({
-  head: () => ({
-    meta: [
-      { title: "Settings — Vendor — Vendura" },
-      { name: "description", content: "Manage your store and account settings." },
-      { property: "og:title", content: "Settings — Vendura" },
-      { property: "og:description", content: "Manage your store and account settings." },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Settings — Vendor — Vendura" }] }),
   component: VendorSettingsPage,
 });
 
 const tabs = [
-  { id: "profile", label: "Profile", icon: <User className="h-4 w-4" /> },
-  { id: "store", label: "Store Info", icon: <Store className="h-4 w-4" /> },
-  { id: "password", label: "Password", icon: <KeyRound className="h-4 w-4" /> },
-  { id: "bank", label: "Bank", icon: <Shield className="h-4 w-4" /> },
-  { id: "delivery", label: "Delivery", icon: <Truck className="h-4 w-4" /> },
-  { id: "notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "store", label: "Store Info", icon: Store },
+  { id: "password", label: "Password", icon: KeyRound },
+  { id: "bank", label: "Bank", icon: Shield },
+  { id: "delivery", label: "Delivery", icon: Truck },
+  { id: "notifications", label: "Notifications", icon: Bell },
 ] as const;
-
 type TabId = (typeof tabs)[number]["id"];
 
+const defaultPreferences = {
+  newOrders: true,
+  newMessages: true,
+  lowStock: true,
+  payouts: true,
+  offers: true,
+};
+
 function VendorSettingsPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.set);
   const [tab, setTab] = useState<TabId>("profile");
-  const [saving, setSaving] = useState(false);
-
-  const [profile, setProfile] = useState({ fullName: mockVendor.fullName, email: mockVendor.email, phone: mockVendor.phone ?? "" });
-  const [store, setStore] = useState({ name: "TechNaija", description: "Quality tech gadgets and accessories at the best prices.", allowNegotiation: true, returnPolicy: "7-day return on unused items", shippingPolicy: "Ships within 24 hours" });
+  const [saving, setSaving] = useState<string | null>(null);
+  const [profile, setProfile] = useState({ fullName: "", email: "", phone: "" });
+  const [storeForm, setStoreForm] = useState({
+    name: "",
+    description: "",
+    logoUrl: "",
+    allowNegotiation: true,
+    returnPolicy: "",
+    shippingPolicy: "",
+  });
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
-  const [bankForm, setBankForm] = useState({ bankName: "", accountNumber: "", accountName: "" });
-  const [notifPrefs, setNotifPrefs] = useState({ newOrders: true, newMessages: true, lowStock: true, payouts: true, offers: true });
+  const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
+  const [preferences, setPreferences] = useState(defaultPreferences);
 
+  const { data: store, isLoading: storeLoading } = useQuery({
+    queryKey: ["vendor-store", user?.storeId],
+    queryFn: () => getVendorStore(user?.id ?? ""),
+    enabled: Boolean(user),
+  });
   const { data: bank } = useQuery({ queryKey: ["vendor-bank"], queryFn: getBankAccount });
+  const { data: banks = [] } = useQuery({ queryKey: ["nigerian-banks"], queryFn: getNigerianBanks });
   const { data: delivery } = useQuery({ queryKey: ["delivery-settings"], queryFn: getDeliverySettings });
 
-  async function handleSave(section: string) {
-    setSaving(true);
+  useEffect(() => {
+    if (!user) return;
+    setProfile({ fullName: user.fullName, email: user.email, phone: user.phone ?? "" });
+    setPreferences(user.notificationPreferences ?? defaultPreferences);
+  }, [user]);
+
+  useEffect(() => {
+    if (!store) return;
+    setStoreForm({
+      name: store.name,
+      description: store.description,
+      logoUrl: store.logoUrl ?? "",
+      allowNegotiation: store.allowNegotiation,
+      returnPolicy: store.policies?.returns ?? "",
+      shippingPolicy: store.policies?.shipping ?? "",
+    });
+  }, [store]);
+
+  async function saveProfile() {
+    setSaving("profile");
     try {
-      if (section === "bank" && bank) await updateBankAccount(bankForm);
-      if (section === "delivery" && delivery) await updateDeliverySettings({ ...(delivery.pickupAddress ? { pickupAddress: delivery.pickupAddress } : {}), ...(delivery.freeDeliveryAbove ? { freeDeliveryAbove: delivery.freeDeliveryAbove } : {}), pickupAvailable: delivery.pickupAvailable });
-      queryClient.invalidateQueries({ queryKey: ["vendor-bank"] });
-      queryClient.invalidateQueries({ queryKey: ["delivery-settings"] });
-      toast.success("Settings saved");
-    } catch { toast.error("Failed to save"); } finally { setSaving(false); }
+      const updated = await updateProfile(profile);
+      setUser(updated);
+      toast.success(updated.emailVerified ? "Profile saved" : "Profile saved. Verify your new email address.");
+      if (!updated.emailVerified) navigate({ to: "/verify-email" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save your profile");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function saveStore() {
+    setSaving("store");
+    try {
+      await updateVendorStore({
+        name: storeForm.name,
+        description: storeForm.description,
+        logoUrl: storeForm.logoUrl || undefined,
+        allowNegotiation: storeForm.allowNegotiation,
+        policies: { returns: storeForm.returnPolicy, shipping: storeForm.shippingPolicy },
+      });
+      await queryClient.invalidateQueries({ queryKey: ["vendor-store"] });
+      toast.success("Store information saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save store information");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function savePassword() {
+    if (passwords.next.length < 8) return toast.error("New password must be at least 8 characters");
+    if (passwords.next !== passwords.confirm) return toast.error("New passwords do not match");
+    setSaving("password");
+    try {
+      await changePassword(passwords.current, passwords.next);
+      setPasswords({ current: "", next: "", confirm: "" });
+      toast.success("Password changed successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change password");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function saveBank() {
+    if (!bankForm.bankCode) return toast.error("Select your bank");
+    if (!/^\d{10}$/.test(bankForm.accountNumber)) return toast.error("Enter a valid 10-digit account number");
+    setSaving("bank");
+    try {
+      await updateBankAccount(bankForm);
+      await queryClient.invalidateQueries({ queryKey: ["vendor-bank"] });
+      toast.success("Bank account verified and saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not verify this bank account");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function saveNotifications() {
+    setSaving("notifications");
+    try {
+      const updated = await updateProfile({ notificationPreferences: preferences });
+      setUser(updated);
+      toast.success("Notification preferences saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save notification preferences");
+    } finally {
+      setSaving(null);
+    }
   }
 
   return (
@@ -63,129 +166,94 @@ function VendorSettingsPage() {
         <h1 className="font-display text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your account and store</p>
       </div>
-
-      {/* Tab nav */}
       <div className="flex flex-wrap gap-1">
-        {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={cn("flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors", tab === t.id ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:bg-accent")}>
-            {t.icon} {t.label}
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button key={id} type="button" onClick={() => setTab(id)} className={cn("flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium", tab === id ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:bg-accent")}>
+            <Icon className="h-4 w-4" /> {label}
           </button>
         ))}
       </div>
 
-      {/* Profile */}
-      {tab === "profile" && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Profile</h2>
+      {tab === "profile" && <Panel title="Profile">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Full name" value={profile.fullName} onChange={(fullName) => setProfile((value) => ({ ...value, fullName }))} />
+          <Field label="Email" type="email" value={profile.email} onChange={(email) => setProfile((value) => ({ ...value, email }))} />
+          <Field label="Phone" type="tel" value={profile.phone} onChange={(phone) => setProfile((value) => ({ ...value, phone }))} />
+        </div>
+        <SaveButton saving={saving === "profile"} onClick={saveProfile} />
+      </Panel>}
+
+      {tab === "store" && <Panel title="Store Information">
+        {storeLoading ? <p className="text-sm text-muted-foreground">Loading your store...</p> : <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name" value={profile.fullName} onChange={(v) => setProfile((f) => ({ ...f, fullName: v }))} />
-            <Field label="Email" value={profile.email} onChange={(v) => setProfile((f) => ({ ...f, email: v }))} />
-            <Field label="Phone" value={profile.phone} onChange={(v) => setProfile((f) => ({ ...f, phone: v }))} />
+            <Field label="Store name" value={storeForm.name} onChange={(name) => setStoreForm((value) => ({ ...value, name }))} />
+            <Field label="Logo image URL" type="url" value={storeForm.logoUrl} onChange={(logoUrl) => setStoreForm((value) => ({ ...value, logoUrl }))} placeholder="https://..." />
           </div>
-          <button onClick={() => handleSave("profile")} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : "Save"}</button>
-        </div>
-      )}
+          <TextArea label="Description" value={storeForm.description} onChange={(description) => setStoreForm((value) => ({ ...value, description }))} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextArea label="Return policy" value={storeForm.returnPolicy} onChange={(returnPolicy) => setStoreForm((value) => ({ ...value, returnPolicy }))} />
+            <TextArea label="Shipping policy" value={storeForm.shippingPolicy} onChange={(shippingPolicy) => setStoreForm((value) => ({ ...value, shippingPolicy }))} />
+          </div>
+          <Toggle label="Allow negotiation" description="Let customers make offers on your products" checked={storeForm.allowNegotiation} onChange={(allowNegotiation) => setStoreForm((value) => ({ ...value, allowNegotiation }))} />
+          <SaveButton saving={saving === "store"} onClick={saveStore} />
+        </>}
+      </Panel>}
 
-      {/* Store */}
-      {tab === "store" && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Store Information</h2>
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-soft text-xl font-bold text-primary">TN</div>
-            <button className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">Change Logo</button>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Store name</label>
-            <input value={store.name} onChange={(e) => setStore((s) => ({ ...s, name: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Description</label>
-            <textarea rows={3} value={store.description} onChange={(e) => setStore((s) => ({ ...s, description: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-foreground">Return policy</label>
-            <input value={store.returnPolicy} onChange={(e) => setStore((s) => ({ ...s, returnPolicy: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-          </div>
-          <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border p-3">
-            <div><p className="text-sm font-medium text-foreground">Allow negotiation</p><p className="text-xs text-muted-foreground">Let customers make offers on your products</p></div>
-            <button type="button" onClick={() => setStore((s) => ({ ...s, allowNegotiation: !s.allowNegotiation }))} className={cn("relative h-6 w-11 rounded-full transition-colors", store.allowNegotiation ? "bg-primary" : "bg-muted")}>
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform", store.allowNegotiation ? "left-[1.375rem]" : "left-0.5")} />
-            </button>
+      {tab === "password" && <Panel title="Change Password">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Current password" type="password" value={passwords.current} onChange={(current) => setPasswords((value) => ({ ...value, current }))} />
+          <Field label="New password" type="password" value={passwords.next} onChange={(next) => setPasswords((value) => ({ ...value, next }))} />
+          <Field label="Confirm new password" type="password" value={passwords.confirm} onChange={(confirm) => setPasswords((value) => ({ ...value, confirm }))} />
+        </div>
+        <SaveButton label="Update Password" saving={saving === "password"} onClick={savePassword} />
+      </Panel>}
+
+      {tab === "bank" && <Panel title="Bank Account">
+        {bank && <p className="text-sm text-muted-foreground">Current account: {bank.bankName} · {bank.accountNumber} · {bank.accountName}</p>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-1 text-sm font-medium text-foreground">Bank
+            <select value={bankForm.bankCode} onChange={(event) => setBankForm((value) => ({ ...value, bankCode: event.target.value }))} className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm">
+              <option value="">Select a bank</option>
+              {banks.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}
+            </select>
           </label>
-          <button onClick={() => handleSave("store")} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : "Save"}</button>
+          <Field label="Account number" inputMode="numeric" value={bankForm.accountNumber} onChange={(accountNumber) => setBankForm((value) => ({ ...value, accountNumber: accountNumber.replace(/\D/g, "").slice(0, 10) }))} placeholder="0123456789" />
         </div>
-      )}
+        <SaveButton label="Verify and Save" saving={saving === "bank"} onClick={saveBank} />
+      </Panel>}
 
-      {/* Password */}
-      {tab === "password" && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Change Password</h2>
-          <div className="space-y-3">
-            <div><label className="mb-1 block text-sm font-medium text-foreground">Current password</label><input type="password" value={passwords.current} onChange={(e) => setPasswords((p) => ({ ...p, current: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-            <div><label className="mb-1 block text-sm font-medium text-foreground">New password</label><input type="password" value={passwords.next} onChange={(e) => setPasswords((p) => ({ ...p, next: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-            <div><label className="mb-1 block text-sm font-medium text-foreground">Confirm new password</label><input type="password" value={passwords.confirm} onChange={(e) => setPasswords((p) => ({ ...p, confirm: e.target.value }))} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-          </div>
-          <p className="text-xs text-muted-foreground">Password changes are verified and hashed by the backend.</p>
-          <button onClick={() => toast.success("Password updated (demo)")} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : "Update Password"}</button>
-        </div>
-      )}
+      {tab === "delivery" && <Panel title="Delivery Settings">
+        <p className="text-sm text-muted-foreground">Pickup is {delivery?.pickupAvailable ? "enabled" : "disabled"}. {delivery?.pickupAddress || "No pickup address has been added."}</p>
+        <p className="text-sm text-muted-foreground">{delivery?.zones.length ?? 0} delivery zones configured.</p>
+        <Link to="/vendor/delivery" className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-accent">Manage Delivery</Link>
+      </Panel>}
 
-      {/* Bank */}
-      {tab === "bank" && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Bank Account</h2>
-          {bank && <p className="text-sm text-muted-foreground">Current: {bank.bankName} · {bank.accountNumber} · {bank.accountName}</p>}
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div><label className="mb-1 block text-sm font-medium text-foreground">Bank</label><input value={bankForm.bankName} onChange={(e) => setBankForm((f) => ({ ...f, bankName: e.target.value }))} placeholder="GTBank" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-            <div><label className="mb-1 block text-sm font-medium text-foreground">Account number</label><input value={bankForm.accountNumber} onChange={(e) => setBankForm((f) => ({ ...f, accountNumber: e.target.value }))} placeholder="0123456789" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-            <div><label className="mb-1 block text-sm font-medium text-foreground">Account name</label><input value={bankForm.accountName} onChange={(e) => setBankForm((f) => ({ ...f, accountName: e.target.value }))} placeholder="TECHNAIJA VENTURES" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" /></div>
-          </div>
-          <p className="text-xs text-muted-foreground">Bank accounts are verified by the backend before payouts.</p>
-          <button onClick={() => handleSave("bank")} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : "Save Bank"}</button>
-        </div>
-      )}
-
-      {/* Delivery */}
-      {tab === "delivery" && delivery && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Delivery Settings</h2>
-          <p className="text-sm text-muted-foreground">Pickup: {delivery.pickupAvailable ? "Enabled" : "Disabled"} · {delivery.pickupAddress ?? "No address"}</p>
-          <p className="text-sm text-muted-foreground">Free delivery above: ₦{delivery.freeDeliveryAbove?.toLocaleString() ?? "—"}</p>
-          <p className="text-xs text-muted-foreground">{delivery.zones.length} delivery zones configured. Edit zones on the Delivery page.</p>
-          <Link to="/vendor/delivery" className="inline-block rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent">Manage Zones</Link>
-        </div>
-      )}
-
-      {/* Notifications */}
-      {tab === "notifications" && (
-        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-          <h2 className="text-base font-semibold text-foreground">Notification Preferences</h2>
-          <div className="space-y-2">
-            {(Object.keys(notifPrefs) as (keyof typeof notifPrefs)[]).map((key) => {
-              const labels: Record<string, string> = { newOrders: "New orders", newMessages: "New messages", lowStock: "Low stock alerts", payouts: "Payout updates", offers: "New offers" };
-              return (
-                <label key={key} className="flex cursor-pointer items-center justify-between rounded-lg border border-border p-3">
-                  <span className="text-sm font-medium text-foreground">{labels[key]}</span>
-                  <button type="button" onClick={() => setNotifPrefs((p) => ({ ...p, [key]: !p[key] }))} className={cn("relative h-6 w-11 rounded-full transition-colors", notifPrefs[key] ? "bg-primary" : "bg-muted")}>
-                    <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform", notifPrefs[key] ? "left-[1.375rem]" : "left-0.5")} />
-                  </button>
-                </label>
-              );
-            })}
-          </div>
-          <button onClick={() => toast.success("Preferences saved")} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Save</button>
-        </div>
-      )}
+      {tab === "notifications" && <Panel title="Notification Preferences">
+        {Object.entries({ newOrders: "New orders", newMessages: "New messages", lowStock: "Low stock alerts", payouts: "Payout updates", offers: "New offers" }).map(([key, label]) => (
+          <Toggle key={key} label={label} checked={preferences[key as keyof typeof preferences]} onChange={(checked) => setPreferences((value) => ({ ...value, [key]: checked }))} />
+        ))}
+        <SaveButton saving={saving === "notifications"} onClick={saveNotifications} />
+      </Panel>}
     </div>
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-foreground">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-    </div>
-  );
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="space-y-4 rounded-lg border border-border bg-card p-5"><h2 className="text-base font-semibold">{title}</h2>{children}</section>;
 }
 
+function Field({ label, value, onChange, type = "text", placeholder, inputMode }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"] }) {
+  return <label className="space-y-1 text-sm font-medium text-foreground">{label}<input required type={type} inputMode={inputMode} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" /></label>;
+}
+
+function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <label className="space-y-1 text-sm font-medium text-foreground">{label}<textarea rows={3} value={value} onChange={(event) => onChange(event.target.value)} className="block w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" /></label>;
+}
+
+function Toggle({ label, description, checked, onChange }: { label: string; description?: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return <div className="flex items-center justify-between rounded-lg border border-border p-3"><div><p className="text-sm font-medium">{label}</p>{description && <p className="text-xs text-muted-foreground">{description}</p>}</div><button type="button" role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} className={cn("relative h-6 w-11 rounded-full transition-colors", checked ? "bg-primary" : "bg-muted")}><span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform", checked ? "left-[1.375rem]" : "left-0.5")} /></button></div>;
+}
+
+function SaveButton({ label = "Save Changes", saving, onClick }: { label?: string; saving: boolean; onClick: () => void }) {
+  return <button type="button" onClick={onClick} disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">{saving ? "Saving..." : label}</button>;
+}

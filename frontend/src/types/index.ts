@@ -22,6 +22,7 @@ export interface User {
   storeId?: ID;
   emailVerified: boolean;
   createdAt: ISODate;
+  notificationPreferences?: { newOrders: boolean; newMessages: boolean; lowStock: boolean; payouts: boolean; offers: boolean };
 }
 
 export interface Customer extends User {

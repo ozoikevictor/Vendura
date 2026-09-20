@@ -48,6 +48,7 @@ export function VendorLayout() {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
+  const [authHydrated, setAuthHydrated] = useState(useAuthStore.persist.hasHydrated());
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
     queryKey: ["vendor-store", user?.storeId],
@@ -71,13 +72,17 @@ export function VendorLayout() {
     .toUpperCase();
 
   useEffect(() => {
-    if (!useAuthStore.persist.hasHydrated()) return;
+    return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    if (!authHydrated) return;
     if (!user) {
       navigate({ to: "/login", replace: true });
     } else if (user.role !== "vendor" && user.role !== "admin") {
       navigate({ to: "/marketplace", replace: true });
     }
-  }, [navigate, user]);
+  }, [authHydrated, navigate, user]);
 
   // Scroll lock for mobile sidebar
   useEffect(() => {
@@ -98,6 +103,10 @@ export function VendorLayout() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [vendorSidebarOpen, setVendorSidebarOpen]);
+
+  if (!authHydrated || !user || (user.role !== "vendor" && user.role !== "admin")) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

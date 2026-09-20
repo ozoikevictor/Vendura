@@ -15,7 +15,12 @@ type PaystackTransfer = { status: string; reference: string; transfer_code?: str
 export const vendorRoutes = (db: Database) => {
   const router = Router(); router.use(authenticate, authorize("vendor", "admin"));
   router.get("/store", asyncRoute(async (req: AuthRequest, res) => { const store = await db.get("stores", req.user!.storeId!); if (!store) throw new ApiError(404, "Store not found"); ok(res, store); }));
-  router.patch("/store", asyncRoute(async (req: AuthRequest, res) => { const allowed = Object.fromEntries(Object.entries(req.body).filter(([key]) => ["name", "tagline", "description", "logoUrl", "bannerUrl", "categoryIds", "location", "allowNegotiation", "policies", "contact"].includes(key))); ok(res, await db.update("stores", req.user!.storeId!, allowed)); }));
+  router.patch("/store", asyncRoute(async (req: AuthRequest, res) => {
+    const input = storeSettingsSchema.parse(req.body);
+    const store = await db.get<Entity>("stores", req.user!.storeId!);
+    if (!store) throw new ApiError(404, "Store not found");
+    ok(res, await db.update("stores", store.id, { ...input, updatedAt: now() }));
+  }));
   router.get("/overview", asyncRoute(async (req: AuthRequest, res) => { const products = (await db.list<Entity>("products")).filter((p) => p.storeId === req.user!.storeId); const orders = (await db.list<Entity>("orders")).filter((o) => o.storeId === req.user!.storeId); const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id); ok(res, { totalRevenue: transactions.filter((t) => t.type === "sale" && t.status !== "reversed").reduce((s, t) => s + Number(t.amount), 0), ordersCount: orders.length, productsCount: products.length, customersCount: new Set(orders.map((o) => o.customerId)).size, pendingOrders: orders.filter((o) => ["placed", "payment_confirmed", "processing"].includes(String(o.status))).length, lowStockCount: products.filter((p) => Number(p.stock) <= Number(p.lowStockThreshold)).length, availableBalance: transactions.filter((t) => t.status === "available").reduce((s, t) => s + Number(t.amount), 0), revenueSeries: [], ordersSeries: [], topProducts: products.sort((a, b) => Number(b.soldCount) - Number(a.soldCount)).slice(0, 5).map((p) => ({ productId: p.id, name: p.name, sales: p.soldCount, revenue: Number(p.soldCount) * Number(p.price) })) }); }));
   router.get("/transactions", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id))));
   router.get("/balance", asyncRoute(async (req: AuthRequest, res) => { const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id); const active = transactions.filter((t) => t.status !== "reversed"); const totalSales = active.filter((t) => t.type === "sale").reduce((s, t) => s + Number(t.amount), 0); const deliveryFees = active.filter((t) => t.type === "delivery").reduce((s, t) => s + Number(t.amount), 0); ok(res, { available: active.filter((t) => t.status === "available").reduce((s, t) => s + Number(t.amount), 0), pending: active.filter((t) => t.status === "pending").reduce((s, t) => s + Number(t.amount), 0), customerPayments: totalSales + deliveryFees, totalSales, deliveryFees, platformFees: Math.abs(active.filter((t) => t.type === "fee").reduce((s, t) => s + Number(t.amount), 0)), totalPaid: Math.abs(active.filter((t) => t.type === "payout").reduce((s, t) => s + Number(t.amount), 0)) }); }));
@@ -83,3 +88,14 @@ async function paystackRequest<T>(path: string, init: RequestInit = {}) {
   if (!response.ok || !payload.status) throw new ApiError(502, payload.message || "Paystack could not verify this bank account");
   return payload.data;
 }
+
+const storeSettingsSchema = z.object({
+  name: z.string().trim().min(2).max(100).optional(),
+  tagline: z.string().trim().max(160).optional(),
+  description: z.string().trim().min(10).max(2000).optional(),
+  logoUrl: z.string().url().or(z.literal("")).optional(),
+  bannerUrl: z.string().url().or(z.literal("")).optional(),
+  allowNegotiation: z.boolean().optional(),
+  policies: z.object({ returns: z.string().max(1000), shipping: z.string().max(1000), warranty: z.string().max(1000).optional() }).optional(),
+  contact: z.object({ phone: z.string().optional(), email: z.string().email().optional(), whatsapp: z.string().optional() }).optional()
+}).refine((value) => Object.keys(value).length > 0, "Provide at least one store field");
