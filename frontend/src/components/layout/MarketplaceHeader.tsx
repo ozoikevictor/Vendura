@@ -58,6 +58,10 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     return () => document.removeEventListener("pointerdown", closeOutside);
   }, [accountOpen]);
 
+  useEffect(() => {
+    setAccountOpen(false);
+  }, [pathname]);
+
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
@@ -265,11 +269,11 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
-                  <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>My Orders</MenuItem>
-                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Profile</MenuItem>
-                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Notifications</MenuItem>
-                  <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Messages</MenuItem>
-                  <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Wishlist</MenuItem>
+                  <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />}>My Orders</MenuItem>
+                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />}>Profile</MenuItem>
+                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>
+                  <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />}>Messages</MenuItem>
+                  <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />}>Wishlist</MenuItem>
                   <div className="my-1 border-t border-border" />
                   <button
                     type="button"
@@ -329,17 +333,14 @@ function MenuItem({
   to,
   icon,
   children,
-  onClick,
 }: {
   to: NonNullable<React.ComponentProps<typeof Link>["to"]>;
   icon: React.ReactNode;
   children: React.ReactNode;
-  onClick?: () => void;
 }) {
   return (
     <Link
       to={to}
-      onClick={onClick}
       role="menuitem"
       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
     >

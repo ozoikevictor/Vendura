@@ -2,15 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { categories } from "@/data/categories";
 
-export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
+export function SiteFooter() {
   const popularCats = categories.slice(0, 6);
-  const popularStores = [
-    { name: "TechNaija", slug: "technaija" },
-    { name: "Ada Fashion", slug: "ada-fashion" },
-    { name: "HomeKraft", slug: "homekraft" },
-    { name: "Stride Lagos", slug: "stride-lagos" },
-    { name: "Essence Co.", slug: "essence-co" },
-  ];
 
   return (
     <footer className="mt-20 border-t-4 border-primary/30 bg-[#17211b] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
@@ -62,8 +55,8 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
               {popularCats.map((c) => (
                 <li key={c.id}>
                   <Link
-                    to={publicMode ? "/explore" : "/categories/$slug"}
-                    params={publicMode ? undefined : { slug: c.slug }}
+                    to="/categories/$slug"
+                    params={{ slug: c.slug }}
                     className="text-sm text-white/65 transition-colors hover:text-primary"
                   >
                     {c.name}
@@ -75,25 +68,11 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
 
           {/* Seller resources */}
           <div>
-            <h3 className="text-sm font-semibold text-white">{publicMode ? "For Sellers" : "Top Stores"}</h3>
+            <h3 className="text-sm font-semibold text-white">For Sellers</h3>
             <ul className="mt-3 space-y-2">
-              {publicMode ? (
-                <>
-                  <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>
-                  <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>
-                  <li><Link to="/explore" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
-                </>
-              ) : popularStores.map((s) => (
-                <li key={s.slug}>
-                  <Link
-                    to="/store/$storeSlug"
-                    params={{ storeSlug: s.slug }}
-                    className="text-sm text-white/65 transition-colors hover:text-primary"
-                  >
-                    {s.name}
-                  </Link>
-                </li>
-              ))}
+              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>
+              <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>
+              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
             </ul>
           </div>
 
@@ -102,8 +81,8 @@ export function SiteFooter({ publicMode = false }: { publicMode?: boolean }) {
             <h3 className="text-sm font-semibold text-white">Company</h3>
             <ul className="mt-3 space-y-2">
               <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Become a Seller</Link></li>
-              <li><Link to={publicMode ? "/explore" : "/marketplace"} className="text-sm text-white/65 transition-colors hover:text-primary">Marketplace</Link></li>
-              <li><Link to={publicMode ? "/explore" : "/categories"} className="text-sm text-white/65 transition-colors hover:text-primary">All Categories</Link></li>
+              <li><Link to="/marketplace" className="text-sm text-white/65 transition-colors hover:text-primary">Marketplace</Link></li>
+              <li><Link to="/categories" className="text-sm text-white/65 transition-colors hover:text-primary">All Categories</Link></li>
               <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Help Center</a></li>
               <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Privacy</a></li>
             </ul>

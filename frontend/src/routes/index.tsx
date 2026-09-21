@@ -337,7 +337,7 @@ function Index() {
       </section>
       </ScrollReveal>
 
-      <SiteFooter publicMode />
+      <SiteFooter />
     </div>
   );
 }

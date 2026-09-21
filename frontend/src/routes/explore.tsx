@@ -113,7 +113,7 @@ function StoreGatewayPage() {
           <Store className="h-4 w-4 text-primary" /> Sellers can copy their unique link from the vendor dashboard.
         </div>
       </main>
-      <SiteFooter publicMode />
+      <SiteFooter />
     </div>
   );
 }
