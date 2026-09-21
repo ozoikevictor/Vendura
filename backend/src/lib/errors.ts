@@ -11,6 +11,10 @@ export const notFound: RequestHandler = (_req, _res, next) =>
   next(new ApiError(404, "Endpoint not found"));
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (error instanceof Error && "type" in error && error.type === "entity.too.large") {
+    res.status(413).json({ error: { message: "Request is too large. Choose an image smaller than 2 MB." } });
+    return;
+  }
   if (error instanceof ZodError) {
     res.status(400).json({ error: { message: "Validation failed", details: error.flatten() } });
     return;

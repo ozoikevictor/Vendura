@@ -30,7 +30,7 @@ export function createApp(db: Database) {
     origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
     credentials: true,
   }));
-  app.use(express.json({ limit: "1mb", verify: (req, _res, buffer) => { (req as AuthRequest).rawBody = buffer; } }));
+  app.use(express.json({ limit: "8mb", verify: (req, _res, buffer) => { (req as AuthRequest).rawBody = buffer; } }));
   if (config.NODE_ENV !== "test") app.use("/api", rateLimit({ windowMs: 15 * 60_000, limit: 300, standardHeaders: "draft-8" }));
   app.get("/health", (_req, res) => res.json({ status: "ok", service: "vendura-api" }));
   app.use("/api", webhookRoutes(db));
