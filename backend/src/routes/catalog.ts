@@ -10,6 +10,13 @@ export const catalogRoutes = (db: Database) => {
   const router = Router();
   router.get("/categories", asyncRoute(async (req, res) => {
     let items = await db.list<Entity>("categories");
+    const activeProducts = (await db.list<Entity>("products")).filter((product) => product.status === "active");
+    const productCounts = new Map<string, number>();
+    for (const product of activeProducts) {
+      const categoryId = String(product.categoryId ?? "");
+      productCounts.set(categoryId, (productCounts.get(categoryId) ?? 0) + 1);
+    }
+    items = items.map((category) => ({ ...category, productCount: productCounts.get(category.id) ?? 0 }));
     if (req.query.popular === "true") items = items.sort((a, b) => Number(b.productCount) - Number(a.productCount)).slice(0, Number(req.query.limit ?? 8));
     ok(res, items);
   }));
