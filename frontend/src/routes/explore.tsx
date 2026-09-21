@@ -76,8 +76,8 @@ function StoreGatewayPage() {
           </p>
         </section>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-[1.35fr_0.8fr_0.8fr]">
-          <section className="animate-settle rounded-xl border border-primary/25 bg-card p-6 shadow-frost sm:p-8">
+        <div className={`mt-10 grid gap-5 ${isCustomer ? "lg:min-h-[28rem] lg:grid-cols-[minmax(0,1fr)_minmax(20rem,34rem)] lg:items-center" : "lg:grid-cols-[1.35fr_0.8fr_0.8fr]"}`}>
+          <section className={`animate-settle rounded-xl border border-primary/25 bg-card p-6 shadow-frost sm:p-8 ${isCustomer ? "lg:col-start-2 lg:max-w-xl lg:justify-self-end" : ""}`}>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground"><ExternalLink className="h-6 w-6" /></div>
             <h2 className="mt-5 text-xl font-semibold text-foreground">Open a vendor link</h2>
             <p className="mt-2 text-sm text-muted-foreground">Paste the storefront link a seller shared with you. You can browse before creating a customer account.</p>
