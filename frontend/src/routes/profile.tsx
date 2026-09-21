@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ChangeEvent } from "react";
-import { Camera, Heart, LogOut, Mail, MessageSquare, Package, Phone, Save, ShoppingBasket, User } from "lucide-react";
+import { Camera, Heart, KeyRound, LogOut, Mail, MessageSquare, Package, Phone, Save, ShoppingBasket, Trash2, User } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAuthStore } from "@/store/auth";
-import { logout, updateProfile } from "@/services/authService";
+import { changePassword, logout, updateProfile } from "@/services/authService";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -28,7 +28,9 @@ function ProfilePage() {
   const { user, clear, set: setUser } = useAuthStore();
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", avatarUrl: "" });
   const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [imageError, setImageError] = useState("");
+  const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
 
   useEffect(() => {
     if (!user) return;
@@ -77,11 +79,28 @@ function ProfilePage() {
         avatarUrl: form.avatarUrl,
       });
       setUser(updated);
-      toast.success("Profile saved");
+      toast.success(updated.emailVerified ? "Profile saved" : "Profile saved. Verify your new email address.");
+      if (!updated.emailVerified) navigate({ to: "/verify-email" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save your profile");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function savePassword() {
+    if (!passwords.current) return toast.error("Enter your current password");
+    if (passwords.next.length < 8) return toast.error("New password must be at least 8 characters");
+    if (passwords.next !== passwords.confirm) return toast.error("New passwords do not match");
+    setSavingPassword(true);
+    try {
+      await changePassword(passwords.current, passwords.next);
+      setPasswords({ current: "", next: "", confirm: "" });
+      toast.success("Password changed successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change your password");
+    } finally {
+      setSavingPassword(false);
     }
   }
 
@@ -133,6 +152,11 @@ function ProfilePage() {
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePicture} className="sr-only" />
                 </label>
               </div>
+              {form.avatarUrl && (
+                <button type="button" onClick={() => setForm((current) => ({ ...current, avatarUrl: "" }))} className="mx-auto mt-3 flex items-center gap-1.5 text-xs font-semibold text-destructive hover:underline">
+                  <Trash2 className="h-3.5 w-3.5" /> Remove picture
+                </button>
+              )}
               {imageError && <p className="mt-2 text-center text-xs text-destructive">{imageError}</p>}
             </div>
 
@@ -150,6 +174,21 @@ function ProfilePage() {
             </div>
           </div>
         </div>
+
+        <section className="mt-6 rounded-xl border border-border bg-card p-5 shadow-card">
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-primary" />
+            <h2 className="font-display text-lg font-bold text-foreground">Change password</h2>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <ProfileField label="Current password" icon={<KeyRound className="h-4 w-4" />} type="password" value={passwords.current} onChange={(current) => setPasswords((value) => ({ ...value, current }))} />
+            <ProfileField label="New password" icon={<KeyRound className="h-4 w-4" />} type="password" value={passwords.next} onChange={(next) => setPasswords((value) => ({ ...value, next }))} />
+            <ProfileField label="Confirm password" icon={<KeyRound className="h-4 w-4" />} type="password" value={passwords.confirm} onChange={(confirm) => setPasswords((value) => ({ ...value, confirm }))} />
+          </div>
+          <button type="button" onClick={savePassword} disabled={savingPassword} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-60">
+            <KeyRound className="h-4 w-4" /> {savingPassword ? "Updating..." : "Update password"}
+          </button>
+        </section>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <ProfileLink to="/customer/orders" icon={<Package className="h-5 w-5" />} title="Orders" description="Track purchases and delivery status." />

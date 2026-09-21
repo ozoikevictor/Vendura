@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Store, Search, Heart, ShoppingBasket, Menu, User, Bell,
@@ -25,6 +25,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [accountOpen, setAccountOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const queryClient = useQueryClient();
@@ -47,6 +48,15 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     window.addEventListener("scroll", update, { passive: true });
     return () => window.removeEventListener("scroll", update);
   }, []);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) setAccountOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, [accountOpen]);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -129,7 +139,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
           {/* Search (desktop) */}
           <form onSubmit={handleSearch} className="hidden flex-1 max-w-xl md:block">
-            <div className="relative">
+            <div ref={accountMenuRef} className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
@@ -236,7 +246,8 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
               <button
                 type="button"
                 onClick={() => setAccountOpen(!accountOpen)}
-                onBlur={() => setTimeout(() => setAccountOpen(false), 150)}
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
                 className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
               >
                 <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
@@ -248,17 +259,17 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
               {accountOpen && (
-                <div className="absolute right-0 top-full mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost z-50">
+                <div role="menu" className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost">
                   {isCustomer ? <><div className="px-3 py-2 border-b border-border mb-1">
                     <p className="text-sm font-semibold text-foreground">{user?.fullName}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
-                  <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />}>My Orders</MenuItem>
-                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />}>Profile</MenuItem>
-                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>
-                  <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />}>Messages</MenuItem>
-                  <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />}>Wishlist</MenuItem>
+                  <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>My Orders</MenuItem>
+                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Profile</MenuItem>
+                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Notifications</MenuItem>
+                  <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Messages</MenuItem>
+                  <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />} onClick={() => setAccountOpen(false)}>Wishlist</MenuItem>
                   <div className="my-1 border-t border-border" />
                   <button
                     type="button"
@@ -318,14 +329,18 @@ function MenuItem({
   to,
   icon,
   children,
+  onClick,
 }: {
   to: NonNullable<React.ComponentProps<typeof Link>["to"]>;
   icon: React.ReactNode;
   children: React.ReactNode;
+  onClick?: () => void;
 }) {
   return (
     <Link
       to={to}
+      onClick={onClick}
+      role="menuitem"
       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
     >
       {icon}
