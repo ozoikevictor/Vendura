@@ -110,6 +110,11 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     navigate({ to: "/register" });
   };
 
+  const openAccountPage = async (to: "/customer/orders" | "/profile" | "/customer/notifications" | "/messages" | "/wishlist") => {
+    await navigate({ to });
+    setAccountOpen(false);
+  };
+
   return (
     <>
       <header className={cn(
@@ -269,11 +274,11 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
-                  <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />}>My Orders</MenuItem>
-                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />}>Profile</MenuItem>
-                  <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>
-                  <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />}>Messages</MenuItem>
-                  <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />}>Wishlist</MenuItem>
+                  <AccountMenuButton onSelect={() => openAccountPage("/customer/orders")} icon={<Package className="h-4 w-4" />}>My Orders</AccountMenuButton>
+                  <AccountMenuButton onSelect={() => openAccountPage("/profile")} icon={<User className="h-4 w-4" />}>Profile</AccountMenuButton>
+                  <AccountMenuButton onSelect={() => openAccountPage("/customer/notifications")} icon={<Bell className="h-4 w-4" />}>Notifications</AccountMenuButton>
+                  <AccountMenuButton onSelect={() => openAccountPage("/messages")} icon={<MessageSquare className="h-4 w-4" />}>Messages</AccountMenuButton>
+                  <AccountMenuButton onSelect={() => openAccountPage("/wishlist")} icon={<Heart className="h-4 w-4" />}>Wishlist</AccountMenuButton>
                   <div className="my-1 border-t border-border" />
                   <button
                     type="button"
@@ -347,5 +352,19 @@ function MenuItem({
       {icon}
       {children}
     </Link>
+  );
+}
+
+function AccountMenuButton({ icon, children, onSelect }: { icon: React.ReactNode; children: React.ReactNode; onSelect: () => void | Promise<void> }) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onSelect}
+      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+    >
+      {icon}
+      {children}
+    </button>
   );
 }
