@@ -39,7 +39,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const activeStoreSlug = !publicMode && pathname.startsWith("/store/") ? rememberedStoreSlug : null;
   const isCustomer = user?.role === "customer";
-  const isCustomerStoreHome = isCustomer && !publicMode && !activeStoreSlug;
+  const isCustomerStoreHome = !publicMode && !activeStoreSlug;
   const homeTarget = isCustomerStoreHome ? "/marketplace" : "/";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
