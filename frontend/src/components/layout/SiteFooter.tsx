@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Store } from "lucide-react";
 import { categories } from "@/data/categories";
+import { useAuthStore } from "@/store/auth";
 
 export function SiteFooter() {
   const popularCats = categories.slice(0, 6);
+  const isCustomer = useAuthStore((state) => state.user?.role === "customer");
 
   return (
     <footer className="mt-20 border-t-4 border-primary/30 bg-[#17211b] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
@@ -68,11 +70,11 @@ export function SiteFooter() {
 
           {/* Seller resources */}
           <div>
-            <h3 className="text-sm font-semibold text-white">For Sellers</h3>
+            <h3 className="text-sm font-semibold text-white">{isCustomer ? "Store access" : "For Sellers"}</h3>
             <ul className="mt-3 space-y-2">
-              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>
-              <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>
-              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
+              {!isCustomer && <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>}
+              {!isCustomer && <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>}
+              <li><Link to="/explore" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
             </ul>
           </div>
 
@@ -80,7 +82,7 @@ export function SiteFooter() {
           <div>
             <h3 className="text-sm font-semibold text-white">Company</h3>
             <ul className="mt-3 space-y-2">
-              <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Become a Seller</Link></li>
+              {!isCustomer && <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Become a Seller</Link></li>}
               <li><Link to="/marketplace" className="text-sm text-white/65 transition-colors hover:text-primary">Marketplace</Link></li>
               <li><Link to="/categories" className="text-sm text-white/65 transition-colors hover:text-primary">All Categories</Link></li>
               <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Help Center</a></li>

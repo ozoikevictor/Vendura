@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Store, Search, Heart, ShoppingBasket, Menu, User, Bell,
   Package, MessageSquare, LayoutGrid, ChevronDown, LogOut,
@@ -24,8 +25,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [accountOpen, setAccountOpen] = useState(false);
-  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const queryClient = useQueryClient();
@@ -49,19 +48,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     return () => window.removeEventListener("scroll", update);
   }, []);
 
-  useEffect(() => {
-    if (!accountOpen) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (!accountMenuRef.current?.contains(event.target as Node)) setAccountOpen(false);
-    };
-    document.addEventListener("pointerdown", closeOutside);
-    return () => document.removeEventListener("pointerdown", closeOutside);
-  }, [accountOpen]);
-
-  useEffect(() => {
-    setAccountOpen(false);
-  }, [pathname]);
-
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
@@ -77,7 +63,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     } finally {
       clearAuth();
       queryClient.clear();
-      setAccountOpen(false);
       navigate({ to: "/login", replace: true });
       setLoggingOut(false);
     }
@@ -88,7 +73,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
       await handleLogout();
       return;
     }
-    setAccountOpen(false);
     navigate({ to: "/login" });
   };
 
@@ -100,19 +84,12 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
       } finally {
         clearAuth();
         queryClient.clear();
-        setAccountOpen(false);
         navigate({ to: "/register", replace: true });
         setLoggingOut(false);
       }
       return;
     }
-    setAccountOpen(false);
     navigate({ to: "/register" });
-  };
-
-  const openAccountPage = async (to: "/customer/orders" | "/profile" | "/customer/notifications" | "/messages" | "/wishlist") => {
-    await navigate({ to });
-    setAccountOpen(false);
   };
 
   return (
@@ -251,14 +228,9 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
               </Link>}
 
             {/* Account */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setAccountOpen(!accountOpen)}
-                aria-expanded={accountOpen}
-                aria-haspopup="menu"
-                className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
-              >
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button type="button" className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent">
                 <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
                   {isCustomer && user.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : isCustomer ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2) : <User className="h-4 w-4" />}
                 </span>
@@ -266,29 +238,22 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                   <span className="hidden max-w-24 truncate sm:inline">{user.fullName}</span>
                 )}
                 <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-              {accountOpen && (
-                <div role="menu" className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost">
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" sideOffset={6} className="z-[100] w-56 rounded-xl border border-border bg-card p-1.5 shadow-frost">
                   {isCustomer ? <><div className="px-3 py-2 border-b border-border mb-1">
                     <p className="text-sm font-semibold text-foreground">{user?.fullName}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
-                  <AccountMenuButton onSelect={() => openAccountPage("/customer/orders")} icon={<Package className="h-4 w-4" />}>My Orders</AccountMenuButton>
-                  <AccountMenuButton onSelect={() => openAccountPage("/profile")} icon={<User className="h-4 w-4" />}>Profile</AccountMenuButton>
-                  <AccountMenuButton onSelect={() => openAccountPage("/customer/notifications")} icon={<Bell className="h-4 w-4" />}>Notifications</AccountMenuButton>
-                  <AccountMenuButton onSelect={() => openAccountPage("/messages")} icon={<MessageSquare className="h-4 w-4" />}>Messages</AccountMenuButton>
-                  <AccountMenuButton onSelect={() => openAccountPage("/wishlist")} icon={<Heart className="h-4 w-4" />}>Wishlist</AccountMenuButton>
-                  <div className="my-1 border-t border-border" />
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {loggingOut ? "Logging out..." : "Log out"}
-                  </button>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/customer/orders" })} icon={<Package className="h-4 w-4" />}>My Orders</AccountMenuItem>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/profile" })} icon={<User className="h-4 w-4" />}>Profile</AccountMenuItem>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/customer/notifications" })} icon={<Bell className="h-4 w-4" />}>Notifications</AccountMenuItem>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/messages" })} icon={<MessageSquare className="h-4 w-4" />}>Messages</AccountMenuItem>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/wishlist" })} icon={<Heart className="h-4 w-4" />}>Wishlist</AccountMenuItem>
+                  <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                  <AccountMenuItem onSelect={handleLogout} disabled={loggingOut} icon={<LogOut className="h-4 w-4" />}>{loggingOut ? "Logging out..." : "Log out"}</AccountMenuItem>
                   </> : isSellerPreview ? <>
                     <div className="mb-1 border-b border-border px-3 py-2">
                       <p className="text-sm font-semibold text-foreground">Storefront preview</p>
@@ -307,9 +272,9 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     </button>
                     <MenuItem to="/register" icon={<User className="h-4 w-4" />}>Create account</MenuItem>
                   </>}
-                </div>
-              )}
-            </div>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </div>
         </div>
 
@@ -355,16 +320,15 @@ function MenuItem({
   );
 }
 
-function AccountMenuButton({ icon, children, onSelect }: { icon: React.ReactNode; children: React.ReactNode; onSelect: () => void | Promise<void> }) {
+function AccountMenuItem({ icon, children, onSelect, disabled = false }: { icon: React.ReactNode; children: React.ReactNode; onSelect: () => void | Promise<void>; disabled?: boolean }) {
   return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onSelect}
-      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+    <DropdownMenu.Item
+      disabled={disabled}
+      onSelect={onSelect}
+      className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-60"
     >
       {icon}
       {children}
-    </button>
+    </DropdownMenu.Item>
   );
 }
