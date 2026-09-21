@@ -39,7 +39,8 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const activeStoreSlug = !publicMode && pathname.startsWith("/store/") ? rememberedStoreSlug : null;
   const isCustomer = user?.role === "customer";
-  const isCustomerStoreHome = isCustomer && !activeStoreSlug;
+  const isCustomerStoreHome = isCustomer && !publicMode && !activeStoreSlug;
+  const homeTarget = isCustomerStoreHome ? "/marketplace" : "/";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
   // Scroll lock with guaranteed cleanup — never freezes the page
@@ -133,7 +134,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <Link to={activeStoreSlug ? "/store/$storeSlug" : "/"} params={activeStoreSlug ? { storeSlug: activeStoreSlug } : undefined} onClick={close} className="flex items-center gap-2">
+          <Link to={activeStoreSlug ? "/store/$storeSlug" : homeTarget} params={activeStoreSlug ? { storeSlug: activeStoreSlug } : undefined} onClick={close} className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>

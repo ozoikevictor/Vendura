@@ -111,7 +111,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
           {/* Logo */}
           <Link
-            to={storefrontSlug ? "/store/$storeSlug" : "/"}
+            to={storefrontSlug ? "/store/$storeSlug" : isCustomer ? "/marketplace" : "/"}
             params={storefrontSlug ? { storeSlug: storefrontSlug } : undefined}
             className="flex shrink-0 items-center gap-2"
           >
