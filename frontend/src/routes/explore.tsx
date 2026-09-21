@@ -2,9 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, ExternalLink, Eye, Loader2, Store, UserPlus } from "lucide-react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { getStoreBySlug } from "@/services/storeService";
 import { getErrorMessage } from "@/services/api";
+import { useAuthStore } from "@/store/auth";
 import { useStorefrontStore } from "@/store/storefront";
 
 export const Route = createFileRoute("/explore")({
@@ -32,6 +34,7 @@ function getStoreSlug(value: string) {
 
 function StoreGatewayPage() {
   const navigate = useNavigate();
+  const isCustomer = useAuthStore((state) => state.user?.role === "customer");
   const setActiveStore = useStorefrontStore((state) => state.setActiveStore);
   const [storeLink, setStoreLink] = useState("");
   const [error, setError] = useState("");
@@ -59,15 +62,17 @@ function StoreGatewayPage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <PublicHeader />
+      {isCustomer ? <MarketplaceHeader /> : <PublicHeader />}
       <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <section className="animate-rise text-center">
           <p className="eyebrow">Choose your next step</p>
           <h1 className="mx-auto mt-3 max-w-3xl font-display text-3xl font-bold text-foreground sm:text-5xl">
-            Open a seller's store or launch your own
+            {isCustomer ? "Open a seller's store" : "Open a seller's store or launch your own"}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Vendura stores are reached through each seller's unique link. Paste one below, explore our demonstration, or create a store for your business.
+            {isCustomer
+              ? "Paste a vendor storefront link below to start shopping."
+              : "Vendura stores are reached through each seller's unique link. Paste one below, explore our demonstration, or create a store for your business."}
           </p>
         </section>
 
@@ -94,19 +99,19 @@ function StoreGatewayPage() {
             </form>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-6 shadow-card">
+          {!isCustomer && <section className="rounded-xl border border-border bg-card p-6 shadow-card">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary"><UserPlus className="h-6 w-6" /></div>
             <h2 className="mt-5 text-xl font-semibold text-foreground">Start selling</h2>
             <p className="mt-2 text-sm text-muted-foreground">Create your seller account, add products, and receive a storefront link to share with customers.</p>
             <Link to="/vendor-register" className="mt-6 inline-flex items-center gap-2 font-semibold text-primary hover:underline">Create seller account <ArrowRight className="h-4 w-4" /></Link>
-          </section>
+          </section>}
 
-          <section className="rounded-xl border border-border bg-card p-6 shadow-card">
+          {!isCustomer && <section className="rounded-xl border border-border bg-card p-6 shadow-card">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-clay-soft text-clay"><Eye className="h-6 w-6" /></div>
             <h2 className="mt-5 text-xl font-semibold text-foreground">View the demo</h2>
             <p className="mt-2 text-sm text-muted-foreground">See how browsing, products, categories, and the shopping experience work using sample content.</p>
             <Link to="/marketplace" className="mt-6 inline-flex items-center gap-2 font-semibold text-primary hover:underline">Explore demo store <ArrowRight className="h-4 w-4" /></Link>
-          </section>
+          </section>}
         </div>
 
         <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
