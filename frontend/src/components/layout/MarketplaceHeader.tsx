@@ -125,7 +125,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
           {/* Search (desktop) */}
           <form onSubmit={handleSearch} className="hidden flex-1 max-w-xl md:block">
-            <div ref={accountMenuRef} className="relative">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
