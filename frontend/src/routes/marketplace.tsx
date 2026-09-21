@@ -9,10 +9,8 @@ import { SectionHeader } from "@/components/shared/SectionHeader";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import type { ProductQuery } from "@/types";
-import { formatNaira } from "@/utils/format";
-import { products as demoProducts } from "@/data/products";
-import { stores as demoStores } from "@/data/stores";
-import { categories as demoCategories } from "@/data/categories";
+import { getStores } from "@/services/storeService";
+import { queryProducts } from "@/services/productService";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
@@ -44,26 +42,22 @@ function MarketplacePage() {
     queryKey: ["categories"],
     queryFn: getCategories,
   });
-  const catalogCategories = categories?.length ? categories : demoCategories;
-  const filteredProducts = useMemo(() => {
-    let items = [...demoProducts];
-    const category = catalogCategories.find((item) => item.slug === query.categorySlug);
-    if (category) items = items.filter((product) => product.categoryId === category.id);
-    if (query.minPrice != null) items = items.filter((product) => product.price >= query.minPrice!);
-    if (query.maxPrice != null) items = items.filter((product) => product.price <= query.maxPrice!);
-    if (query.negotiableOnly) items = items.filter((product) => product.negotiable);
-    if (query.inStockOnly) items = items.filter((product) => product.stock > 0);
-    if (query.sort === "newest") items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    if (query.sort === "price_asc") items.sort((a, b) => a.price - b.price);
-    if (query.sort === "price_desc") items.sort((a, b) => b.price - a.price);
-    if (query.sort === "rating") items.sort((a, b) => b.rating - a.rating);
-    if (query.sort === "popular") items.sort((a, b) => b.soldCount - a.soldCount);
-    return items;
-  }, [catalogCategories, query]);
-  const total = filteredProducts.length;
-  const totalPages = Math.ceil(total / (query.pageSize ?? 24));
-  const start = ((query.page ?? 1) - 1) * (query.pageSize ?? 24);
-  const products = filteredProducts.slice(start, start + (query.pageSize ?? 24));
+  const { data: storeList = [] } = useQuery({
+    queryKey: ["stores"],
+    queryFn: getStores,
+  });
+  const { data, isLoading } = useQuery({
+    queryKey: ["products", query],
+    queryFn: () => queryProducts(query),
+  });
+  const catalogCategories = categories ?? [];
+  const products = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
+  const storeById = useMemo(
+    () => new Map(storeList.map((store) => [store.id, store])),
+    [storeList],
+  );
 
   function update(patch: Record<string, unknown>) {
     setQuery((q) => {
@@ -185,17 +179,23 @@ function MarketplacePage() {
             </div>
 
             {/* Grid */}
-            {products.length === 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="h-72 animate-pulse rounded-xl border border-border bg-card" />
+                ))}
+              </div>
+            ) : products.length === 0 ? (
               <EmptyState
                 title="No products found"
-                description="Try adjusting your filters or search for something else."
+                description="Vendor products will appear here as sellers publish them."
                 action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Clear filters</Link>}
               />
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                   {products.map((p) => {
-                    const store = demoStores.find((s) => s.id === p.storeId);
+                    const store = storeById.get(p.storeId);
                     return (
                       <ProductCard
                         key={p.id}

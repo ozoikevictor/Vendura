@@ -17,9 +17,11 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as StoresRouteImport } from './routes/stores'
 import { Route as VendorRouteRouteImport } from './routes/vendor/route'
 import { Route as VendorRegisterRouteImport } from './routes/vendor-register'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
@@ -98,6 +100,11 @@ const MarketplaceRoute = MarketplaceRouteImport.update({
   path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -111,6 +118,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoresRoute = StoresRouteImport.update({
+  id: '/stores',
+  path: '/stores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorRouteRoute = VendorRouteRouteImport.update({
@@ -310,9 +322,11 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/stores': typeof StoresRoute
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
@@ -358,9 +372,11 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/stores': typeof StoresRoute
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
@@ -409,9 +425,11 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
+  '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/stores': typeof StoresRoute
   '/vendor-register': typeof VendorRegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/wishlist': typeof WishlistRoute
@@ -461,9 +479,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/marketplace'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/search'
+    | '/stores'
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
@@ -509,9 +529,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/marketplace'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/search'
+    | '/stores'
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
@@ -559,9 +581,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/marketplace'
+    | '/profile'
     | '/register'
     | '/reset-password'
     | '/search'
+    | '/stores'
     | '/vendor-register'
     | '/verify-email'
     | '/wishlist'
@@ -610,9 +634,11 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
+  StoresRoute: typeof StoresRoute
   VendorRegisterRoute: typeof VendorRegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WishlistRoute: typeof WishlistRoute
@@ -686,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -705,6 +738,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stores': {
+      id: '/stores'
+      path: '/stores'
+      fullPath: '/stores'
+      preLoaderRoute: typeof StoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendor': {
@@ -1045,9 +1085,11 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
+  ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
+  StoresRoute: StoresRoute,
   VendorRegisterRoute: VendorRegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WishlistRoute: WishlistRoute,

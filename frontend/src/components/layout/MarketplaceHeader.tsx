@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Store, Search, Heart, ShoppingBasket, Menu, User, Bell,
   Package, MessageSquare, LayoutGrid, ChevronDown, LogOut,
@@ -23,6 +23,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const { user, clear: clearAuth } = useAuthStore();
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [accountOpen, setAccountOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -36,7 +37,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     refetchOnWindowFocus: "always",
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
-  const storefrontSlug = publicMode ? null : activeStoreSlug;
+  const storefrontSlug = !publicMode && pathname.startsWith("/store/") ? activeStoreSlug : null;
   const isCustomer = user?.role === "customer";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
@@ -162,6 +163,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
               <Link to="/marketplace" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
                 <LayoutGrid className="mr-1 inline h-4 w-4" /> Marketplace
               </Link>
+              <Link to="/stores" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">Stores</Link>
               <Link to="/categories" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">Categories</Link>
             </>}
           </nav>
@@ -261,6 +263,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
                   <MenuItem to="/customer/orders" icon={<Package className="h-4 w-4" />}>My Orders</MenuItem>
+                  <MenuItem to="/profile" icon={<User className="h-4 w-4" />}>Profile</MenuItem>
                   <MenuItem to="/customer/notifications" icon={<Bell className="h-4 w-4" />}>Notifications</MenuItem>
                   <MenuItem to="/messages" icon={<MessageSquare className="h-4 w-4" />}>Messages</MenuItem>
                   <MenuItem to="/wishlist" icon={<Heart className="h-4 w-4" />}>Wishlist</MenuItem>

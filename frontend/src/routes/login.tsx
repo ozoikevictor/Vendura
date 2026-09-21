@@ -6,7 +6,6 @@ import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
-import { useStorefrontStore } from "@/store/storefront";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/login")({
@@ -26,7 +25,6 @@ function LoginPage() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.set);
   const hasCartItems = useCartStore((s) => s.items.some((item) => !item.savedForLater));
-  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -43,7 +41,6 @@ function LoginPage() {
       if (user.role === "admin") navigate({ to: "/admin" });
       else if (user.role === "vendor") navigate({ to: "/vendor" });
       else if (hasCartItems) navigate({ to: "/checkout" });
-      else if (activeStoreSlug) navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug } });
       else navigate({ to: "/marketplace" });
     } catch (error) {
       toast.error(getErrorMessage(error, "Invalid email or password"));

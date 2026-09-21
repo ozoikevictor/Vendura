@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search as SearchIcon, X } from "lucide-react";
+import { Search as SearchIcon } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -8,7 +8,7 @@ import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
-import { stores } from "@/data/stores";
+import { getStores } from "@/services/storeService";
 import type { ProductQuery } from "@/types";
 
 export const Route = createFileRoute("/search")({
@@ -34,6 +34,15 @@ function SearchPage() {
     queryFn: () => queryProducts({ q, sort, pageSize: 48 }),
     enabled: q.length > 0,
   });
+  const { data: storeList = [] } = useQuery({
+    queryKey: ["stores"],
+    queryFn: getStores,
+    enabled: q.length > 0,
+  });
+  const storeById = useMemo(
+    () => new Map(storeList.map((store) => [store.id, store])),
+    [storeList],
+  );
 
   const products = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -94,7 +103,7 @@ function SearchPage() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
             {products.map((p) => {
-              const store = stores.find((s) => s.id === p.storeId);
+              const store = storeById.get(p.storeId);
               return (
                 <ProductCard
                   key={p.id}

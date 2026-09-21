@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Store, X, Home, LayoutGrid, Heart, ShoppingBasket,
   Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell, LogOut,
@@ -31,12 +31,13 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const wishlistCount = useWishlistStore((s) => s.ids.length);
   const [searchValue, setSearchValue] = useState("");
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clear);
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
   const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
-  const activeStoreSlug = publicMode ? null : rememberedStoreSlug;
+  const activeStoreSlug = !publicMode && pathname.startsWith("/store/") ? rememberedStoreSlug : null;
   const isCustomer = user?.role === "customer";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
@@ -180,6 +181,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
               </Link>
             </> : <>
               <DrawerLink to={publicMode ? "/explore" : "/marketplace"} onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>Marketplace</DrawerLink>
+              {!publicMode && <DrawerLink to="/stores" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Stores</DrawerLink>}
               <DrawerLink to={publicMode ? "/explore" : "/categories"} onClick={close} icon={<Package className="h-4 w-4" />}>Categories</DrawerLink>
             </>}
             {!publicMode && <>
@@ -237,7 +239,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                   <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
                   <p className="text-xs text-muted-foreground">Customer account</p>
                 </div>
-                <DrawerLink to="/customer/orders" onClick={close} icon={<User className="h-4 w-4" />}>Customer Account</DrawerLink>
+                <DrawerLink to="/profile" onClick={close} icon={<User className="h-4 w-4" />}>Profile</DrawerLink>
                 <button type="button" onClick={handleLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-60"><LogOut className="h-4 w-4" />{loggingOut ? "Logging out..." : "Log out"}</button>
               </> : isSellerPreview ? <>
                 <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
