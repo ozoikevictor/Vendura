@@ -170,14 +170,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
 
           {/* Actions */}
           <div className="ml-auto flex items-center gap-1">
-            {publicMode ? <>
-              <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
-                Log in
-              </Link>
-              <Link to="/vendor-register" className="hidden rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:inline-flex">
-                Start selling
-              </Link>
-            </> : <>
             {/* Wishlist */}
             <Link
               to="/wishlist"
@@ -247,8 +239,8 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 onBlur={() => setTimeout(() => setAccountOpen(false), 150)}
                 className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                  {isCustomer ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2) : <User className="h-4 w-4" />}
+                <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                  {isCustomer && user.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : isCustomer ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2) : <User className="h-4 w-4" />}
                 </span>
                 {isCustomer && (
                   <span className="hidden max-w-24 truncate sm:inline">{user.fullName}</span>
@@ -298,7 +290,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                 </div>
               )}
             </div>
-            </>}
           </div>
         </div>
 

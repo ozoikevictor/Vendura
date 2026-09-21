@@ -48,7 +48,7 @@ export const catalogRoutes = (db: Database) => {
   }));
   router.get("/products", asyncRoute(async (req, res) => {
     const query = z.object({ q: z.string().optional(), categorySlug: z.string().optional(), subcategorySlug: z.string().optional(), storeId: z.string().optional(), minPrice: z.coerce.number().optional(), maxPrice: z.coerce.number().optional(), negotiableOnly: z.enum(["true", "false"]).optional(), inStockOnly: z.enum(["true", "false"]).optional(), sort: z.enum(["relevance", "newest", "price_asc", "price_desc", "rating", "popular"]).default("relevance"), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(100).default(24) }).parse(req.query);
-    let items = await db.list<Entity>("products");
+    let items = (await db.list<Entity>("products")).filter((product) => product.status === "active");
     const categories = await db.list<Entity>("categories");
     if (query.q) { const q = query.q.toLowerCase(); items = items.filter((p) => String(p.name).toLowerCase().includes(q) || String(p.description).toLowerCase().includes(q) || (p.tags as string[]).some((tag) => tag.toLowerCase().includes(q))); }
     if (query.categorySlug) { const category = categories.find((c) => c.slug === query.categorySlug); items = items.filter((p) => p.categoryId === category?.id); }
@@ -60,6 +60,7 @@ export const catalogRoutes = (db: Database) => {
     if (query.inStockOnly === "true") items = items.filter((p) => Number(p.stock) > 0);
     const sorts = { relevance: (a: Entity, b: Entity) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || Number(b.soldCount) - Number(a.soldCount), newest: (a: Entity, b: Entity) => +new Date(String(b.createdAt)) - +new Date(String(a.createdAt)), price_asc: (a: Entity, b: Entity) => Number(a.price) - Number(b.price), price_desc: (a: Entity, b: Entity) => Number(b.price) - Number(a.price), rating: (a: Entity, b: Entity) => Number(b.rating) - Number(a.rating), popular: (a: Entity, b: Entity) => Number(b.soldCount) - Number(a.soldCount) };
     items.sort(sorts[query.sort]);
+    if (query.sort === "relevance" && !query.storeId) items = mixProductsByStore(items);
     const total = items.length;
     items = items.slice((query.page - 1) * query.pageSize, query.page * query.pageSize);
     ok(res, { items, total, page: query.page, pageSize: query.pageSize });
@@ -111,3 +112,19 @@ export const catalogRoutes = (db: Database) => {
 };
 
 async function ownedProduct(db: Database, id: string, req: AuthRequest) { const product = await db.get<Entity>("products", id); if (!product) throw new ApiError(404, "Product not found"); if (req.user!.role !== "admin" && product.storeId !== req.user!.storeId) throw new ApiError(403, "Product belongs to another store"); return product; }
+
+function mixProductsByStore(products: Entity[]) {
+  const groups = new Map<string, Entity[]>();
+  for (const product of products) {
+    const storeId = String(product.storeId);
+    groups.set(storeId, [...(groups.get(storeId) ?? []), product]);
+  }
+  const mixed: Entity[] = [];
+  while (mixed.length < products.length) {
+    for (const group of groups.values()) {
+      const product = group.shift();
+      if (product) mixed.push(product);
+    }
+  }
+  return mixed;
+}

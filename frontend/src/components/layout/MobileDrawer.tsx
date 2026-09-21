@@ -230,13 +230,14 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
           <div className="mt-6 border-t border-border pt-4">
             <p className="eyebrow mb-2">Account</p>
             <div className="space-y-1">
-              {publicMode ? <>
-                <DrawerLink to="/login" onClick={close} icon={<LogIn className="h-4 w-4" />}>Log in</DrawerLink>
-                <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
-                <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Start selling</DrawerLink>
-              </> : isCustomer ? <>
+              {isCustomer ? <>
                 <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
-                  <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                      {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : user.fullName.split(" ").map((part) => part[0]).join("").slice(0, 2)}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
+                  </div>
                   <p className="text-xs text-muted-foreground">Customer account</p>
                 </div>
                 <DrawerLink to="/profile" onClick={close} icon={<User className="h-4 w-4" />}>Profile</DrawerLink>
@@ -251,11 +252,8 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 <button type="button" onClick={handleCustomerRegistration} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"><User className="h-4 w-4" />Create customer account</button>
               </> : <>
                 <button type="button" onClick={handleCustomerLogin} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"><LogIn className="h-4 w-4" />Customer login</button>
-                <DrawerLink to="/login" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Vendor login</DrawerLink>
                 <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
-                <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Create seller account</DrawerLink>
               </>}
-              {user?.role === "customer" && <DrawerLink to="/vendor-register" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Become a Seller</DrawerLink>}
             </div>
           </div>
         </div>

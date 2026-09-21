@@ -75,12 +75,36 @@ function MarketplacePage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <MarketplaceHeader publicMode />
+      <MarketplaceHeader />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <SectionHeader eyebrow="Shop" title="Marketplace" description={`${total} products from verified vendors`} />
+        <SectionHeader
+          eyebrow="Shop across Vendura"
+          title="Marketplace"
+          description={`${total} products from ${storeList.length} independent ${storeList.length === 1 ? "vendor" : "vendors"}`}
+        />
 
-        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
+        <section className="mt-6" aria-labelledby="marketplace-categories">
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <h2 id="marketplace-categories" className="font-display text-lg font-bold text-foreground">Shop by category</h2>
+            <Link to="/categories" className="text-sm font-semibold text-primary hover:underline">View all categories</Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            {catalogCategories.slice(0, 12).map((category) => (
+              <Link
+                key={category.id}
+                to="/categories/$slug"
+                params={{ slug: category.slug }}
+                className="min-h-20 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary hover:bg-primary-soft"
+              >
+                <p className="text-sm font-semibold text-foreground">{category.name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{category.productCount} products</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-8 flex flex-col gap-6 lg:flex-row">
           {/* Sidebar filters */}
           <aside className={`${showFilters ? "fixed inset-0 z-50 overflow-y-auto bg-background lg:static lg:z-auto lg:w-64 lg:shrink-0" : "hidden lg:block"}`}>
             <div className="rounded-xl border border-border bg-card p-4 lg:sticky lg:top-4">

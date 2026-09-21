@@ -47,7 +47,10 @@ const profileSchema = z.object({
   fullName: z.string().trim().min(2).max(100).optional(),
   email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
   phone: z.string().trim().min(7).max(20).optional(),
-  avatarUrl: z.string().url().or(z.literal("")).optional(),
+  avatarUrl: z.string().refine(
+    (value) => value === "" || /^https?:\/\//i.test(value) || /^data:image\/(jpeg|png|webp);base64,/i.test(value),
+    "Profile picture must be an HTTP image URL or an uploaded JPG, PNG, or WebP image"
+  ).optional(),
   notificationPreferences: z.object({ newOrders: z.boolean(), newMessages: z.boolean(), lowStock: z.boolean(), payouts: z.boolean(), offers: z.boolean() }).optional()
 }).refine((value) => Object.keys(value).length > 0, "Provide at least one profile field");
 const hashSecret = (value: string) => createHash("sha256").update(`${value}:${config.JWT_SECRET}`).digest("hex");
