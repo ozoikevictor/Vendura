@@ -39,6 +39,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const activeStoreSlug = !publicMode && pathname.startsWith("/store/") ? rememberedStoreSlug : null;
   const isCustomer = user?.role === "customer";
+  const isCustomerStoreGateway = isCustomer && pathname === "/explore";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
   // Scroll lock with guaranteed cleanup — never freezes the page
@@ -170,7 +171,9 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 <Home className="h-4 w-4" /> Store Home
               </Link>
             ) : (
-              <DrawerLink to="/" onClick={close} icon={<Home className="h-4 w-4" />}>Home</DrawerLink>
+              <DrawerLink to={isCustomerStoreGateway ? "/marketplace" : "/"} onClick={close} icon={<Home className="h-4 w-4" />}>
+                {isCustomerStoreGateway ? "Store Home" : "Home"}
+              </DrawerLink>
             )}
             {activeStoreSlug ? <>
               <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
