@@ -41,77 +41,53 @@ function Index() {
     <div className="min-h-screen lagoon-wash">
       <PublicHeader />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <div className="grid items-center gap-8 lg:grid-cols-2">
-            <div className="animate-rise">
-              <p className="eyebrow mb-4">Nigeria's Multi-Vendor Marketplace</p>
-              <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Sell Smarter.
-                <br />
-                <span className="text-primary">Shop Anywhere.</span>
-              </h1>
-              <p className="mt-5 max-w-md text-base text-muted-foreground sm:text-lg">
-                From phones to fashion, building materials to baby products —
-                buy from verified vendors across Nigeria, or start your own store
-                in minutes.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  to="/explore"
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost"
-                >
-                  Open a Store
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  to="/vendor-register"
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-card transition-all hover:bg-accent"
-                >
-                  <Store className="h-4 w-4" />
-                  Start Selling
-                </Link>
-              </div>
-
-              {/* Trust badges */}
-              <div className="mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  Verified vendors
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Truck className="h-4 w-4 text-primary" />
-                  Nationwide delivery
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Wallet className="h-4 w-4 text-primary" />
-                  Secure payouts
-                </span>
-              </div>
+      {/* Hero image and introduction */}
+      <section className="overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-10 lg:px-8">
+          <div className="animate-settle overflow-hidden rounded-2xl border border-border bg-card shadow-frost">
+            <img
+              src={heroImg}
+              alt="Customers and sellers using the Vendura marketplace"
+              className="h-56 w-full object-cover sm:h-80 lg:h-[26rem]"
+            />
+          </div>
+        </div>
+        <div className="mx-auto max-w-4xl px-4 py-12 text-center sm:px-6 sm:py-16 lg:px-8">
+          <div className="animate-rise">
+            <p className="eyebrow mb-4">Nigeria's Multi-Vendor Marketplace</p>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              Sell Smarter. <span className="text-primary">Shop Anywhere.</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+              From phones to fashion, building materials to home essentials, buy from trusted vendors across Nigeria or start your own store in minutes.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/marketplace"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost"
+              >
+                Shop the marketplace
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-card transition-all hover:bg-accent"
+              >
+                <UserPlus className="h-4 w-4" />
+                Create a customer account
+              </Link>
+              <Link
+                to="/vendor-register"
+                className="inline-flex items-center gap-2 rounded-xl border border-primary/25 bg-primary-soft px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+              >
+                <Store className="h-4 w-4" />
+                Start selling
+              </Link>
             </div>
-
-            {/* Hero image */}
-            <div className="relative animate-settle">
-              <div className="overflow-hidden rounded-2xl border border-border shadow-frost">
-                <img
-                  src={heroImg}
-                  alt="Vendura marketplace"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              {/* Floating card */}
-              <div className="absolute -bottom-4 -left-4 hidden rounded-xl border border-border bg-card p-3 shadow-frost sm:block">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-soft text-success">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Built for every seller</p>
-                    <p className="text-xs text-muted-foreground">Your store, products, and customers</p>
-                  </div>
-                </div>
-              </div>
+            <div className="mt-9 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Verified vendors</span>
+              <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-primary" /> Nationwide delivery</span>
+              <span className="flex items-center gap-1.5"><Wallet className="h-4 w-4 text-primary" /> Secure payments</span>
             </div>
           </div>
         </div>
