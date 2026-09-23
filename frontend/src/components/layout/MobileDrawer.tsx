@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { logout } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
-import { useStorefrontStore } from "@/store/storefront";
 
 /**
  * Mobile navigation drawer.
@@ -36,8 +35,8 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
   const clearAuth = useAuthStore((state) => state.clear);
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
-  const rememberedStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
-  const activeStoreSlug = !publicMode && pathname.startsWith("/store/") ? rememberedStoreSlug : null;
+  const routeStoreSlug = pathname.match(/^\/store\/([^/]+)/)?.[1];
+  const activeStoreSlug = !publicMode && routeStoreSlug ? routeStoreSlug : null;
   const isCustomer = user?.role === "customer";
   const isCustomerStoreHome = !publicMode && !activeStoreSlug;
   const homeTarget = isCustomerStoreHome ? "/marketplace" : "/";

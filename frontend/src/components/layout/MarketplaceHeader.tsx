@@ -15,7 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getNotifications } from "@/services/notificationService";
 import { logout } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
-import { useStorefrontStore } from "@/store/storefront";
 
 export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean }) {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
@@ -28,7 +27,6 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const [loggingOut, setLoggingOut] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const queryClient = useQueryClient();
-  const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: () => getNotifications(user!.id),
@@ -37,7 +35,8 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
     refetchOnWindowFocus: "always",
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
-  const storefrontSlug = !publicMode && pathname.startsWith("/store/") ? activeStoreSlug : null;
+  const routeStoreSlug = pathname.match(/^\/store\/([^/]+)/)?.[1];
+  const storefrontSlug = !publicMode && routeStoreSlug ? routeStoreSlug : null;
   const isCustomer = user?.role === "customer";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
 
