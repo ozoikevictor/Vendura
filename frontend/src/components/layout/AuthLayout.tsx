@@ -14,8 +14,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className={`fixed inset-x-0 top-0 z-50 border-b border-primary/20 bg-[#edf8f0] transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm"}`}>
+    <div className="flex min-h-[100svh] flex-col bg-background">
+      <header className={`sticky inset-x-0 top-0 z-50 shrink-0 border-b border-primary/20 bg-[#edf8f0] transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm"}`}>
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex min-w-0 items-center gap-2 text-foreground">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -29,10 +29,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
       </header>
-      <div className="h-16 shrink-0" aria-hidden="true" />
 
       <main className="flex-1">
-        <div className="min-h-[calc(100dvh-4rem)] lg:relative">
+        <div className="min-h-[calc(100svh-4rem)] lg:relative">
           <aside className="relative min-h-64 overflow-hidden lg:fixed lg:bottom-0 lg:left-0 lg:top-16 lg:w-[44%] lg:min-h-0">
             <img src={authBanner} alt="A Vendura seller preparing products for customers" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-foreground/70" />
@@ -48,7 +47,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </aside>
-          <section className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:ml-[44%] lg:px-10">
+          <section className="flex min-h-[calc(100svh-4rem)] items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:ml-[44%] lg:px-10">
             <div className="w-full animate-rise">{children}</div>
           </section>
         </div>
