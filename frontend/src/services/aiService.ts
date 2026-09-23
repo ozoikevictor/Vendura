@@ -25,6 +25,30 @@ export interface BuyerRequest {
   createdAt: string;
 }
 
+export interface AIHistoryItem {
+  id: string;
+  query: string;
+  response: string;
+  productIds: string[];
+  resultCount: number;
+  createdAt: string;
+}
+
+export interface AISellerOffer {
+  id: string;
+  conversationId: string;
+  productId: string;
+  productName: string;
+  productImage: string;
+  productSlug?: string;
+  originalPrice: number;
+  offeredPrice: number;
+  counterPrice?: number;
+  status: string;
+  createdAt: string;
+  store: { id: string; name: string; verified: boolean; rating: number } | null;
+}
+
 export const searchWithAI = (input: { message: string; imageName?: string; imageType?: string }) =>
   api<AISearchResult>("/ai/search", { method: "POST", ...json(input) });
 
@@ -36,3 +60,5 @@ export const createBuyerRequest = (
 ) => api<BuyerRequest>("/ai/requests", { method: "POST", ...json(input) });
 
 export const getBuyerRequests = () => api<BuyerRequest[]>("/ai/requests");
+export const getAIHistory = () => api<AIHistoryItem[]>("/ai/history");
+export const getAISellerOffers = () => api<AISellerOffer[]>("/ai/offers");

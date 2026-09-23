@@ -25,10 +25,14 @@ import { useCartStore } from "@/store/cart";
 import { formatNaira } from "@/utils/format";
 import {
   createBuyerRequest,
+  getAIHistory,
+  getAISellerOffers,
   getBuyerRequests,
   searchWithAI,
   transcribeVoice,
   type AIProduct,
+  type AIHistoryItem,
+  type AISellerOffer,
   type BuyerRequest,
 } from "@/services/aiService";
 import { getErrorMessage } from "@/services/api";
@@ -672,20 +676,29 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-export const customerHistory = [
-  { title: "iPhone 15 Pro under ₦900k", detail: "14 offers", status: "Active" },
-  { title: "Laptop for programming", detail: "Completed", status: "Completed" },
-  { title: "Black sneakers size 44", detail: "No offers", status: "Expired" },
-];
-
 export function CustomerAIListPage({ kind }: { kind: "history" | "requests" | "offers" }) {
   const [buyerRequests, setBuyerRequests] = useState<BuyerRequest[]>([]);
-  const [requestsLoading, setRequestsLoading] = useState(kind === "requests");
+  const [history, setHistory] = useState<AIHistoryItem[]>([]);
+  const [offers, setOffers] = useState<AISellerOffer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   useEffect(() => {
-    if (kind !== "requests") return;
-    getBuyerRequests()
-      .then(setBuyerRequests)
-      .finally(() => setRequestsLoading(false));
+    const load =
+      kind === "requests"
+        ? getBuyerRequests()
+        : kind === "history"
+          ? getAIHistory()
+          : getAISellerOffers();
+    load
+      .then((items) => {
+        if (kind === "requests") setBuyerRequests(items as BuyerRequest[]);
+        if (kind === "history") setHistory(items as AIHistoryItem[]);
+        if (kind === "offers") setOffers(items as AISellerOffer[]);
+      })
+      .catch((error) =>
+        setLoadError(getErrorMessage(error, "This information could not be loaded.")),
+      )
+      .finally(() => setLoading(false));
   }, [kind]);
   const title =
     kind === "history" ? "AI history" : kind === "requests" ? "Buyer requests" : "Seller offers";
@@ -705,12 +718,18 @@ export function CustomerAIListPage({ kind }: { kind: "history" | "requests" | "o
             Your shopping conversations, requests, and seller responses.
           </p>
           <div className="mt-6 space-y-3">
-            {kind === "offers" ? (
-              <OfferCards />
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="h-24 animate-pulse rounded-lg bg-muted" />
+                ))}
+              </div>
+            ) : loadError ? (
+              <div className="rounded-lg border border-destructive/20 bg-destructive-soft p-4 text-sm text-destructive">
+                {loadError}
+              </div>
             ) : kind === "requests" ? (
-              requestsLoading ? (
-                <div className="h-24 animate-pulse rounded-lg bg-muted" />
-              ) : buyerRequests.length > 0 ? (
+              buyerRequests.length > 0 ? (
                 buyerRequests.map((request) => (
                   <article key={request.id} className="rounded-lg border border-border bg-card p-4">
                     <div className="flex items-start justify-between gap-4">
@@ -739,90 +758,101 @@ export function CustomerAIListPage({ kind }: { kind: "history" | "requests" | "o
                   No buyer requests yet.
                 </div>
               )
-            ) : (
-              customerHistory.map((item) => (
-                <article
-                  key={item.title}
-                  className="flex items-center gap-4 rounded-lg border border-border bg-card p-4"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-soft text-primary">
-                    {kind === "history" ? (
+            ) : kind === "history" ? (
+              history.length > 0 ? (
+                history.map((item) => (
+                  <article
+                    key={item.id}
+                    className="flex items-center gap-4 rounded-lg border border-border bg-card p-4"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-md bg-primary-soft text-primary">
                       <MessageSquare className="h-5 w-5" />
-                    ) : (
-                      <Tag className="h-5 w-5" />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-sm font-semibold">{item.title}</h2>
-                    <p className="text-xs text-muted-foreground">{item.detail}</p>
-                  </div>
-                  <span className="rounded bg-muted px-2 py-1 text-xs font-medium">
-                    {item.status}
-                  </span>
-                </article>
-              ))
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-sm font-semibold">{item.query}</h2>
+                      <p className="line-clamp-2 text-xs text-muted-foreground">{item.response}</p>
+                    </div>
+                    <span className="shrink-0 rounded bg-muted px-2 py-1 text-xs font-medium">
+                      {item.resultCount} results
+                    </span>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                  No AI conversations yet.
+                </div>
+              )
+            ) : offers.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {offers.map((offer) => (
+                  <article key={offer.id} className="rounded-lg border border-border bg-card p-5">
+                    <div className="flex items-start gap-3">
+                      {offer.productImage && (
+                        <img
+                          src={offer.productImage}
+                          alt=""
+                          className="h-14 w-14 rounded-md object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold uppercase text-primary">
+                          {offer.store?.verified ? "Verified seller" : "Seller offer"}
+                        </p>
+                        <h2 className="truncate font-bold">
+                          {offer.store?.name ?? "Marketplace seller"}
+                        </h2>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {offer.productName}
+                        </p>
+                      </div>
+                      {offer.store && (
+                        <span className="flex items-center gap-1 text-sm">
+                          <Star className="h-4 w-4 fill-warning text-warning" />
+                          {offer.store.rating}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-4 text-2xl font-bold">
+                      {formatNaira(offer.counterPrice ?? offer.offeredPrice)}
+                    </p>
+                    <p className="mt-1 text-xs capitalize text-muted-foreground">
+                      Status: {offer.status}
+                    </p>
+                    <div className="mt-5 grid grid-cols-2 gap-2">
+                      {offer.productSlug ? (
+                        <Link
+                          to="/product/$slug"
+                          params={{ slug: offer.productSlug }}
+                          className="rounded-md border border-border px-3 py-2 text-center text-sm font-semibold"
+                        >
+                          View product
+                        </Link>
+                      ) : (
+                        <span className="rounded-md border border-border px-3 py-2 text-center text-sm text-muted-foreground">
+                          Product unavailable
+                        </span>
+                      )}
+                      <Link
+                        to="/messages/$conversationId"
+                        params={{ conversationId: offer.conversationId }}
+                        className="rounded-md bg-primary px-3 py-2 text-center text-sm font-semibold text-primary-foreground"
+                      >
+                        Message seller
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                No seller offers yet.
+              </div>
             )}
           </div>
         </main>
         <SiteFooter />
       </div>
     </CustomerAIGuard>
-  );
-}
-
-function OfferCards() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {[
-        {
-          seller: "TechHub Nigeria",
-          price: "₦870,000",
-          battery: "91%",
-          delivery: "Tomorrow",
-          rating: "4.8",
-        },
-        {
-          seller: "SmartPhone Arena",
-          price: "₦890,000",
-          battery: "96%",
-          delivery: "Same day",
-          rating: "4.7",
-        },
-      ].map((offer, index) => (
-        <article key={offer.seller} className="rounded-lg border border-border bg-card p-5">
-          <div className="flex justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase text-primary">Verified seller</p>
-              <h2 className="mt-1 font-bold">{offer.seller}</h2>
-            </div>
-            <span className="flex items-center gap-1 text-sm">
-              <Star className="h-4 w-4 fill-warning text-warning" />
-              {offer.rating}
-            </span>
-          </div>
-          <h3 className="mt-5 font-semibold">iPhone 15 Pro · 256GB</h3>
-          <p className="mt-1 text-2xl font-bold">{offer.price}</p>
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-            <span>Battery: {offer.battery}</span>
-            <span>Delivery: {offer.delivery}</span>
-            <span>Condition: Used</span>
-            <span>Warranty: 30 days</span>
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            <Link
-              to="/customer/ai/deals/$dealId"
-              params={{ dealId: String(index + 1) }}
-              className="rounded-md border border-border px-3 py-2 text-center text-sm font-semibold"
-            >
-              Negotiate
-            </Link>
-            <button className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
-              Accept Offer
-            </button>
-          </div>
-        </article>
-      ))}
-    </div>
   );
 }
 

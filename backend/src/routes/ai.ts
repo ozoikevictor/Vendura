@@ -43,7 +43,7 @@ export const aiRoutes = (db: Database) => {
   const router = Router();
   router.use("/ai", authenticate, authorize("customer", "admin"));
 
-  router.post("/ai/search", asyncRoute(async (req, res) => {
+  router.post("/ai/search", asyncRoute(async (req: AuthRequest, res) => {
     const input = requestSchema.parse(req.body);
     const source = `${input.message} ${input.imageName ?? ""}`.toLowerCase();
     const requestedTerms = tokenize(source);
@@ -105,6 +105,16 @@ export const aiRoutes = (db: Database) => {
         : "I could not find an in-stock product matching that request. Try a broader name or create a buyer request."
       : `I found ${matches.length} live marketplace ${matches.length === 1 ? "product" : "products"}${budget !== undefined ? `, including ${exactCount} within ${formatNaira(budget)}` : ""}.`;
 
+    await db.create("aiHistory", {
+      id: id("ai-history"),
+      customerId: req.user!.id,
+      query: input.message || `Image search: ${input.imageName}`,
+      response,
+      productIds: matches.map((product) => product.id),
+      resultCount: matches.length,
+      createdAt: now(),
+    });
+
     ok(res, {
       response,
       products: matches,
@@ -143,8 +153,40 @@ export const aiRoutes = (db: Database) => {
   router.get("/ai/requests", asyncRoute(async (req: AuthRequest, res) => {
     const requests = (await db.list<Entity>("buyerRequests"))
       .filter((request) => req.user!.role === "admin" || request.customerId === req.user!.id)
-      .sort((a, b) => +new Date(String(b.createdAt)) - +new Date(String(a.createdAt)));
+      .sort((a, b) => +new Date(String((b as Entity).createdAt)) - +new Date(String((a as Entity).createdAt)));
     ok(res, requests);
+  }));
+
+  router.get("/ai/history", asyncRoute(async (req: AuthRequest, res) => {
+    const history = (await db.list<Entity>("aiHistory"))
+      .filter((item) => req.user!.role === "admin" || item.customerId === req.user!.id)
+      .sort((a, b) => +new Date(String(b.createdAt)) - +new Date(String(a.createdAt)));
+    ok(res, history);
+  }));
+
+  router.get("/ai/offers", asyncRoute(async (req: AuthRequest, res) => {
+    const conversations = (await db.list<Entity>("conversations"))
+      .filter((conversation) => req.user!.role === "admin" || conversation.customerId === req.user!.id);
+    const conversationById = new Map(conversations.map((conversation) => [conversation.id, conversation]));
+    const [stores, products] = await Promise.all([db.list<Entity>("stores"), db.list<Entity>("products")]);
+    const storeById = new Map(stores.map((store) => [store.id, store]));
+    const productById = new Map(products.map((product) => [product.id, product]));
+    const offers = (await db.list<Entity>("offers"))
+      .filter((offer) => offer.by === "vendor" && conversationById.has(String(offer.conversationId)))
+      .map((offer) => {
+        const conversation = conversationById.get(String(offer.conversationId))!;
+        const store = storeById.get(String(conversation.storeId));
+        const product = productById.get(String(offer.productId));
+        return {
+          ...offer,
+          productName: conversation.productName,
+          productImage: conversation.productImage,
+          productSlug: product?.slug,
+          store: store ? { id: store.id, name: store.name, verified: Boolean(store.verified), rating: Number(store.rating ?? 0) } : null,
+        };
+      })
+      .sort((a, b) => +new Date(String((b as Entity).createdAt)) - +new Date(String((a as Entity).createdAt)));
+    ok(res, offers);
   }));
 
   router.post("/ai/requests", asyncRoute(async (req: AuthRequest, res) => {

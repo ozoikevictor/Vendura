@@ -184,6 +184,11 @@ describe("Vendura API", () => {
     expect(buyerRequest.body.data).toMatchObject({ product: "Red leather bag", status: "active", offerCount: 0 });
     const requests = await request(app).get("/api/ai/requests").set(auth(customer));
     expect(requests.body.data[0]).toMatchObject({ id: buyerRequest.body.data.id, maximumBudget: 50000 });
+    const history = await request(app).get("/api/ai/history").set(auth(customer));
+    expect(history.body.data[0]).toMatchObject({ query: "I need a red phone", resultCount: 0 });
+    const aiOffers = await request(app).get("/api/ai/offers").set(auth(customer));
+    expect(aiOffers.status).toBe(200);
+    expect(Array.isArray(aiOffers.body.data)).toBe(true);
   });
   it("returns vendor dashboard, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); expect((await request(app).get("/api/vendor/overview").set(auth(token))).status).toBe(200); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
   it("lists banks and verifies a seller bank account through Paystack", async () => {
