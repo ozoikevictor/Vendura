@@ -218,7 +218,10 @@ export function VendorLayout() {
         <div className="h-16" aria-hidden="true" />
 
         {/* Page content */}
-        <main className="h-[calc(100vh-4rem)] overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-8">
+        <main className={cn(
+          "h-[calc(100vh-4rem)] overscroll-contain p-4 sm:p-6 lg:p-8",
+          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" ? "overflow-hidden" : "overflow-y-auto",
+        )}>
           <Outlet />
         </main>
       </div>

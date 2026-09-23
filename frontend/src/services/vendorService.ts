@@ -13,7 +13,25 @@ import type {
 } from "@/types";
 import { api, json } from "./api";
 
+export interface VendorAIResultItem {
+  id: string;
+  type: "product" | "order" | "request";
+  title: string;
+  subtitle: string;
+  meta: string;
+  image?: string;
+  href: string;
+}
+
+export interface VendorAIResult {
+  response: string;
+  items: VendorAIResultItem[];
+  metrics: Array<{ label: string; value: string }>;
+}
+
 export const getVendorOverview = () => api<VendorOverview>("/vendor/overview");
+export const searchVendorAI = (message: string) =>
+  api<VendorAIResult>("/vendor/ai/search", { method: "POST", ...json({ message }) });
 export const getTransactions = (_vendorId: ID) => api<Transaction[]>("/vendor/transactions");
 export const getVendorBalance = () => api<VendorBalance>("/vendor/balance");
 export const getPayouts = (_vendorId: ID) => api<Payout[]>("/vendor/payouts");

@@ -44,6 +44,22 @@ export const vendorRoutes = (db: Database) => {
       topProducts: products.sort((a, b) => Number(b.soldCount) - Number(a.soldCount)).slice(0, 5).map((product) => ({ productId: product.id, name: product.name, sales: product.soldCount, revenue: Number(product.soldCount) * Number(product.price) }))
     });
   }));
+  router.post("/ai/search", asyncRoute(async (req: AuthRequest, res) => {
+    const { message } = z.object({ message: z.string().trim().min(1).max(1000) }).parse(req.body);
+    const [store, allProducts, allOrders, allTransactions, allRequests] = await Promise.all([
+      db.get<Entity>("stores", req.user!.storeId!),
+      db.list<Entity>("products"),
+      db.list<Entity>("orders"),
+      db.list<Entity>("transactions"),
+      db.list<Entity>("buyerRequests"),
+    ]);
+    if (!store) throw new ApiError(404, "Store not found");
+    const products = allProducts.filter((product) => product.storeId === store.id);
+    const orders = allOrders.filter((order) => order.storeId === store.id);
+    const transactions = allTransactions.filter((transaction) => transaction.vendorId === req.user!.id && transaction.status !== "reversed");
+    const result = answerVendorAI(message, store, products, orders, transactions, allRequests);
+    ok(res, result);
+  }));
   router.get("/transactions", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id))));
   router.get("/balance", asyncRoute(async (req: AuthRequest, res) => { const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id); const active = transactions.filter((t) => t.status !== "reversed"); const totalSales = active.filter((t) => t.type === "sale").reduce((s, t) => s + Number(t.amount), 0); const deliveryFees = active.filter((t) => t.type === "delivery").reduce((s, t) => s + Number(t.amount), 0); ok(res, { available: active.filter((t) => t.status === "available").reduce((s, t) => s + Number(t.amount), 0), pending: active.filter((t) => t.status === "pending").reduce((s, t) => s + Number(t.amount), 0), customerPayments: totalSales + deliveryFees, totalSales, deliveryFees, platformFees: Math.abs(active.filter((t) => t.type === "fee").reduce((s, t) => s + Number(t.amount), 0)), totalPaid: Math.abs(active.filter((t) => t.type === "payout").reduce((s, t) => s + Number(t.amount), 0)) }); }));
   router.get("/payouts", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("payouts")).filter((p) => p.vendorId === req.user!.id))));
@@ -132,6 +148,125 @@ function weeklyOrderSeries(orders: Entity[]) {
     }).length;
     return { label: dayStart.toLocaleString("en-NG", { weekday: "short" }), value };
   });
+}
+
+function answerVendorAI(message: string, store: Entity, products: Entity[], orders: Entity[], transactions: Entity[], requests: Entity[]) {
+  const query = message.toLowerCase();
+  const activeProducts = products.filter((product) => product.status === "active");
+  const lowStock = activeProducts
+    .filter((product) => Number(product.stock) <= Number(product.lowStockThreshold ?? 0))
+    .sort((a, b) => Number(a.stock) - Number(b.stock));
+  const pendingOrders = orders.filter((order) => ["placed", "payment_confirmed", "processing"].includes(String(order.status)));
+  const sales = transactions.filter((transaction) => transaction.type === "sale");
+  const period = /today/.test(query) ? "today" : /week/.test(query) ? "week" : /month/.test(query) ? "month" : "all";
+  const periodSales = sales.filter((transaction) => isInPeriod(String(transaction.createdAt ?? ""), period));
+  const revenue = periodSales.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
+  if (/^(hi|hello|hey|good morning|good afternoon|good evening)[!.?\s]*$/i.test(message.trim())) {
+    return vendorAIResult(`Hello! I can help you understand ${store.name}'s products, orders, stock, revenue, customers, and buyer opportunities. What would you like to check?`);
+  }
+  if (/low.?stock|running low|restock|inventory alert/.test(query)) {
+    return vendorAIResult(
+      lowStock.length > 0
+        ? `${lowStock.length} ${lowStock.length === 1 ? "product needs" : "products need"} attention. ${lowStock.slice(0, 4).map((product) => `${product.name} has ${product.stock} left`).join("; ")}.`
+        : "None of your active products are currently at or below their low-stock threshold.",
+      lowStock.slice(0, 8).map(productAIItem),
+    );
+  }
+  if (/best.?sell|top product|selling (the )?most|most sold/.test(query)) {
+    const top = [...activeProducts].sort((a, b) => Number(b.soldCount ?? 0) - Number(a.soldCount ?? 0)).slice(0, 5);
+    return vendorAIResult(
+      top.length > 0 ? `${top[0].name} is currently your best-selling product with ${Number(top[0].soldCount ?? 0)} sold.` : "You do not have active products to rank yet.",
+      top.map(productAIItem),
+    );
+  }
+  if (/buyer request|opportunit|customer request/.test(query)) {
+    const matches = requests
+      .filter((request) => request.status === "active")
+      .map((request) => ({ request, score: requestMatchScore(request, activeProducts) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+    return vendorAIResult(
+      matches.length > 0
+        ? `I found ${matches.length} active buyer ${matches.length === 1 ? "request" : "requests"} that may match your catalogue.`
+        : "I could not find an active buyer request matching your current catalogue.",
+      matches.map(({ request }) => ({ id: String(request.id), type: "request", title: String(request.product), subtitle: `${formatNaira(Number(request.maximumBudget))} maximum budget`, meta: String(request.deliveryLocation ?? "Location not provided"), href: "/vendor/ai/opportunities" })),
+    );
+  }
+  if (/revenue|sales|how much.*(make|made|earn)/.test(query)) {
+    const label = period === "today" ? "today" : period === "week" ? "this week" : period === "month" ? "this month" : "in recorded sales";
+    return vendorAIResult(`Your store has ${formatNaira(revenue)} ${label}, from ${periodSales.length} recorded ${periodSales.length === 1 ? "sale" : "sales"}.`, [], [
+      { label: "Revenue", value: formatNaira(revenue) },
+      { label: "Sales", value: String(periodSales.length) },
+    ]);
+  }
+  if (/order/.test(query)) {
+    const relevant = /pending|new|summar/.test(query) ? pendingOrders : orders;
+    return vendorAIResult(
+      relevant.length > 0
+        ? `You have ${relevant.length} ${/pending|new|summar/.test(query) ? "open" : "total"} ${relevant.length === 1 ? "order" : "orders"}.`
+        : `You do not have any ${/pending|new|summar/.test(query) ? "open " : ""}orders right now.`,
+      relevant.slice(0, 8).map((order) => ({ id: String(order.id), type: "order", title: String(order.orderNumber), subtitle: `${order.customerName ?? "Customer"} · ${formatNaira(Number(order.total))}`, meta: humanize(String(order.status)), href: `/vendor/orders/${order.id}` })),
+    );
+  }
+  if (/customer/.test(query)) {
+    const customers = new Set(orders.map((order) => String(order.customerId)));
+    return vendorAIResult(`${store.name} has received orders from ${customers.size} ${customers.size === 1 ? "customer" : "customers"}.`, [], [{ label: "Customers", value: String(customers.size) }]);
+  }
+  if (/how many|number of|count/.test(query) && /product|listing/.test(query)) {
+    return vendorAIResult(`You have ${products.length} product listings: ${activeProducts.length} active and ${products.length - activeProducts.length} not active.`, [], [
+      { label: "All products", value: String(products.length) },
+      { label: "Active", value: String(activeProducts.length) },
+      { label: "Low stock", value: String(lowStock.length) },
+    ]);
+  }
+  const namedProducts = activeProducts.filter((product) => normalize(String(product.name)).split(" ").some((word) => word.length > 3 && normalize(query).includes(word)));
+  if (namedProducts.length > 0) {
+    return vendorAIResult(`I found ${namedProducts.length} matching ${namedProducts.length === 1 ? "product" : "products"} in your store.`, namedProducts.slice(0, 8).map(productAIItem));
+  }
+  return vendorAIResult("I can check your live products, low stock, orders, revenue, customers, best sellers, or matching buyer requests. Try asking about one of those areas.");
+}
+
+function vendorAIResult(response: string, items: Array<Record<string, unknown>> = [], metrics: Array<{ label: string; value: string }> = []) {
+  return { response, items, metrics };
+}
+
+function productAIItem(product: Entity) {
+  return { id: String(product.id), type: "product", title: String(product.name), subtitle: formatNaira(Number(product.price)), meta: `${Number(product.stock)} in stock · ${Number(product.soldCount ?? 0)} sold`, image: (product.images as string[] | undefined)?.[0], href: `/vendor/products/${product.id}` };
+}
+
+function requestMatchScore(request: Entity, products: Entity[]) {
+  const requestWords = new Set(normalize(`${request.product ?? ""} ${request.details ?? ""}`).split(" ").filter((word) => word.length > 2));
+  return products.reduce((best, product) => {
+    const productWords = normalize(`${product.name} ${product.description} ${(product.tags as string[] | undefined ?? []).join(" ")}`).split(" ");
+    return Math.max(best, productWords.filter((word) => requestWords.has(word)).length);
+  }, 0);
+}
+
+function isInPeriod(value: string, period: "today" | "week" | "month" | "all") {
+  if (period === "all") return true;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const current = new Date();
+  if (period === "today") return date.toDateString() === current.toDateString();
+  if (period === "month") return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth();
+  const weekStart = new Date(current);
+  weekStart.setDate(current.getDate() - 6);
+  weekStart.setHours(0, 0, 0, 0);
+  return date >= weekStart && date <= current;
+}
+
+function normalize(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function humanize(value: string) {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatNaira(value: number) {
+  return `₦${Math.round(value || 0).toLocaleString("en-NG")}`;
 }
 
 async function paystackRequest<T>(path: string, init: RequestInit = {}) {
