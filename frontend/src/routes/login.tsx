@@ -7,6 +7,7 @@ import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -60,6 +61,7 @@ function LoginPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8">
+          <SocialAuthButtons />
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { useStorefrontStore } from "@/store/storefront";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -58,7 +59,8 @@ function RegisterPage() {
       setAuth(user);
       if (user.emailVerified) {
         toast.success("Account created successfully!");
-        if (activeStoreSlug) navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug } });
+        if (activeStoreSlug)
+          navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug } });
         else navigate({ to: "/marketplace" });
       } else {
         toast.success("Account created! Verify your email.");
@@ -82,6 +84,7 @@ function RegisterPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8">
+          <SocialAuthButtons />
           <form onSubmit={handleSubmit} className="space-y-4">
             <Field
               icon={<User className="h-4 w-4" />}
