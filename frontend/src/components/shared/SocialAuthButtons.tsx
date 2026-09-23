@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-export function SocialAuthButtons() {
+export function SocialAuthButtons({ showDivider = true }: { showDivider?: boolean }) {
   const notifyProviderSetup = (provider: string) => {
     toast.info(`${provider} sign-in will be available after OAuth setup.`);
   };
@@ -23,13 +23,15 @@ export function SocialAuthButtons() {
         <AppleIcon />
         Continue with Apple
       </button>
-      <div className="flex items-center gap-3 py-1" aria-hidden="true">
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          Or continue with email
-        </span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
+      {showDivider && (
+        <div className="flex items-center gap-3 py-1" aria-hidden="true">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Or continue with email
+          </span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+      )}
     </div>
   );
 }

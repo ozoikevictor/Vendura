@@ -11,6 +11,7 @@ import { nigerianStates } from "@/data/users";
 import { getErrorMessage } from "@/services/api";
 import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
+import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -61,7 +62,9 @@ function CheckoutPage() {
   );
   const total = subtotal + deliveryFee;
   const paymentAttemptKey = "vendura-paystack-attempt";
-  const cartFingerprint = JSON.stringify(items.map((item) => ({ id: item.id, quantity: item.quantity, price: item.unitPrice })));
+  const cartFingerprint = JSON.stringify(
+    items.map((item) => ({ id: item.id, quantity: item.quantity, price: item.unitPrice })),
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,10 +85,18 @@ function CheckoutPage() {
     setLoading(true);
     setError("");
     try {
-      const savedAttempt = form.paymentMethod === "card"
-        ? JSON.parse(window.sessionStorage.getItem(paymentAttemptKey) ?? "null") as { fingerprint?: string; orderIds?: string[] } | null
-        : null;
-      if (form.paymentMethod === "card" && savedAttempt?.fingerprint === cartFingerprint && savedAttempt.orderIds?.length) {
+      const savedAttempt =
+        form.paymentMethod === "card"
+          ? (JSON.parse(window.sessionStorage.getItem(paymentAttemptKey) ?? "null") as {
+              fingerprint?: string;
+              orderIds?: string[];
+            } | null)
+          : null;
+      if (
+        form.paymentMethod === "card" &&
+        savedAttempt?.fingerprint === cartFingerprint &&
+        savedAttempt.orderIds?.length
+      ) {
         const payment = await initializePaystackPayment(savedAttempt.orderIds);
         window.sessionStorage.setItem("vendura-pending-payment", payment.reference);
         window.location.assign(payment.authorizationUrl);
@@ -114,7 +125,10 @@ function CheckoutPage() {
       });
       if (form.paymentMethod === "card") {
         const orderIds = result.orders.map((order) => order.id);
-        window.sessionStorage.setItem(paymentAttemptKey, JSON.stringify({ fingerprint: cartFingerprint, orderIds }));
+        window.sessionStorage.setItem(
+          paymentAttemptKey,
+          JSON.stringify({ fingerprint: cartFingerprint, orderIds }),
+        );
         const payment = await initializePaystackPayment(orderIds);
         window.sessionStorage.setItem("vendura-pending-payment", payment.reference);
         window.location.assign(payment.authorizationUrl);
@@ -230,6 +244,12 @@ function CheckoutPage() {
             >
               Create account
             </Link>
+          </div>
+          <div className="mx-auto mt-6 max-w-xs">
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Or use a customer account
+            </p>
+            <SocialAuthButtons showDivider={false} />
           </div>
         </div>
         <SiteFooter />
@@ -384,13 +404,23 @@ function CheckoutPage() {
                     id: "standard",
                     label: "Standard Delivery",
                     desc: "3–5 business days",
-                    fee: formatNaira(Object.values(storeSubtotals).reduce((sum, amount) => sum + calculateDeliveryFee(amount, "standard"), 0)),
+                    fee: formatNaira(
+                      Object.values(storeSubtotals).reduce(
+                        (sum, amount) => sum + calculateDeliveryFee(amount, "standard"),
+                        0,
+                      ),
+                    ),
                   },
                   {
                     id: "express",
                     label: "Express Delivery",
                     desc: "1–2 business days",
-                    fee: formatNaira(Object.values(storeSubtotals).reduce((sum, amount) => sum + calculateDeliveryFee(amount, "express"), 0)),
+                    fee: formatNaira(
+                      Object.values(storeSubtotals).reduce(
+                        (sum, amount) => sum + calculateDeliveryFee(amount, "express"),
+                        0,
+                      ),
+                    ),
                   },
                   { id: "pickup", label: "Store Pickup", desc: "Pick up from seller", fee: "Free" },
                 ].map((opt) => (
@@ -500,7 +530,9 @@ function CheckoutPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery fee</span>
-                  <span className="text-foreground">{deliveryFee === 0 ? "Free" : formatNaira(deliveryFee)}</span>
+                  <span className="text-foreground">
+                    {deliveryFee === 0 ? "Free" : formatNaira(deliveryFee)}
+                  </span>
                 </div>
                 <div className="border-t border-border pt-1.5">
                   <div className="flex justify-between">
@@ -514,7 +546,13 @@ function CheckoutPage() {
                 disabled={loading}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
-                {loading ? (form.paymentMethod === "card" ? "Opening Paystack..." : "Placing order...") : (form.paymentMethod === "card" ? `Pay ${formatNaira(total)}` : "Place Order")}
+                {loading
+                  ? form.paymentMethod === "card"
+                    ? "Opening Paystack..."
+                    : "Placing order..."
+                  : form.paymentMethod === "card"
+                    ? `Pay ${formatNaira(total)}`
+                    : "Place Order"}
               </button>
               <p className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3 w-3" /> Backend validates all prices and fees
