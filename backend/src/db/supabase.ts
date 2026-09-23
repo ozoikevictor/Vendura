@@ -12,7 +12,8 @@ const collectionTable: Record<string, string> = {
   conversations: "conversations", messages: "messages", offers: "offers",
   notifications: "notifications", plans: "plans", subscriptions: "subscriptions",
   bankAccounts: "bank_accounts", deliverySettings: "delivery_settings",
-  transactions: "transactions", payouts: "payouts"
+  transactions: "transactions", payouts: "payouts",
+  aiHistory: "messages", buyerRequests: "messages"
 };
 
 type EntityRow = { id: string; data: Entity };

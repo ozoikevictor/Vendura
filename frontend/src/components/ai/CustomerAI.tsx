@@ -425,13 +425,6 @@ export function CustomerAIPage() {
         {showRequest && (
           <BuyerRequestModal initialProduct={message} onClose={() => setShowRequest(false)} />
         )}
-        <Link
-          to="/customer/ai"
-          aria-label="Open AI Assistant"
-          className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg sm:hidden"
-        >
-          <Sparkles className="h-5 w-5" />
-        </Link>
       </div>
     </CustomerAIGuard>
   );

@@ -39,6 +39,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   const storefrontSlug = !publicMode && routeStoreSlug ? routeStoreSlug : null;
   const isCustomer = user?.role === "customer";
   const isSellerPreview = user?.role === "vendor" || user?.role === "admin";
+  const isCustomerAI = pathname === "/customer/ai" || pathname.startsWith("/customer/ai/");
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 8);
@@ -279,20 +280,22 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
         </div>
 
         {/* Search (mobile) */}
-        <form onSubmit={handleSearch} className="border-t border-primary/15 bg-[#edf8f0] px-4 py-2 md:hidden">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search products..."
-              className="w-full rounded-lg border border-input bg-background/60 py-2 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-        </form>
+        {!isCustomerAI && (
+          <form onSubmit={handleSearch} className="border-t border-primary/15 bg-[#edf8f0] px-4 py-2 md:hidden">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Search products..."
+                className="w-full rounded-lg border border-input bg-background/60 py-2 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </form>
+        )}
       </header>
-      <div className="h-[7.25rem] md:h-16" aria-hidden="true" />
+      <div className={cn(isCustomerAI ? "h-16" : "h-[7.25rem] md:h-16")} aria-hidden="true" />
 
       <MobileDrawer publicMode={publicMode} />
     </>
