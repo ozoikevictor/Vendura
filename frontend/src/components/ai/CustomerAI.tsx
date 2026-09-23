@@ -548,7 +548,7 @@ function BuyerRequestModal({
   };
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-[2px]"
+      className="absolute inset-0 z-[100] flex items-start justify-center bg-foreground/40 p-2 backdrop-blur-[2px] sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -557,7 +557,7 @@ function BuyerRequestModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="buyer-request-title"
-        className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-lg border border-border bg-card p-5 shadow-xl"
+        className="max-h-[calc(100%-1rem)] w-full max-w-lg overflow-y-auto overscroll-contain rounded-lg border border-border bg-card p-4 shadow-xl sm:max-h-[85dvh] sm:p-5"
       >
         <div className="flex items-center justify-between">
           <h2 id="buyer-request-title" className="text-lg font-bold">
@@ -647,6 +647,12 @@ function BuyerRequestModal({
                 Other details
                 <textarea
                   value={form.details}
+                  onPointerDown={(event) => {
+                    if (document.activeElement !== event.currentTarget) {
+                      event.preventDefault();
+                      event.currentTarget.focus({ preventScroll: true });
+                    }
+                  }}
                   onChange={(event) => update("details", event.target.value)}
                   placeholder="Size, colour, storage, specifications..."
                   className="mt-1 min-h-20 w-full rounded-md border border-input bg-background p-3 font-normal"
@@ -689,6 +695,12 @@ function RequestField({
       <input
         type={type}
         value={value}
+        onPointerDown={(event) => {
+          if (document.activeElement !== event.currentTarget) {
+            event.preventDefault();
+            event.currentTarget.focus({ preventScroll: true });
+          }
+        }}
         onChange={(event) => onChange(event.target.value)}
         className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-normal"
       />

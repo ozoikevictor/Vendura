@@ -4,6 +4,7 @@ import { Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import * as authService from "@/services/authService";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (search: Record<string, unknown>) => ({ token: typeof search.token === "string" ? search.token : "" }),
@@ -45,11 +46,10 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center lagoon-wash px-4 py-12">
+    <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">Vendura</Link>
-          <h1 className="mt-4 text-2xl font-bold text-foreground">Reset password</h1>
+          <h1 className="text-2xl font-bold text-foreground">Reset password</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">Choose a new password for your account.</p>
         </div>
 
@@ -60,7 +60,7 @@ function ResetPasswordPage() {
               <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">New password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input id="password" type={showPw ? "text" : "password"} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
+                <input id="password" type={showPw ? "text" : "password"} autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-10 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
                 <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -71,7 +71,7 @@ function ResetPasswordPage() {
               <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-foreground">Confirm password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input id="confirm" type={showPw ? "text" : "password"} required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••"
+                <input id="confirm" type={showPw ? "text" : "password"} autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••"
                   className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
               </div>
             </div>
@@ -87,6 +87,6 @@ function ResetPasswordPage() {
           <Link to="/login" className="font-semibold text-primary hover:underline">Back to login</Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

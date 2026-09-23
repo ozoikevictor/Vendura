@@ -16,14 +16,14 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className={`fixed inset-x-0 top-0 z-50 border-b border-primary/20 bg-[#edf8f0] transition-shadow duration-300 ${scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm"}`}>
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2 text-foreground">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex min-w-0 items-center gap-2 text-foreground">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-5 w-5" />
             </span>
-            <span className="font-display text-xl font-bold">Vendura</span>
+            <span className="truncate font-display text-xl font-bold">Vendura</span>
           </Link>
-          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link to="/" className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-muted-foreground hover:text-foreground sm:gap-2 sm:text-sm">
             <ArrowLeft className="h-4 w-4" />
             Back to home
           </Link>
@@ -32,7 +32,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <div className="h-16 shrink-0" aria-hidden="true" />
 
       <main className="flex-1">
-        <div className="min-h-[calc(100vh-4rem)] lg:relative">
+        <div className="min-h-[calc(100dvh-4rem)] lg:relative">
           <aside className="relative min-h-64 overflow-hidden lg:fixed lg:bottom-0 lg:left-0 lg:top-16 lg:w-[44%] lg:min-h-0">
             <img src={authBanner} alt="A Vendura seller preparing products for customers" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-foreground/70" />
@@ -48,7 +48,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </aside>
-          <section className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:ml-[44%] lg:px-10">
+          <section className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-10 sm:px-8 sm:py-14 lg:ml-[44%] lg:px-10">
             <div className="w-full animate-rise">{children}</div>
           </section>
         </div>
@@ -57,9 +57,9 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border bg-card lg:ml-[44%]">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 text-center text-xs text-muted-foreground sm:flex-row sm:px-6 sm:text-left lg:px-8">
           <span>© 2026 Vendura. Secure shopping and selling across Nigeria.</span>
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            Privacy protected · Secure payments · Help when you need it
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+            Privacy protected · Secure payments · Help
           </span>
         </div>
       </footer>

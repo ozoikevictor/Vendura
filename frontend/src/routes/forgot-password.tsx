@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import * as authService from "@/services/authService";
 import { toast } from "sonner";
+import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
@@ -38,11 +39,10 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center lagoon-wash px-4 py-12">
+    <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link to="/" className="font-display text-2xl font-bold text-primary">Vendura</Link>
-          <h1 className="mt-4 text-2xl font-bold text-foreground">Forgot password?</h1>
+          <h1 className="text-2xl font-bold text-foreground">Forgot password?</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Enter your email and we'll send you a reset link.
           </p>
@@ -67,7 +67,7 @@ function ForgotPasswordPage() {
                 <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
+                  <input id="email" type="email" inputMode="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
                     className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
               </div>
@@ -85,6 +85,6 @@ function ForgotPasswordPage() {
           <Link to="/login" className="font-semibold text-primary hover:underline">Log in</Link>
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
