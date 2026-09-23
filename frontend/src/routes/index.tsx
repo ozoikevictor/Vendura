@@ -114,7 +114,7 @@ function Index() {
                 aria-hidden="true"
               />
             </h1>
-            <p className="mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
+            <p className="copy-float mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
               From phones to fashion, building materials to home essentials, buy from trusted
               vendors across Nigeria or start your own store in minutes.
             </p>
