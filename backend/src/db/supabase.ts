@@ -20,6 +20,8 @@ type EntityRow = { id: string; data: Entity };
 
 export class SupabaseDatabase implements Database {
   private headers: Record<string, string>;
+  private catalogCache = new Map<string, { expiresAt: number; rows: EntityRow[] }>();
+  private catalogRequests = new Map<string, Promise<EntityRow[]>>();
 
   constructor(private url: string, serviceRoleKey: string) {
     this.url = url.replace(/\/$/, "");
@@ -56,10 +58,28 @@ export class SupabaseDatabase implements Database {
     for (const table of [...TABLES].reverse()) {
       await this.request(`${table}?id=not.is.null`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
     }
+    this.catalogCache.clear();
   }
 
   async list<T extends Entity>(collection: string): Promise<T[]> {
-    const rows = await this.request<EntityRow[]>(`${this.table(collection)}?select=id,data`);
+    const table = this.table(collection);
+    const cacheable = table === "products" || table === "categories" || table === "stores";
+    let rows: EntityRow[];
+    const cached = cacheable ? this.catalogCache.get(table) : undefined;
+    if (cached && cached.expiresAt > Date.now()) {
+      rows = cached.rows;
+    } else if (cacheable && this.catalogRequests.has(table)) {
+      rows = await this.catalogRequests.get(table)!;
+    } else {
+      const request = this.request<EntityRow[]>(`${table}?select=id,data`);
+      if (cacheable) this.catalogRequests.set(table, request);
+      try {
+        rows = await request;
+        if (cacheable) this.catalogCache.set(table, { expiresAt: Date.now() + 60_000, rows });
+      } finally {
+        if (cacheable) this.catalogRequests.delete(table);
+      }
+    }
     return rows.map((row) => ({ ...row.data, id: row.id }) as T);
   }
 
@@ -80,6 +100,7 @@ export class SupabaseDatabase implements Database {
     });
     const saved = rows[0];
     if (!saved) throw new Error("Supabase did not return the created record");
+    this.catalogCache.delete(this.table(collection));
     return { ...saved.data, id: saved.id } as T;
   }
 
@@ -91,6 +112,7 @@ export class SupabaseDatabase implements Database {
       method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ data })
     });
     const saved = rows[0];
+    this.catalogCache.delete(this.table(collection));
     return saved ? ({ ...saved.data, id: saved.id } as T) : null;
   }
 
@@ -98,6 +120,7 @@ export class SupabaseDatabase implements Database {
     const rows = await this.request<Array<{ id: string }>>(`${this.table(collection)}?id=eq.${encodeURIComponent(id)}&select=id`, {
       method: "DELETE", headers: { Prefer: "return=representation" }
     });
+    if (rows.length > 0) this.catalogCache.delete(this.table(collection));
     return rows.length > 0;
   }
 }

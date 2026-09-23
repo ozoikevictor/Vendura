@@ -48,14 +48,18 @@ function MarketplacePage() {
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
+    staleTime: 120_000,
   });
   const { data: storeList = [] } = useQuery({
     queryKey: ["stores"],
     queryFn: getStores,
+    staleTime: 120_000,
   });
   const { data, isLoading } = useQuery({
     queryKey: ["products", query],
     queryFn: () => queryProducts(query),
+    staleTime: 60_000,
+    placeholderData: (previous) => previous,
   });
   const catalogCategories = categories ?? [];
   const products = data?.items ?? [];

@@ -9,8 +9,12 @@ import type { AuthRequest, Database, Entity } from "../types.js";
 export const catalogRoutes = (db: Database) => {
   const router = Router();
   router.get("/categories", asyncRoute(async (req, res) => {
-    let items = await db.list<Entity>("categories");
-    const activeProducts = (await db.list<Entity>("products")).filter((product) => product.status === "active");
+    const [categoryItems, products] = await Promise.all([
+      db.list<Entity>("categories"),
+      db.list<Entity>("products")
+    ]);
+    let items = categoryItems;
+    const activeProducts = products.filter((product) => product.status === "active");
     const productCounts = new Map<string, number>();
     for (const product of activeProducts) {
       const categoryId = String(product.categoryId ?? "");
@@ -18,6 +22,7 @@ export const catalogRoutes = (db: Database) => {
     }
     items = items.map((category) => ({ ...category, productCount: productCounts.get(category.id) ?? 0 }));
     if (req.query.popular === "true") items = items.sort((a, b) => Number(b.productCount) - Number(a.productCount)).slice(0, Number(req.query.limit ?? 8));
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=300");
     ok(res, items);
   }));
   router.get("/categories/:slug", asyncRoute(async (req, res) => {
@@ -34,6 +39,7 @@ export const catalogRoutes = (db: Database) => {
   router.get("/stores", asyncRoute(async (req, res) => {
     let items = await db.list<Entity>("stores");
     if (req.query.featured === "true") items = items.filter((item) => item.verified).slice(0, Number(req.query.limit ?? 6));
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=300");
     ok(res, items);
   }));
   router.get("/stores/slug/:slug", asyncRoute(async (req, res) => {
@@ -56,7 +62,9 @@ export const catalogRoutes = (db: Database) => {
   router.get("/products", asyncRoute(async (req, res) => {
     const query = z.object({ q: z.string().optional(), categorySlug: z.string().optional(), subcategorySlug: z.string().optional(), storeId: z.string().optional(), minPrice: z.coerce.number().optional(), maxPrice: z.coerce.number().optional(), negotiableOnly: z.enum(["true", "false"]).optional(), inStockOnly: z.enum(["true", "false"]).optional(), sort: z.enum(["relevance", "newest", "price_asc", "price_desc", "rating", "popular"]).default("relevance"), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(100).default(24) }).parse(req.query);
     let items = (await db.list<Entity>("products")).filter((product) => product.status === "active");
-    const categories = await db.list<Entity>("categories");
+    const categories = query.categorySlug || query.subcategorySlug
+      ? await db.list<Entity>("categories")
+      : [];
     if (query.q) { const q = query.q.toLowerCase(); items = items.filter((p) => String(p.name).toLowerCase().includes(q) || String(p.description).toLowerCase().includes(q) || (p.tags as string[]).some((tag) => tag.toLowerCase().includes(q))); }
     if (query.categorySlug) { const category = categories.find((c) => c.slug === query.categorySlug); items = items.filter((p) => p.categoryId === category?.id); }
     if (query.subcategorySlug) { const subIds = categories.flatMap((c) => c.subcategories as Entity[]).filter((s) => s.slug === query.subcategorySlug).map((s) => s.id); items = items.filter((p) => subIds.includes(String(p.subcategoryId))); }
@@ -70,6 +78,7 @@ export const catalogRoutes = (db: Database) => {
     if (query.sort === "relevance" && !query.storeId) items = mixProductsByStore(items);
     const total = items.length;
     items = items.slice((query.page - 1) * query.pageSize, query.page * query.pageSize);
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=300");
     ok(res, { items, total, page: query.page, pageSize: query.pageSize });
   }));
   router.get("/products/featured", asyncRoute(async (req, res) => ok(res, (await db.list<Entity>("products")).filter((p) => p.featured).slice(0, Number(req.query.limit ?? 8)))));
