@@ -82,9 +82,12 @@ export function CustomerAIPage() {
     const fitVisibleScreen = () => {
       if (pageShell.current) {
         pageShell.current.style.height = `${viewport?.height ?? window.innerHeight}px`;
+        pageShell.current.style.top = `${viewport?.offsetTop ?? 0}px`;
       }
     };
 
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     fitVisibleScreen();
     viewport?.addEventListener("resize", fitVisibleScreen);
     viewport?.addEventListener("scroll", fitVisibleScreen);
@@ -93,6 +96,7 @@ export function CustomerAIPage() {
       viewport?.removeEventListener("resize", fitVisibleScreen);
       viewport?.removeEventListener("scroll", fitVisibleScreen);
       window.removeEventListener("resize", fitVisibleScreen);
+      document.body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
@@ -171,7 +175,7 @@ export function CustomerAIPage() {
 
   return (
     <CustomerAIGuard>
-      <div ref={pageShell} className="flex h-[100svh] flex-col overflow-hidden bg-background">
+      <div ref={pageShell} className="fixed inset-x-0 top-0 flex h-[100svh] flex-col overflow-hidden bg-background">
         <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 gap-0 overflow-hidden">
           <aside className="hidden w-60 shrink-0 border-r border-border bg-card p-3 sm:block sm:rounded-l-lg sm:border sm:border-r-0">
             <button
