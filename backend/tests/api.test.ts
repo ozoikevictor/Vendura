@@ -153,6 +153,38 @@ describe("Vendura API", () => {
     expect((await db.get("products", "product-phone-1"))?.stock).toBe(10);
   });
   it("creates a conversation, message, and offer", async () => { const token = await login("customer@vendura.test"); const conversation = await request(app).post("/api/conversations").set(auth(token)).send({ productId: "product-phone-1" }); expect(conversation.status).toBe(201); const conversationId = conversation.body.data.id; expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(token)).send({ text: "Can we negotiate?" })).status).toBe(201); expect((await request(app).post(`/api/conversations/${conversationId}/offers`).set(auth(token)).send({ offeredPrice: 220000 })).status).toBe(201); });
+  it("searches live products through the authenticated shopping assistant", async () => {
+    expect((await request(app).post("/api/ai/search").send({ message: "I need a phone" })).status).toBe(401);
+    const vendor = await login("vendor@vendura.test");
+    expect((await request(app).post("/api/ai/search").set(auth(vendor)).send({ message: "I need a phone" })).status).toBe(403);
+    const customer = await login("customer@vendura.test");
+    const result = await request(app).post("/api/ai/search").set(auth(customer)).send({
+      message: "I need an iPhone under ₦300,000",
+      imageName: "black-smartphone.jpg",
+      imageType: "image/jpeg",
+    });
+    expect(result.status).toBe(200);
+    expect(result.body.data.products).toHaveLength(0);
+    expect(result.body.data.response).toContain("will not substitute");
+    expect(result.body.data.filters.maximumPrice).toBe(300000);
+    expect(result.body.data.imageSearch.received).toBe(true);
+    const generic = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "I need a phone under ₦300,000" });
+    expect(generic.body.data.products[0]).toMatchObject({ id: "product-phone-1", name: "Aurora 5G Smartphone", price: 245000 });
+    const specific = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "I need a red phone" });
+    expect(specific.body.data.products).toHaveLength(0);
+    const buyerRequest = await request(app).post("/api/ai/requests").set(auth(customer)).send({
+      product: "Red leather bag",
+      details: "Medium size with a shoulder strap",
+      condition: "New",
+      maximumBudget: 50000,
+      deliveryLocation: "Enugu",
+      neededBy: "Friday",
+    });
+    expect(buyerRequest.status).toBe(201);
+    expect(buyerRequest.body.data).toMatchObject({ product: "Red leather bag", status: "active", offerCount: 0 });
+    const requests = await request(app).get("/api/ai/requests").set(auth(customer));
+    expect(requests.body.data[0]).toMatchObject({ id: buyerRequest.body.data.id, maximumBudget: 50000 });
+  });
   it("returns vendor dashboard, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); expect((await request(app).get("/api/vendor/overview").set(auth(token))).status).toBe(200); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
   it("lists banks and verifies a seller bank account through Paystack", async () => {
     const originalKey = config.PAYSTACK_SECRET_KEY;

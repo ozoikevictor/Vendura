@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Store, X, Home, LayoutGrid, Heart, ShoppingBasket,
-  Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell, LogOut,
+  Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell, LogOut, Sparkles,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
@@ -197,6 +197,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
               {isCustomer && <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
                   My Orders
                 </DrawerLink>}
+              {isCustomer && <DrawerLink to="/customer/ai" onClick={close} icon={<Sparkles className="h-4 w-4" />}>AI Assistant</DrawerLink>}
               {user?.role === "customer" && <DrawerLink to="/customer/notifications" onClick={close} icon={<Bell className="h-4 w-4" />}>Notifications</DrawerLink>}
               {isCustomer && <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
                   Messages

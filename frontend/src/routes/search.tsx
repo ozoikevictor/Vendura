@@ -48,10 +48,10 @@ function SearchPage() {
   const total = data?.total ?? 0;
 
   return (
-    <div className="min-h-screen lagoon-wash">
+    <div className="flex min-h-screen flex-col lagoon-wash">
       <MarketplaceHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link to="/marketplace" className="hover:text-primary">Marketplace</Link>
@@ -114,7 +114,7 @@ function SearchPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

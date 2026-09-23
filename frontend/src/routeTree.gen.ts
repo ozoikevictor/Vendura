@@ -50,8 +50,16 @@ import { Route as VendorNotificationsRouteImport } from './routes/vendor/notific
 import { Route as VendorPayoutsRouteImport } from './routes/vendor/payouts'
 import { Route as VendorSettingsRouteImport } from './routes/vendor/settings'
 import { Route as VendorSubscriptionRouteImport } from './routes/vendor/subscription'
+import { Route as CustomerAiIndexRouteImport } from './routes/customer/ai/index'
+import { Route as CustomerAiHistoryRouteImport } from './routes/customer/ai/history'
+import { Route as CustomerAiOffersRouteImport } from './routes/customer/ai/offers'
+import { Route as CustomerAiRequestsRouteImport } from './routes/customer/ai/requests'
 import { Route as CustomerOrdersIndexRouteImport } from './routes/customer/orders/index'
 import { Route as CustomerOrdersOrderIdRouteImport } from './routes/customer/orders/$orderId'
+import { Route as VendorAiIndexRouteImport } from './routes/vendor/ai/index'
+import { Route as VendorAiAnalyticsRouteImport } from './routes/vendor/ai/analytics'
+import { Route as VendorAiOpportunitiesRouteImport } from './routes/vendor/ai/opportunities'
+import { Route as VendorAiProductsRouteImport } from './routes/vendor/ai/products'
 import { Route as VendorMessagesIndexRouteImport } from './routes/vendor/messages/index'
 import { Route as VendorMessagesConversationIdRouteImport } from './routes/vendor/messages/$conversationId'
 import { Route as VendorOrdersIndexRouteImport } from './routes/vendor/orders/index'
@@ -59,6 +67,7 @@ import { Route as VendorOrdersOrderIdRouteImport } from './routes/vendor/orders/
 import { Route as VendorProductsIndexRouteImport } from './routes/vendor/products/index'
 import { Route as VendorProductsProductIdRouteImport } from './routes/vendor/products/$productId'
 import { Route as VendorProductsNewRouteImport } from './routes/vendor/products/new'
+import { Route as CustomerAiDealsDealIdRouteImport } from './routes/customer/ai/deals/$dealId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -265,6 +274,26 @@ const VendorSubscriptionRoute = VendorSubscriptionRouteImport.update({
   path: '/subscription',
   getParentRoute: () => VendorRouteRoute,
 } as any)
+const CustomerAiIndexRoute = CustomerAiIndexRouteImport.update({
+  id: '/customer/ai/',
+  path: '/customer/ai/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerAiHistoryRoute = CustomerAiHistoryRouteImport.update({
+  id: '/customer/ai/history',
+  path: '/customer/ai/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerAiOffersRoute = CustomerAiOffersRouteImport.update({
+  id: '/customer/ai/offers',
+  path: '/customer/ai/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerAiRequestsRoute = CustomerAiRequestsRouteImport.update({
+  id: '/customer/ai/requests',
+  path: '/customer/ai/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomerOrdersIndexRoute = CustomerOrdersIndexRouteImport.update({
   id: '/customer/orders/',
   path: '/customer/orders/',
@@ -274,6 +303,26 @@ const CustomerOrdersOrderIdRoute = CustomerOrdersOrderIdRouteImport.update({
   id: '/customer/orders/$orderId',
   path: '/customer/orders/$orderId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const VendorAiIndexRoute = VendorAiIndexRouteImport.update({
+  id: '/ai/',
+  path: '/ai/',
+  getParentRoute: () => VendorRouteRoute,
+} as any)
+const VendorAiAnalyticsRoute = VendorAiAnalyticsRouteImport.update({
+  id: '/ai/analytics',
+  path: '/ai/analytics',
+  getParentRoute: () => VendorRouteRoute,
+} as any)
+const VendorAiOpportunitiesRoute = VendorAiOpportunitiesRouteImport.update({
+  id: '/ai/opportunities',
+  path: '/ai/opportunities',
+  getParentRoute: () => VendorRouteRoute,
+} as any)
+const VendorAiProductsRoute = VendorAiProductsRouteImport.update({
+  id: '/ai/products',
+  path: '/ai/products',
+  getParentRoute: () => VendorRouteRoute,
 } as any)
 const VendorMessagesIndexRoute = VendorMessagesIndexRouteImport.update({
   id: '/messages/',
@@ -310,6 +359,11 @@ const VendorProductsNewRoute = VendorProductsNewRouteImport.update({
   id: '/products/new',
   path: '/products/new',
   getParentRoute: () => VendorRouteRoute,
+} as any)
+const CustomerAiDealsDealIdRoute = CustomerAiDealsDealIdRouteImport.update({
+  id: '/customer/ai/deals/$dealId',
+  path: '/customer/ai/deals/$dealId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -354,15 +408,24 @@ export interface FileRoutesByFullPath {
   '/categories/': typeof CategoriesIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/vendor/': typeof VendorIndexRoute
+  '/customer/ai/history': typeof CustomerAiHistoryRoute
+  '/customer/ai/offers': typeof CustomerAiOffersRoute
+  '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
+  '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
+  '/vendor/ai/products': typeof VendorAiProductsRoute
   '/vendor/messages/$conversationId': typeof VendorMessagesConversationIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
   '/vendor/products/$productId': typeof VendorProductsProductIdRoute
   '/vendor/products/new': typeof VendorProductsNewRoute
+  '/customer/ai/': typeof CustomerAiIndexRoute
   '/customer/orders/': typeof CustomerOrdersIndexRoute
+  '/vendor/ai/': typeof VendorAiIndexRoute
   '/vendor/messages/': typeof VendorMessagesIndexRoute
   '/vendor/orders/': typeof VendorOrdersIndexRoute
   '/vendor/products/': typeof VendorProductsIndexRoute
+  '/customer/ai/deals/$dealId': typeof CustomerAiDealsDealIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -404,15 +467,24 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesIndexRoute
   '/messages': typeof MessagesIndexRoute
   '/vendor': typeof VendorIndexRoute
+  '/customer/ai/history': typeof CustomerAiHistoryRoute
+  '/customer/ai/offers': typeof CustomerAiOffersRoute
+  '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
+  '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
+  '/vendor/ai/products': typeof VendorAiProductsRoute
   '/vendor/messages/$conversationId': typeof VendorMessagesConversationIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
   '/vendor/products/$productId': typeof VendorProductsProductIdRoute
   '/vendor/products/new': typeof VendorProductsNewRoute
+  '/customer/ai': typeof CustomerAiIndexRoute
   '/customer/orders': typeof CustomerOrdersIndexRoute
+  '/vendor/ai': typeof VendorAiIndexRoute
   '/vendor/messages': typeof VendorMessagesIndexRoute
   '/vendor/orders': typeof VendorOrdersIndexRoute
   '/vendor/products': typeof VendorProductsIndexRoute
+  '/customer/ai/deals/$dealId': typeof CustomerAiDealsDealIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -457,15 +529,24 @@ export interface FileRoutesById {
   '/categories/': typeof CategoriesIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/vendor/': typeof VendorIndexRoute
+  '/customer/ai/history': typeof CustomerAiHistoryRoute
+  '/customer/ai/offers': typeof CustomerAiOffersRoute
+  '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
+  '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
+  '/vendor/ai/products': typeof VendorAiProductsRoute
   '/vendor/messages/$conversationId': typeof VendorMessagesConversationIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
   '/vendor/products/$productId': typeof VendorProductsProductIdRoute
   '/vendor/products/new': typeof VendorProductsNewRoute
+  '/customer/ai/': typeof CustomerAiIndexRoute
   '/customer/orders/': typeof CustomerOrdersIndexRoute
+  '/vendor/ai/': typeof VendorAiIndexRoute
   '/vendor/messages/': typeof VendorMessagesIndexRoute
   '/vendor/orders/': typeof VendorOrdersIndexRoute
   '/vendor/products/': typeof VendorProductsIndexRoute
+  '/customer/ai/deals/$dealId': typeof CustomerAiDealsDealIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -511,15 +592,24 @@ export interface FileRouteTypes {
     | '/categories/'
     | '/messages/'
     | '/vendor/'
+    | '/customer/ai/history'
+    | '/customer/ai/offers'
+    | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/vendor/ai/analytics'
+    | '/vendor/ai/opportunities'
+    | '/vendor/ai/products'
     | '/vendor/messages/$conversationId'
     | '/vendor/orders/$orderId'
     | '/vendor/products/$productId'
     | '/vendor/products/new'
+    | '/customer/ai/'
     | '/customer/orders/'
+    | '/vendor/ai/'
     | '/vendor/messages/'
     | '/vendor/orders/'
     | '/vendor/products/'
+    | '/customer/ai/deals/$dealId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -561,15 +651,24 @@ export interface FileRouteTypes {
     | '/categories'
     | '/messages'
     | '/vendor'
+    | '/customer/ai/history'
+    | '/customer/ai/offers'
+    | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/vendor/ai/analytics'
+    | '/vendor/ai/opportunities'
+    | '/vendor/ai/products'
     | '/vendor/messages/$conversationId'
     | '/vendor/orders/$orderId'
     | '/vendor/products/$productId'
     | '/vendor/products/new'
+    | '/customer/ai'
     | '/customer/orders'
+    | '/vendor/ai'
     | '/vendor/messages'
     | '/vendor/orders'
     | '/vendor/products'
+    | '/customer/ai/deals/$dealId'
   id:
     | '__root__'
     | '/'
@@ -613,15 +712,24 @@ export interface FileRouteTypes {
     | '/categories/'
     | '/messages/'
     | '/vendor/'
+    | '/customer/ai/history'
+    | '/customer/ai/offers'
+    | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/vendor/ai/analytics'
+    | '/vendor/ai/opportunities'
+    | '/vendor/ai/products'
     | '/vendor/messages/$conversationId'
     | '/vendor/orders/$orderId'
     | '/vendor/products/$productId'
     | '/vendor/products/new'
+    | '/customer/ai/'
     | '/customer/orders/'
+    | '/vendor/ai/'
     | '/vendor/messages/'
     | '/vendor/orders/'
     | '/vendor/products/'
+    | '/customer/ai/deals/$dealId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -650,8 +758,13 @@ export interface RootRouteChildren {
   StoreStoreSlugRoute: typeof StoreStoreSlugRoute
   CategoriesIndexRoute: typeof CategoriesIndexRoute
   MessagesIndexRoute: typeof MessagesIndexRoute
+  CustomerAiHistoryRoute: typeof CustomerAiHistoryRoute
+  CustomerAiOffersRoute: typeof CustomerAiOffersRoute
+  CustomerAiRequestsRoute: typeof CustomerAiRequestsRoute
   CustomerOrdersOrderIdRoute: typeof CustomerOrdersOrderIdRoute
+  CustomerAiIndexRoute: typeof CustomerAiIndexRoute
   CustomerOrdersIndexRoute: typeof CustomerOrdersIndexRoute
+  CustomerAiDealsDealIdRoute: typeof CustomerAiDealsDealIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -943,6 +1056,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorSubscriptionRouteImport
       parentRoute: typeof VendorRouteRoute
     }
+    '/customer/ai/': {
+      id: '/customer/ai/'
+      path: '/customer/ai'
+      fullPath: '/customer/ai/'
+      preLoaderRoute: typeof CustomerAiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/ai/history': {
+      id: '/customer/ai/history'
+      path: '/customer/ai/history'
+      fullPath: '/customer/ai/history'
+      preLoaderRoute: typeof CustomerAiHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/ai/offers': {
+      id: '/customer/ai/offers'
+      path: '/customer/ai/offers'
+      fullPath: '/customer/ai/offers'
+      preLoaderRoute: typeof CustomerAiOffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/ai/requests': {
+      id: '/customer/ai/requests'
+      path: '/customer/ai/requests'
+      fullPath: '/customer/ai/requests'
+      preLoaderRoute: typeof CustomerAiRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer/orders/': {
       id: '/customer/orders/'
       path: '/customer/orders'
@@ -956,6 +1097,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/customer/orders/$orderId'
       preLoaderRoute: typeof CustomerOrdersOrderIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/vendor/ai/': {
+      id: '/vendor/ai/'
+      path: '/ai'
+      fullPath: '/vendor/ai/'
+      preLoaderRoute: typeof VendorAiIndexRouteImport
+      parentRoute: typeof VendorRouteRoute
+    }
+    '/vendor/ai/analytics': {
+      id: '/vendor/ai/analytics'
+      path: '/ai/analytics'
+      fullPath: '/vendor/ai/analytics'
+      preLoaderRoute: typeof VendorAiAnalyticsRouteImport
+      parentRoute: typeof VendorRouteRoute
+    }
+    '/vendor/ai/opportunities': {
+      id: '/vendor/ai/opportunities'
+      path: '/ai/opportunities'
+      fullPath: '/vendor/ai/opportunities'
+      preLoaderRoute: typeof VendorAiOpportunitiesRouteImport
+      parentRoute: typeof VendorRouteRoute
+    }
+    '/vendor/ai/products': {
+      id: '/vendor/ai/products'
+      path: '/ai/products'
+      fullPath: '/vendor/ai/products'
+      preLoaderRoute: typeof VendorAiProductsRouteImport
+      parentRoute: typeof VendorRouteRoute
     }
     '/vendor/messages/': {
       id: '/vendor/messages/'
@@ -1006,6 +1175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorProductsNewRouteImport
       parentRoute: typeof VendorRouteRoute
     }
+    '/customer/ai/deals/$dealId': {
+      id: '/customer/ai/deals/$dealId'
+      path: '/customer/ai/deals/$dealId'
+      fullPath: '/customer/ai/deals/$dealId'
+      preLoaderRoute: typeof CustomerAiDealsDealIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1043,10 +1219,14 @@ interface VendorRouteRouteChildren {
   VendorSettingsRoute: typeof VendorSettingsRoute
   VendorSubscriptionRoute: typeof VendorSubscriptionRoute
   VendorIndexRoute: typeof VendorIndexRoute
+  VendorAiAnalyticsRoute: typeof VendorAiAnalyticsRoute
+  VendorAiOpportunitiesRoute: typeof VendorAiOpportunitiesRoute
+  VendorAiProductsRoute: typeof VendorAiProductsRoute
   VendorMessagesConversationIdRoute: typeof VendorMessagesConversationIdRoute
   VendorOrdersOrderIdRoute: typeof VendorOrdersOrderIdRoute
   VendorProductsProductIdRoute: typeof VendorProductsProductIdRoute
   VendorProductsNewRoute: typeof VendorProductsNewRoute
+  VendorAiIndexRoute: typeof VendorAiIndexRoute
   VendorMessagesIndexRoute: typeof VendorMessagesIndexRoute
   VendorOrdersIndexRoute: typeof VendorOrdersIndexRoute
   VendorProductsIndexRoute: typeof VendorProductsIndexRoute
@@ -1062,10 +1242,14 @@ const VendorRouteRouteChildren: VendorRouteRouteChildren = {
   VendorSettingsRoute: VendorSettingsRoute,
   VendorSubscriptionRoute: VendorSubscriptionRoute,
   VendorIndexRoute: VendorIndexRoute,
+  VendorAiAnalyticsRoute: VendorAiAnalyticsRoute,
+  VendorAiOpportunitiesRoute: VendorAiOpportunitiesRoute,
+  VendorAiProductsRoute: VendorAiProductsRoute,
   VendorMessagesConversationIdRoute: VendorMessagesConversationIdRoute,
   VendorOrdersOrderIdRoute: VendorOrdersOrderIdRoute,
   VendorProductsProductIdRoute: VendorProductsProductIdRoute,
   VendorProductsNewRoute: VendorProductsNewRoute,
+  VendorAiIndexRoute: VendorAiIndexRoute,
   VendorMessagesIndexRoute: VendorMessagesIndexRoute,
   VendorOrdersIndexRoute: VendorOrdersIndexRoute,
   VendorProductsIndexRoute: VendorProductsIndexRoute,
@@ -1101,8 +1285,13 @@ const rootRouteChildren: RootRouteChildren = {
   StoreStoreSlugRoute: StoreStoreSlugRoute,
   CategoriesIndexRoute: CategoriesIndexRoute,
   MessagesIndexRoute: MessagesIndexRoute,
+  CustomerAiHistoryRoute: CustomerAiHistoryRoute,
+  CustomerAiOffersRoute: CustomerAiOffersRoute,
+  CustomerAiRequestsRoute: CustomerAiRequestsRoute,
   CustomerOrdersOrderIdRoute: CustomerOrdersOrderIdRoute,
+  CustomerAiIndexRoute: CustomerAiIndexRoute,
   CustomerOrdersIndexRoute: CustomerOrdersIndexRoute,
+  CustomerAiDealsDealIdRoute: CustomerAiDealsDealIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -24,10 +24,10 @@ function CategoriesPage() {
   const catalogCategories = apiCategories ?? [];
 
   return (
-    <div className="min-h-screen lagoon-wash">
+    <div className="flex min-h-screen flex-col lagoon-wash">
       <MarketplaceHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <SectionHeader
           eyebrow="Browse"
           title="All Categories"
@@ -54,7 +54,7 @@ function CategoriesPage() {
             </Link>
           ))}
         </div>
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

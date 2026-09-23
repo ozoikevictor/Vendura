@@ -54,7 +54,7 @@ function CategoryDetailPage() {
 
   if (!category) {
     return (
-      <div className="min-h-screen lagoon-wash">
+      <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
         <div className="mx-auto max-w-7xl px-4 py-12">
           <EmptyState title="Category not found" description="This category doesn't exist." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">All categories</Link>} />
@@ -68,10 +68,10 @@ function CategoryDetailPage() {
   const total = data?.total ?? 0;
 
   return (
-    <div className="min-h-screen lagoon-wash">
+    <div className="flex min-h-screen flex-col lagoon-wash">
       <MarketplaceHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Link to="/categories" className="hover:text-primary">Categories</Link>
@@ -134,7 +134,7 @@ function CategoryDetailPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

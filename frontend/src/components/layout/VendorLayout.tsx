@@ -21,6 +21,7 @@ import {
   Search,
   PanelLeftClose,
   PanelLeftOpen,
+  Sparkles,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useAuthStore } from "@/store/auth";
@@ -31,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/vendor", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/vendor/ai", label: "AI Business Assistant", icon: Sparkles },
   { to: "/vendor/products", label: "Products", icon: Package },
   { to: "/vendor/products/new", label: "Add Product", icon: PlusCircle },
   { to: "/vendor/orders", label: "Orders", icon: ShoppingBag },

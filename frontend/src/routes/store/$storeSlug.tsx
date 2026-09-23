@@ -60,7 +60,7 @@ function StorePage() {
 
   if (storeLoading) {
     return (
-      <div className="min-h-screen lagoon-wash">
+      <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="h-40 animate-pulse rounded-xl bg-muted" />
@@ -75,7 +75,7 @@ function StorePage() {
 
   if (!store) {
     return (
-      <div className="min-h-screen lagoon-wash">
+      <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
         <div className="mx-auto max-w-7xl px-4 py-12">
           <EmptyState title="Store not found" description="This store doesn't exist or has been removed." action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse marketplace</Link>} />
@@ -86,7 +86,7 @@ function StorePage() {
   }
 
   return (
-    <div className="min-h-screen lagoon-wash">
+    <div className="flex min-h-screen flex-col lagoon-wash">
       <MarketplaceHeader />
 
       {/* Banner */}
@@ -95,7 +95,7 @@ function StorePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8">
         {/* Store header */}
         <div className="relative -mt-12 flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-4 border-background bg-primary-soft text-2xl font-bold text-primary shadow-card sm:h-24 sm:w-24">
@@ -172,7 +172,7 @@ function StorePage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       <SiteFooter />
     </div>

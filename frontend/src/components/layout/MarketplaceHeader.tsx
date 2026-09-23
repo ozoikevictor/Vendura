@@ -3,7 +3,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   Store, Search, Heart, ShoppingBasket, Menu, User, Bell,
-  Package, MessageSquare, LayoutGrid, ChevronDown, LogOut,
+  Package, MessageSquare, LayoutGrid, ChevronDown, LogOut, Sparkles,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
@@ -247,6 +247,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
                     <p className="mt-1 text-xs font-medium text-primary">Customer account</p>
                   </div>
                   <AccountMenuItem onSelect={() => navigate({ to: "/customer/orders" })} icon={<Package className="h-4 w-4" />}>My Orders</AccountMenuItem>
+                  <AccountMenuItem onSelect={() => navigate({ to: "/customer/ai" })} icon={<Sparkles className="h-4 w-4" />}>AI Assistant</AccountMenuItem>
                   <AccountMenuItem onSelect={() => navigate({ to: "/profile" })} icon={<User className="h-4 w-4" />}>Profile</AccountMenuItem>
                   <AccountMenuItem onSelect={() => navigate({ to: "/customer/notifications" })} icon={<Bell className="h-4 w-4" />}>Notifications</AccountMenuItem>
                   <AccountMenuItem onSelect={() => navigate({ to: "/messages" })} icon={<MessageSquare className="h-4 w-4" />}>Messages</AccountMenuItem>
