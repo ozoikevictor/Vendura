@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, ExternalLink, Eye, Loader2, Store, UserPlus } from "lucide-react";
+import { ArrowRight, ExternalLink, Loader2, Store, UserPlus } from "lucide-react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -107,10 +107,10 @@ function StoreGatewayPage() {
           </section>}
 
           {!isCustomer && <section className="rounded-xl border border-border bg-card p-6 shadow-card">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-clay-soft text-clay"><Eye className="h-6 w-6" /></div>
-            <h2 className="mt-5 text-xl font-semibold text-foreground">View the demo</h2>
-            <p className="mt-2 text-sm text-muted-foreground">See how browsing, products, categories, and the shopping experience work using sample content.</p>
-            <Link to="/marketplace" className="mt-6 inline-flex items-center gap-2 font-semibold text-primary hover:underline">Explore demo store <ArrowRight className="h-4 w-4" /></Link>
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary"><Store className="h-6 w-6" /></div>
+            <h2 className="mt-5 text-xl font-semibold text-foreground">Shop the marketplace</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Browse products, categories, and trusted stores across Vendura.</p>
+            <Link to="/marketplace" className="mt-6 inline-flex items-center gap-2 font-semibold text-primary hover:underline">Shop the marketplace <ArrowRight className="h-4 w-4" /></Link>
           </section>}
         </div>
 

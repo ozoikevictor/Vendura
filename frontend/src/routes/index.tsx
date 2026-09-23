@@ -41,19 +41,16 @@ function Index() {
     <div className="min-h-screen lagoon-wash">
       <PublicHeader />
 
-      {/* Hero image and introduction */}
-      <section className="overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-10 lg:px-8">
-          <div className="animate-settle overflow-hidden rounded-2xl border border-border bg-card shadow-frost">
-            <img
-              src={heroImg}
-              alt="Customers and sellers using the Vendura marketplace"
-              className="h-56 w-full object-cover sm:h-80 lg:h-[26rem]"
-            />
-          </div>
-        </div>
-        <div className="mx-auto max-w-4xl px-4 py-12 text-center sm:px-6 sm:py-16 lg:px-8">
-          <div className="animate-rise">
+      {/* Hero cover and introduction */}
+      <section className="relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
+        <img
+          src={heroImg}
+          alt="Customers and sellers using the Vendura marketplace"
+          className="absolute inset-0 -z-20 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 -z-10 bg-foreground/45" />
+        <div className="mx-auto flex min-h-[36rem] max-w-7xl items-center px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8">
+          <div className="w-full max-w-3xl animate-rise rounded-2xl border border-white/40 bg-white/90 p-6 shadow-frost backdrop-blur-sm sm:p-10 lg:p-12">
             <p className="eyebrow mb-4">Nigeria's Multi-Vendor Marketplace</p>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               Sell Smarter. <span className="text-primary">Shop Anywhere.</span>
