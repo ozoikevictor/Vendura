@@ -16,7 +16,7 @@ import { getNotifications } from "@/services/notificationService";
 import { logout } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean }) {
+export function MarketplaceHeader({ publicMode = false, contained = false }: { publicMode?: boolean; contained?: boolean }) {
   const setDrawerOpen = useUIStore((s) => s.setDrawerOpen);
   const cartCount = useCartStore((s) => s.getActiveItems().length);
   const wishlistCount = useWishlistStore((s) => s.ids.length);
@@ -95,7 +95,8 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
   return (
     <>
       <header className={cn(
-        "fixed inset-x-0 top-0 z-40 border-b border-primary/20 bg-[#edf8f0] transition-shadow duration-300",
+        "inset-x-0 top-0 z-40 border-b border-primary/20 bg-[#edf8f0] transition-shadow duration-300",
+        contained ? "absolute" : "fixed",
         scrolled ? "shadow-[0_10px_28px_-16px_rgba(35,44,38,0.45)]" : "shadow-sm",
       )}>
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
