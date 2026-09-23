@@ -103,7 +103,7 @@ function Index() {
             </Link>
           }
         />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+        <div className="stagger-grid grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
           {categories
             .filter((c) => popularCategorySlugs.includes(c.slug))
             .map((c) => (
@@ -137,7 +137,7 @@ function Index() {
             description="Go from registration to a shareable online store in four clear steps."
             className="justify-center text-center [&_div]:items-center"
           />
-          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="stagger-grid mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: UserPlus, title: "Create your account", desc: "Enter your personal and business details to open a secure seller account." },
               { icon: Store, title: "Set up your store", desc: "Add your store name, description, location, logo, and delivery information." },
@@ -171,7 +171,7 @@ function Index() {
             description="Customers can browse first, then create an account when they are ready to order."
             className="justify-center text-center [&_div]:items-center"
           />
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="stagger-grid mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: LinkIcon, title: "Open the store link", desc: "Open the unique storefront link shared by the seller." },
               { icon: ShoppingBasket, title: "Browse and add items", desc: "View products and prepare a cart without creating an account first." },
@@ -218,7 +218,7 @@ function Index() {
                 Become a Seller
               </Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="stagger-grid grid gap-3 sm:grid-cols-2">
               {[
                 { icon: Store, title: "Custom Storefront", desc: "Your own branded store page with banner, products, and policies." },
                 { icon: MessageSquare, title: "Price Negotiation", desc: "Enable per-product negotiation. Accept, reject, or counter offers." },
@@ -247,7 +247,7 @@ function Index() {
             description="Practical safeguards for sellers, customers, orders, and payments."
             className="justify-center text-center [&_div]:items-center"
           />
-          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="stagger-grid mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: ShieldCheck, title: "Verified sellers", desc: "Store verification helps customers recognize approved Vendura businesses." },
               { icon: Wallet, title: "Protected payments", desc: "Payment status, fees, balances, and seller earnings remain visible and traceable." },
@@ -274,7 +274,7 @@ function Index() {
           description="Start free and scale as you grow. No hidden fees."
           className="justify-center text-center [&_div]:items-center"
         />
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="stagger-grid mt-8 grid gap-4 md:grid-cols-3">
           {plans.map((plan) => (
             <div
               key={plan.id}
