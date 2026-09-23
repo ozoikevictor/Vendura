@@ -192,6 +192,21 @@ describe("Vendura API", () => {
     const count = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "How many products are on Vendura?" });
     expect(count.body.data).toMatchObject({ intent: "chat", products: [] });
     expect(count.body.data.response).toContain("1 active product");
+    const availability = await request(app).post("/api/ai/search").set(auth(customer)).send({
+      message: "Do you have phones?",
+      sessionId: "catalog-chat",
+    });
+    expect(availability.body.data.products[0]).toMatchObject({ id: "product-phone-1" });
+    expect(availability.body.data.response).toContain("Yes. I found 1 matching in-stock product");
+    const bareProduct = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "phone" });
+    expect(bareProduct.body.data).toMatchObject({ intent: "shopping" });
+    expect(bareProduct.body.data.products[0]).toMatchObject({ id: "product-phone-1" });
+    const colours = await request(app).post("/api/ai/search").set(auth(customer)).send({
+      message: "What colours?",
+      sessionId: "catalog-chat",
+    });
+    expect(colours.body.data.products[0]).toMatchObject({ id: "product-phone-1" });
+    expect(colours.body.data.response).toContain("have not listed colour options yet");
     const aiOffers = await request(app).get("/api/ai/offers").set(auth(customer));
     expect(aiOffers.status).toBe(200);
     expect(Array.isArray(aiOffers.body.data)).toBe(true);

@@ -15,9 +15,11 @@ const requestSchema = z.object({
 });
 
 const STOP_WORDS = new Set([
-  "a", "an", "and", "any", "are", "below", "buy", "for", "find", "get", "i", "image", "in",
-  "is", "looking", "me", "my", "need", "of", "or", "photo", "picture", "please", "product", "show",
-  "some", "the", "to", "under", "want", "with",
+  "a", "about", "an", "and", "any", "are", "available", "below", "buy", "can", "carry", "could",
+  "did", "do", "does", "for", "find", "get", "has", "have", "i", "image", "in", "is", "kind",
+  "kinds", "looking", "me", "my", "need", "of", "or", "photo", "picture", "please", "product",
+  "products", "sell", "show", "some", "stock", "tell", "the", "there", "to", "type", "types",
+  "under", "want", "what", "which", "with", "would", "you", "your",
 ]);
 
 const SYNONYMS: Record<string, string[]> = {
@@ -26,6 +28,13 @@ const SYNONYMS: Record<string, string[]> = {
   sneakers: ["sneaker", "shoe", "shoes", "footwear"],
   laptop: ["computer", "notebook", "programming"],
   dress: ["fashion", "clothing", "gown"],
+  clothe: ["clothes", "clothing", "dress", "shirt", "t-shirt", "gown", "fashion", "wear"],
+  clothing: ["clothes", "dress", "shirt", "t-shirt", "gown", "fashion", "wear"],
+  watch: ["wristwatch", "wrist", "timepiece"],
+  hair: ["hair", "wig", "extension", "scarf", "hair cream"],
+  makeup: ["makeup", "cosmetic", "cosmetics", "beauty", "foundation", "lipstick", "powder", "face cream"],
+  cosmetic: ["cosmetics", "makeup", "beauty", "foundation", "lipstick", "powder", "face cream"],
+  bag: ["bag", "handbag", "crossbody", "purse"],
   ps5: ["playstation", "console", "gaming"],
 };
 
@@ -47,10 +56,18 @@ export const aiRoutes = (db: Database) => {
   router.post("/ai/search", asyncRoute(async (req: AuthRequest, res) => {
     const input = requestSchema.parse(req.body);
     const source = `${input.message} ${input.imageName ?? ""}`.toLowerCase();
-    const requestedTerms = tokenize(source);
+    const attributeQuestion = isAttributeQuestion(source);
+    const recentHistory = attributeQuestion
+      ? (await db.list<Entity>("aiHistory"))
+        .filter((item) => item.customerId === req.user!.id && (!input.sessionId || item.sessionId === input.sessionId))
+        .sort((a, b) => +new Date(String(b.createdAt)) - +new Date(String(a.createdAt)))
+      : [];
+    const previousQuery = String(recentHistory[0]?.query ?? "");
+    const searchSource = attributeQuestion && previousQuery ? previousQuery.toLowerCase() : source;
+    const requestedTerms = tokenize(searchSource);
     const terms = [...expandTerms(requestedTerms)];
     const strictTerms = requestedTerms.filter((term) => STRICT_PRODUCT_TERMS.has(term));
-    const budget = readMaximumBudget(source);
+    const budget = readMaximumBudget(searchSource);
     const [products, stores, categories] = await Promise.all([
       db.list<Entity>("products"),
       db.list<Entity>("stores"),
@@ -88,17 +105,22 @@ export const aiRoutes = (db: Database) => {
       .filter((item) => (terms.length === 0 || item.score > 0) && item.strictMatch && item.detailMatch)
       .sort((a, b) => b.score - a.score || Number(a.product.price) - Number(b.product.price));
 
-    const shoppingIntent = isShoppingRequest(source, input.imageName);
+    const shoppingIntent = isShoppingRequest(source, input.imageName) || ranked.length > 0 || attributeQuestion;
     let selected = shoppingIntent ? ranked.slice(0, 12) : [];
     let response = answerMarketplaceQuestion(source, products, stores);
-    const aiAnswer = await generateMarketplaceReply({
+    if (attributeQuestion && previousQuery) {
+      response = answerAttributeQuestion(source, selected.map(({ product }) => product));
+    } else if (/\b(have|has|sell|stock|available|carry)\b/i.test(source) && selected.length > 0) {
+      response = answerAvailabilityQuestion(selected.map(({ product }) => product));
+    }
+    const aiAnswer = !response ? await generateMarketplaceReply({
       customerId: req.user!.id,
       sessionId: input.sessionId,
       message: input.message,
       products,
       stores,
       db,
-    });
+    }) : null;
     if (aiAnswer) {
       response = aiAnswer.response;
       if (aiAnswer.productIds.length > 0) {
@@ -238,6 +260,53 @@ function isShoppingRequest(message: string, imageName?: string) {
   return Boolean(imageName) || /\b(find|show|buy|need|want|looking for|search|under|budget|available|stock|have|compare|difference|price)\b/i.test(message);
 }
 
+function isAttributeQuestion(message: string) {
+  return /\b(what|which|show|list|available|have|has|do)\b.*\b(colou?rs?|sizes?|variants?|options?)\b|^\s*(colou?rs?|sizes?|variants?|options?)\s*[?.!]*\s*$/i.test(message);
+}
+
+function answerAvailabilityQuestion(products: Entity[]) {
+  const prices = products.map((product) => Number(product.price)).filter(Number.isFinite).sort((a, b) => a - b);
+  const names = products.slice(0, 4).map((product) => String(product.name)).join(", ");
+  const priceRange = prices.length === 0 ? "" : prices[0] === prices.at(-1)
+    ? ` at ${formatNaira(prices[0])}`
+    : ` from ${formatNaira(prices[0])} to ${formatNaira(prices.at(-1)!)}`;
+  return `Yes. I found ${products.length} matching in-stock ${products.length === 1 ? "product" : "products"}${priceRange}: ${names}. I’ve shown ${products.length === 1 ? "it" : "them"} below.`;
+}
+
+function answerAttributeQuestion(message: string, products: Entity[]) {
+  if (products.length === 0) return "I could not find a previous matching product to check. Tell me the product name first.";
+  const attribute = /\bcolou?r/i.test(message) ? "colour" : /\bsize/i.test(message) ? "size" : "option";
+  const values = new Set<string>();
+  for (const product of products) {
+    const details = [product.variantOptions, product.variants, product.specifications];
+    for (const detail of details) collectAttributeValues(detail, attribute, values);
+  }
+  if (values.size > 0) {
+    return `The listed ${attribute} ${values.size === 1 ? "option is" : "options are"}: ${[...values].slice(0, 12).join(", ")}.`;
+  }
+  return `I found ${products.length} matching ${products.length === 1 ? "product" : "products"}, but the sellers have not listed ${attribute} options yet. Open a product or message the seller to confirm the available ${attribute}s.`;
+}
+
+function collectAttributeValues(value: unknown, attribute: string, output: Set<string>) {
+  if (!value || output.size >= 12) return;
+  if (Array.isArray(value)) {
+    for (const item of value) collectAttributeValues(item, attribute, output);
+    return;
+  }
+  if (typeof value !== "object") return;
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (key.toLowerCase().includes(attribute === "colour" ? "color" : attribute) ||
+      (attribute === "colour" && key.toLowerCase().includes("colour"))) {
+      const items = Array.isArray(item) ? item : [item];
+      for (const entry of items) {
+        if (typeof entry === "string" || typeof entry === "number") output.add(String(entry));
+      }
+    } else {
+      collectAttributeValues(item, attribute, output);
+    }
+  }
+}
+
 function answerMarketplaceQuestion(message: string, products: Entity[], stores: Entity[]) {
   if (/^(hi|hello|hey|good (morning|afternoon|evening)|how are you)[!.?\s]*$/i.test(message.trim())) {
     return "Hello! I’m your Vendura shopping assistant. I can find products, check a seller’s stock, count store products, and compare prices. What can I help you with?";
@@ -362,6 +431,7 @@ function tokenize(value: string) {
 function normalizeTerm(term: string) {
   if (term.endsWith("ies") && term.length > 4) return `${term.slice(0, -3)}y`;
   if (term.endsWith("sses")) return term.slice(0, -2);
+  if (/(ches|shes|xes|zes)$/.test(term) && term.length > 4) return term.slice(0, -2);
   if (term.endsWith("s") && !term.endsWith("ss") && term.length > 3) return term.slice(0, -1);
   return term;
 }
