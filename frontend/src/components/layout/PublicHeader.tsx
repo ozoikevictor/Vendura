@@ -63,7 +63,7 @@ export function PublicHeader() {
             type="button"
             aria-label="Open menu"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground md:hidden"
+            className="flex h-9 w-9 items-center justify-center text-foreground transition-colors hover:text-primary md:hidden"
           >
             <Menu className="h-5 w-5" />
           </button>
