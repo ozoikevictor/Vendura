@@ -279,7 +279,7 @@ export function MarketplaceHeader({ publicMode = false }: { publicMode?: boolean
         </div>
 
         {/* Search (mobile) */}
-        <form onSubmit={handleSearch} className="border-t border-border px-4 py-2 md:hidden">
+        <form onSubmit={handleSearch} className="border-t border-primary/15 bg-[#edf8f0] px-4 py-2 md:hidden">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
