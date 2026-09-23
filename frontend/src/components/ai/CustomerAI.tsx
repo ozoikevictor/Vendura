@@ -73,6 +73,7 @@ export function CustomerAIPage() {
   const [saved, setSaved] = useState<string[]>([]);
   const [showRequest, setShowRequest] = useState(false);
   const pageShell = useRef<HTMLDivElement>(null);
+  const composerInput = useRef<HTMLTextAreaElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
@@ -394,7 +395,14 @@ export function CustomerAIPage() {
                   <ImagePlus className="h-5 w-5" />
                 </button>
                 <textarea
+                  ref={composerInput}
                   value={input}
+                  onPointerDown={(event) => {
+                    if (document.activeElement !== composerInput.current) {
+                      event.preventDefault();
+                      composerInput.current?.focus({ preventScroll: true });
+                    }
+                  }}
                   onChange={(event) => {
                     setInput(event.target.value);
                     if (error) setError("");
