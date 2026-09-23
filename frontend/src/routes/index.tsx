@@ -48,17 +48,17 @@ function Index() {
           alt="Customers and sellers using the Vendura marketplace"
           className="absolute inset-0 -z-20 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 -z-10 bg-foreground/45" />
-        <div className="mx-auto flex min-h-[36rem] max-w-7xl items-center px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8">
-          <div className="w-full max-w-3xl animate-rise rounded-2xl border border-white/40 bg-white/90 p-6 shadow-frost backdrop-blur-sm sm:p-10 lg:p-12">
-            <p className="eyebrow mb-4">Nigeria's Multi-Vendor Marketplace</p>
-            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Sell Smarter. <span className="text-primary">Shop Anywhere.</span>
+        <div className="absolute inset-0 -z-10 bg-foreground/50" />
+        <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
+          <div className="w-full max-w-xl animate-rise text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
+            <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">Nigeria's Multi-Vendor Marketplace</p>
+            <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Sell Smarter. <span className="text-[#b7e3c4]">Shop Anywhere.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            <p className="mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
               From phones to fashion, building materials to home essentials, buy from trusted vendors across Nigeria or start your own store in minutes.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 to="/marketplace"
                 className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost"
@@ -68,23 +68,23 @@ function Index() {
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-card transition-all hover:bg-accent"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/60 bg-white/95 px-6 py-3 text-sm font-semibold text-foreground shadow-card transition-all hover:bg-white"
               >
                 <UserPlus className="h-4 w-4" />
                 Create a customer account
               </Link>
               <Link
                 to="/vendor-register"
-                className="inline-flex items-center gap-2 rounded-xl border border-primary/25 bg-primary-soft px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/60 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <Store className="h-4 w-4" />
                 Start selling
               </Link>
             </div>
-            <div className="mt-9 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Verified vendors</span>
-              <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-primary" /> Nationwide delivery</span>
-              <span className="flex items-center gap-1.5"><Wallet className="h-4 w-4 text-primary" /> Secure payments</span>
+            <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85">
+              <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#b7e3c4]" /> Verified vendors</span>
+              <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#b7e3c4]" /> Nationwide delivery</span>
+              <span className="flex items-center gap-1.5"><Wallet className="h-4 w-4 text-[#b7e3c4]" /> Secure payments</span>
             </div>
           </div>
         </div>

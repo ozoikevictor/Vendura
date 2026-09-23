@@ -32,11 +32,14 @@ export function PublicHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
+          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            Home
+          </Link>
           <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Open a Store
           </Link>
-          <Link to="/explore" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-            View Demo
+          <Link to="/marketplace" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            Marketplace
           </Link>
           <Link to="/vendor-register" className="text-sm font-medium text-muted-foreground hover:text-foreground">
             Become a Seller

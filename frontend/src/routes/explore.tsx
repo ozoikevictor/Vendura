@@ -72,7 +72,7 @@ function StoreGatewayPage() {
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             {isCustomer
               ? "Paste a vendor storefront link below to start shopping."
-              : "Vendura stores are reached through each seller's unique link. Paste one below, explore our demonstration, or create a store for your business."}
+              : "Vendura stores are reached through each seller's unique link. Paste one below, shop the marketplace, or create a store for your business."}
           </p>
         </section>
 
