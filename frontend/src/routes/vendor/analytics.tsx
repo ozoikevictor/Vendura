@@ -23,9 +23,9 @@ function VendorAnalyticsPage() {
 
   if (isLoading || !ov) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
 
-  const maxRev = Math.max(...ov.revenueSeries.map((d) => d.value));
-  const maxOrders = Math.max(...ov.ordersSeries.map((d) => d.value));
-  const maxTopRev = Math.max(...ov.topProducts.map((p) => p.revenue));
+  const maxRev = Math.max(1, ...ov.revenueSeries.map((d) => d.value));
+  const maxOrders = Math.max(1, ...ov.ordersSeries.map((d) => d.value));
+  const maxTopRev = Math.max(1, ...ov.topProducts.map((p) => p.revenue));
 
   const stats = [
     { label: "Total Revenue", value: formatNaira(ov.totalRevenue), icon: <DollarSign className="h-5 w-5" />, tint: "bg-primary-soft text-primary" },
@@ -61,7 +61,7 @@ function VendorAnalyticsPage() {
             {ov.revenueSeries.map((d) => (
               <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
                 <div className="flex w-full items-end justify-center" style={{ height: "100%" }}>
-                  <div className="w-full max-w-8 rounded-t bg-primary transition-all" style={{ height: `${(d.value / maxRev) * 100}%` }} title={formatNaira(d.value)} />
+                  <div className="w-full max-w-8 rounded-t bg-primary transition-all" style={{ height: d.value > 0 ? `${Math.max((d.value / maxRev) * 100, 4)}%` : "2px" }} title={formatNaira(d.value)} />
                 </div>
                 <span className="text-xs text-muted-foreground">{d.label}</span>
               </div>
@@ -76,7 +76,7 @@ function VendorAnalyticsPage() {
             {ov.ordersSeries.map((d) => (
               <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
                 <div className="flex w-full items-end justify-center" style={{ height: "100%" }}>
-                  <div className="w-full max-w-8 rounded-t bg-success transition-all" style={{ height: `${(d.value / maxOrders) * 100}%` }} title={`${d.value} orders`} />
+                  <div className="w-full max-w-8 rounded-t bg-success transition-all" style={{ height: d.value > 0 ? `${Math.max((d.value / maxOrders) * 100, 4)}%` : "2px" }} title={`${d.value} orders`} />
                 </div>
                 <span className="text-xs text-muted-foreground">{d.label}</span>
               </div>

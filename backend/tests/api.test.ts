@@ -190,7 +190,7 @@ describe("Vendura API", () => {
     expect(aiOffers.status).toBe(200);
     expect(Array.isArray(aiOffers.body.data)).toBe(true);
   });
-  it("returns vendor dashboard, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); expect((await request(app).get("/api/vendor/overview").set(auth(token))).status).toBe(200); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
+  it("returns vendor dashboard, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); const overview = await request(app).get("/api/vendor/overview").set(auth(token)); expect(overview.status).toBe(200); expect(overview.body.data.revenueSeries).toHaveLength(7); expect(overview.body.data.ordersSeries).toHaveLength(7); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
   it("lists banks and verifies a seller bank account through Paystack", async () => {
     const originalKey = config.PAYSTACK_SECRET_KEY;
     const originalFetch = globalThis.fetch;

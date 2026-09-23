@@ -110,8 +110,8 @@ function VendorOverviewPage() {
     },
   ];
 
-  const maxRevenue = Math.max(...overview.revenueSeries.map((s) => s.value));
-  const maxOrders = Math.max(...overview.ordersSeries.map((s) => s.value));
+  const maxRevenue = Math.max(1, ...overview.revenueSeries.map((s) => s.value));
+  const maxOrders = Math.max(1, ...overview.ordersSeries.map((s) => s.value));
 
   return (
     <div className="space-y-6">
@@ -199,7 +199,7 @@ function VendorOverviewPage() {
               >
                 <div
                   className="w-full rounded-t-md bg-primary/80 transition-colors hover:bg-primary"
-                  style={{ height: `${Math.max((point.value / maxRevenue) * 100, 2)}%` }}
+                  style={{ height: point.value > 0 ? `${Math.max((point.value / maxRevenue) * 100, 4)}%` : "2px" }}
                   title={formatNaira(point.value)}
                 />
                 <span className="text-xs text-muted-foreground">{point.label}</span>
@@ -219,7 +219,7 @@ function VendorOverviewPage() {
               >
                 <div
                   className="w-full rounded-t-md bg-clay/70 transition-colors hover:bg-clay"
-                  style={{ height: `${Math.max((point.value / maxOrders) * 100, 2)}%` }}
+                  style={{ height: point.value > 0 ? `${Math.max((point.value / maxOrders) * 100, 4)}%` : "2px" }}
                   title={`${point.value} orders`}
                 />
                 <span className="text-xs text-muted-foreground">{point.label}</span>

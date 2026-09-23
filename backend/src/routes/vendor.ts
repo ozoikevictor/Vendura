@@ -21,7 +21,29 @@ export const vendorRoutes = (db: Database) => {
     if (!store) throw new ApiError(404, "Store not found");
     ok(res, await db.update("stores", store.id, { ...input, updatedAt: now() }));
   }));
-  router.get("/overview", asyncRoute(async (req: AuthRequest, res) => { const products = (await db.list<Entity>("products")).filter((p) => p.storeId === req.user!.storeId); const orders = (await db.list<Entity>("orders")).filter((o) => o.storeId === req.user!.storeId); const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id); ok(res, { totalRevenue: transactions.filter((t) => t.type === "sale" && t.status !== "reversed").reduce((s, t) => s + Number(t.amount), 0), ordersCount: orders.length, productsCount: products.length, customersCount: new Set(orders.map((o) => o.customerId)).size, pendingOrders: orders.filter((o) => ["placed", "payment_confirmed", "processing"].includes(String(o.status))).length, lowStockCount: products.filter((p) => Number(p.stock) <= Number(p.lowStockThreshold)).length, availableBalance: transactions.filter((t) => t.status === "available").reduce((s, t) => s + Number(t.amount), 0), revenueSeries: [], ordersSeries: [], topProducts: products.sort((a, b) => Number(b.soldCount) - Number(a.soldCount)).slice(0, 5).map((p) => ({ productId: p.id, name: p.name, sales: p.soldCount, revenue: Number(p.soldCount) * Number(p.price) })) }); }));
+  router.get("/overview", asyncRoute(async (req: AuthRequest, res) => {
+    const [allProducts, allOrders, allTransactions] = await Promise.all([
+      db.list<Entity>("products"),
+      db.list<Entity>("orders"),
+      db.list<Entity>("transactions")
+    ]);
+    const products = allProducts.filter((product) => product.storeId === req.user!.storeId);
+    const orders = allOrders.filter((order) => order.storeId === req.user!.storeId);
+    const transactions = allTransactions.filter((transaction) => transaction.vendorId === req.user!.id);
+    const sales = transactions.filter((transaction) => transaction.type === "sale" && transaction.status !== "reversed");
+    ok(res, {
+      totalRevenue: sales.reduce((sum, transaction) => sum + Number(transaction.amount), 0),
+      ordersCount: orders.length,
+      productsCount: products.length,
+      customersCount: new Set(orders.map((order) => order.customerId)).size,
+      pendingOrders: orders.filter((order) => ["placed", "payment_confirmed", "processing"].includes(String(order.status))).length,
+      lowStockCount: products.filter((product) => Number(product.stock) <= Number(product.lowStockThreshold)).length,
+      availableBalance: transactions.filter((transaction) => transaction.status === "available").reduce((sum, transaction) => sum + Number(transaction.amount), 0),
+      revenueSeries: monthlyRevenueSeries(sales),
+      ordersSeries: weeklyOrderSeries(orders),
+      topProducts: products.sort((a, b) => Number(b.soldCount) - Number(a.soldCount)).slice(0, 5).map((product) => ({ productId: product.id, name: product.name, sales: product.soldCount, revenue: Number(product.soldCount) * Number(product.price) }))
+    });
+  }));
   router.get("/transactions", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id))));
   router.get("/balance", asyncRoute(async (req: AuthRequest, res) => { const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id); const active = transactions.filter((t) => t.status !== "reversed"); const totalSales = active.filter((t) => t.type === "sale").reduce((s, t) => s + Number(t.amount), 0); const deliveryFees = active.filter((t) => t.type === "delivery").reduce((s, t) => s + Number(t.amount), 0); ok(res, { available: active.filter((t) => t.status === "available").reduce((s, t) => s + Number(t.amount), 0), pending: active.filter((t) => t.status === "pending").reduce((s, t) => s + Number(t.amount), 0), customerPayments: totalSales + deliveryFees, totalSales, deliveryFees, platformFees: Math.abs(active.filter((t) => t.type === "fee").reduce((s, t) => s + Number(t.amount), 0)), totalPaid: Math.abs(active.filter((t) => t.type === "payout").reduce((s, t) => s + Number(t.amount), 0)) }); }));
   router.get("/payouts", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("payouts")).filter((p) => p.vendorId === req.user!.id))));
@@ -77,6 +99,40 @@ export const vendorRoutes = (db: Database) => {
 };
 
 export const planRoutes = (db: Database) => { const router = Router(); router.get("/plans", asyncRoute(async (_req, res) => ok(res, await db.list("plans")))); return router; };
+
+function monthlyRevenueSeries(sales: Entity[]) {
+  const now = new Date();
+  return Array.from({ length: 7 }, (_, index) => {
+    const month = new Date(now.getFullYear(), now.getMonth() - (6 - index), 1);
+    const year = month.getFullYear();
+    const monthIndex = month.getMonth();
+    const value = sales.reduce((sum, transaction) => {
+      const createdAt = new Date(String(transaction.createdAt ?? ""));
+      return createdAt.getFullYear() === year && createdAt.getMonth() === monthIndex
+        ? sum + Number(transaction.amount)
+        : sum;
+    }, 0);
+    return { label: month.toLocaleString("en-NG", { month: "short" }), value };
+  });
+}
+
+function weeklyOrderSeries(orders: Entity[]) {
+  const today = new Date();
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, index) => {
+    const dayStart = new Date(monday);
+    dayStart.setDate(monday.getDate() + index);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayStart.getDate() + 1);
+    const value = orders.filter((order) => {
+      const placedAt = new Date(String(order.placedAt ?? ""));
+      return placedAt >= dayStart && placedAt < dayEnd;
+    }).length;
+    return { label: dayStart.toLocaleString("en-NG", { weekday: "short" }), value };
+  });
+}
 
 async function paystackRequest<T>(path: string, init: RequestInit = {}) {
   if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
