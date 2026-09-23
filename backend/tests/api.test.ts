@@ -186,6 +186,12 @@ describe("Vendura API", () => {
     expect(requests.body.data[0]).toMatchObject({ id: buyerRequest.body.data.id, maximumBudget: 50000 });
     const history = await request(app).get("/api/ai/history").set(auth(customer));
     expect(history.body.data[0]).toMatchObject({ query: "I need a red phone", resultCount: 0 });
+    const greeting = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "Hello" });
+    expect(greeting.body.data).toMatchObject({ intent: "chat", products: [] });
+    expect(greeting.body.data.response).toContain("shopping assistant");
+    const count = await request(app).post("/api/ai/search").set(auth(customer)).send({ message: "How many products are on Vendura?" });
+    expect(count.body.data).toMatchObject({ intent: "chat", products: [] });
+    expect(count.body.data.response).toContain("1 active product");
     const aiOffers = await request(app).get("/api/ai/offers").set(auth(customer));
     expect(aiOffers.status).toBe(200);
     expect(Array.isArray(aiOffers.body.data)).toBe(true);

@@ -8,6 +8,7 @@ export type AIProduct = Product & {
 export interface AISearchResult {
   response: string;
   products: AIProduct[];
+  intent: "chat" | "shopping";
   filters: { terms: string[]; maximumPrice?: number };
   imageSearch: { received: boolean; fileName: string; mediaType?: string } | null;
 }
@@ -49,7 +50,7 @@ export interface AISellerOffer {
   store: { id: string; name: string; verified: boolean; rating: number } | null;
 }
 
-export const searchWithAI = (input: { message: string; imageName?: string; imageType?: string }) =>
+export const searchWithAI = (input: { message: string; imageName?: string; imageType?: string; sessionId?: string }) =>
   api<AISearchResult>("/ai/search", { method: "POST", ...json(input) });
 
 export const transcribeVoice = (input: { audio: string; mediaType: string }) =>

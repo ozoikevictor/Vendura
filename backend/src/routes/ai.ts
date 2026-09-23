@@ -9,6 +9,7 @@ const requestSchema = z.object({
   message: z.string().trim().max(1000).default(""),
   imageName: z.string().trim().max(255).optional(),
   imageType: z.string().trim().max(100).optional(),
+  sessionId: z.string().trim().max(100).optional(),
 }).refine((value) => value.message.length > 0 || Boolean(value.imageName), {
   message: "Tell the assistant what you need or attach an image",
 });
@@ -87,7 +88,30 @@ export const aiRoutes = (db: Database) => {
       .filter((item) => (terms.length === 0 || item.score > 0) && item.strictMatch && item.detailMatch)
       .sort((a, b) => b.score - a.score || Number(a.product.price) - Number(b.product.price));
 
-    const matches = ranked.slice(0, 12).map(({ product, store }) => ({
+    const shoppingIntent = isShoppingRequest(source, input.imageName);
+    let selected = shoppingIntent ? ranked.slice(0, 12) : [];
+    let response = answerMarketplaceQuestion(source, products, stores);
+    const aiAnswer = await generateMarketplaceReply({
+      customerId: req.user!.id,
+      sessionId: input.sessionId,
+      message: input.message,
+      products,
+      stores,
+      db,
+    });
+    if (aiAnswer) {
+      response = aiAnswer.response;
+      if (aiAnswer.productIds.length > 0) {
+        const selectedIds = new Set(aiAnswer.productIds);
+        selected = ranked.filter(({ product }) => selectedIds.has(String(product.id)));
+        for (const product of products) {
+          if (!selectedIds.has(String(product.id)) || selected.some((item) => item.product.id === product.id)) continue;
+          selected.push({ product, store: storeById.get(String(product.storeId)), score: 0, strictMatch: true, detailMatch: true });
+        }
+        selected = selected.slice(0, 12);
+      }
+    }
+    const matches = selected.map(({ product, store }) => ({
       ...product,
       store: store ? {
         id: store.id,
@@ -99,15 +123,20 @@ export const aiRoutes = (db: Database) => {
       } : null,
     }));
     const exactCount = budget === undefined ? matches.length : matches.filter((product) => Number((product as Entity).price) <= budget).length;
-    const response = matches.length === 0
-      ? strictTerms.length > 0
-        ? `I could not find an in-stock ${strictTerms.join(" ")} matching your request. I will not substitute a different brand or model.`
-        : "I could not find an in-stock product matching that request. Try a broader name or create a buyer request."
-      : `I found ${matches.length} live marketplace ${matches.length === 1 ? "product" : "products"}${budget !== undefined ? `, including ${exactCount} within ${formatNaira(budget)}` : ""}.`;
+    if (!response) {
+      response = matches.length === 0
+        ? strictTerms.length > 0
+          ? `I could not find an in-stock ${strictTerms.join(" ")} matching your request. I will not substitute a different brand or model.`
+          : shoppingIntent
+            ? "I could not find an in-stock product matching that request. Try a broader name or create a buyer request."
+            : "I can chat about the marketplace, check what a store sells, compare prices, or help you find a product. What would you like to know?"
+        : `I found ${matches.length} live marketplace ${matches.length === 1 ? "product" : "products"}${budget !== undefined ? `, including ${exactCount} within ${formatNaira(budget)}` : ""}.`;
+    }
 
     await db.create("aiHistory", {
       id: id("ai-history"),
       customerId: req.user!.id,
+      sessionId: input.sessionId,
       query: input.message || `Image search: ${input.imageName}`,
       response,
       productIds: matches.map((product) => product.id),
@@ -118,6 +147,7 @@ export const aiRoutes = (db: Database) => {
     ok(res, {
       response,
       products: matches,
+      intent: shoppingIntent || matches.length > 0 ? "shopping" : "chat",
       filters: { terms, strictTerms, ...(budget !== undefined ? { maximumPrice: budget } : {}) },
       imageSearch: input.imageName ? { received: true, fileName: input.imageName, mediaType: input.imageType } : null,
     });
@@ -203,6 +233,123 @@ export const aiRoutes = (db: Database) => {
   }));
   return router;
 };
+
+function isShoppingRequest(message: string, imageName?: string) {
+  return Boolean(imageName) || /\b(find|show|buy|need|want|looking for|search|under|budget|available|stock|have|compare|difference|price)\b/i.test(message);
+}
+
+function answerMarketplaceQuestion(message: string, products: Entity[], stores: Entity[]) {
+  if (/^(hi|hello|hey|good (morning|afternoon|evening)|how are you)[!.?\s]*$/i.test(message.trim())) {
+    return "Hello! I’m your Vendura shopping assistant. I can find products, check a seller’s stock, count store products, and compare prices. What can I help you with?";
+  }
+  if (/\b(thank you|thanks|thank u)\b/i.test(message)) {
+    return "You’re welcome. Ask me anything else about products or stores on Vendura.";
+  }
+
+  const normalizedMessage = normalizeForMatch(message);
+  const store = stores
+    .filter((candidate) => normalizedMessage.includes(normalizeForMatch(String(candidate.name))))
+    .sort((a, b) => String(b.name).length - String(a.name).length)[0];
+  const activeProducts = products.filter((product) => product.status === "active");
+  if (store) {
+    const storeProducts = activeProducts.filter((product) => product.storeId === store.id);
+    const inStock = storeProducts.filter((product) => Number(product.stock) > 0);
+    if (/\b(how many|number of|count)\b/i.test(message)) {
+      return `${store.name} has ${storeProducts.length} active ${storeProducts.length === 1 ? "product" : "products"} on Vendura, and ${inStock.length} ${inStock.length === 1 ? "is" : "are"} currently in stock.`;
+    }
+    const storeWords = new Set(tokenize(String(store.name)));
+    const queryTerms = tokenize(message).filter((term) => !storeWords.has(term));
+    const matching = inStock.filter((product) => {
+      const text = normalizeForMatch(`${product.name} ${product.description} ${(product.tags as string[] | undefined ?? []).join(" ")}`);
+      return queryTerms.some((term) => text.includes(term));
+    });
+    if (/\b(have|has|sell|stock|available|carry)\b/i.test(message) && queryTerms.length > 0) {
+      return matching.length > 0
+        ? `${store.name} has ${matching.length} matching in-stock ${matching.length === 1 ? "product" : "products"}: ${matching.slice(0, 4).map((product) => `${product.name} (${formatNaira(Number(product.price))})`).join(", ")}.`
+        : `I could not find that product in ${store.name}’s current in-stock listings.`;
+    }
+    if (/\b(tell me about|about|store|shop)\b/i.test(message)) {
+      return `${store.name} has ${storeProducts.length} active products, a ${Number(store.rating ?? 0).toFixed(1)} rating, and is ${store.verified ? "verified" : "not yet verified"} on Vendura.`;
+    }
+  }
+  if (/\b(how many|number of|count)\b.*\bproducts?\b/i.test(message)) {
+    const inStock = activeProducts.filter((product) => Number(product.stock) > 0).length;
+    return `Vendura currently has ${activeProducts.length} active products from ${stores.length} stores, with ${inStock} products in stock.`;
+  }
+  if (/\b(how many|number of|count)\b.*\bstores?\b/i.test(message)) {
+    return `Vendura currently has ${stores.length} ${stores.length === 1 ? "store" : "stores"}, including ${stores.filter((item) => item.verified).length} verified sellers.`;
+  }
+  return "";
+}
+
+async function generateMarketplaceReply({ customerId, sessionId, message, products, stores, db }: {
+  customerId: string;
+  sessionId?: string;
+  message: string;
+  products: Entity[];
+  stores: Entity[];
+  db: Database;
+}) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !message.trim() || process.env.NODE_ENV === "test") return null;
+  const storeById = new Map(stores.map((store) => [store.id, store]));
+  const catalog = products
+    .filter((product) => product.status === "active")
+    .slice(0, 200)
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      stock: Number(product.stock),
+      store: storeById.get(String(product.storeId))?.name ?? "Unknown store",
+      tags: product.tags ?? [],
+    }));
+  const history = (await db.list<Entity>("aiHistory"))
+    .filter((item) => item.customerId === customerId && (!sessionId || item.sessionId === sessionId))
+    .sort((a, b) => +new Date(String(a.createdAt)) - +new Date(String(b.createdAt)))
+    .slice(-6)
+    .map((item) => ({ user: item.query, assistant: item.response }));
+  try {
+    const aiResponse = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        instructions: "You are Vendura's friendly customer shopping assistant. Answer conversationally and use only the supplied live catalog for factual product, price, stock, and store claims. Never invent products. Select product IDs only when cards would help answer the user. Keep answers concise and helpful.",
+        input: JSON.stringify({ conversation: history, customerMessage: message, liveCatalog: catalog }),
+        text: {
+          format: {
+            type: "json_schema",
+            name: "vendura_marketplace_reply",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                response: { type: "string" },
+                productIds: { type: "array", items: { type: "string" } },
+              },
+              required: ["response", "productIds"],
+              additionalProperties: false,
+            },
+          },
+        },
+      }),
+    });
+    if (!aiResponse.ok) return null;
+    const payload = await aiResponse.json() as { output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
+    const text = payload.output?.flatMap((item) => item.content ?? []).find((item) => item.type === "output_text")?.text;
+    if (!text) return null;
+    const parsed = z.object({ response: z.string().min(1), productIds: z.array(z.string()).max(12) }).parse(JSON.parse(text));
+    const validIds = new Set(catalog.map((product) => String(product.id)));
+    return { response: parsed.response, productIds: parsed.productIds.filter((productId) => validIds.has(productId)) };
+  } catch {
+    return null;
+  }
+}
+
+function normalizeForMatch(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
 
 function tokenize(value: string) {
   return value

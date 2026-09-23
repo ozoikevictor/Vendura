@@ -38,12 +38,14 @@ import {
 import { getErrorMessage } from "@/services/api";
 
 const prompts = [
+  "Hi, what can you help me with?",
+  "How many products are on Vendura?",
+  "How many products does Victor Fashion have?",
   "I need an iPhone 15 Pro under ₦900,000",
-  "Find black Nike sneakers size 44 under ₦100,000",
-  "I need a laptop for programming. My budget is ₦700,000",
-  "Find me a black dress for an event this weekend",
-  "I need a PS5 with two controllers",
+  "Compare prices for phones",
 ];
+
+type ConversationTurn = { message: string; reply: string };
 
 export function CustomerAIGuard({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -66,6 +68,9 @@ export function CustomerAIPage() {
   const [loading, setLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [matches, setMatches] = useState<AIProduct[]>([]);
+  const [intent, setIntent] = useState<"chat" | "shopping">("chat");
+  const [previousTurns, setPreviousTurns] = useState<ConversationTurn[]>([]);
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [listening, setListening] = useState(false);
@@ -73,6 +78,7 @@ export function CustomerAIPage() {
   const [saved, setSaved] = useState<string[]>([]);
   const [showRequest, setShowRequest] = useState(false);
   const pageShell = useRef<HTMLDivElement>(null);
+  const chatScroll = useRef<HTMLDivElement>(null);
   const composerInput = useRef<HTMLTextAreaElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -101,8 +107,14 @@ export function CustomerAIPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const container = chatScroll.current;
+    if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [loading, message, reply, previousTurns]);
+
   const submit = async (value = input) => {
-    if (!value.trim() && !image) return;
+    if (loading || (!value.trim() && !image)) return;
+    if (message && reply) setPreviousTurns((current) => [...current, { message, reply }]);
     setInput("");
     setMessage(value.trim() || `Find products similar to ${image?.name ?? "this image"}`);
     setLoading(true);
@@ -110,10 +122,12 @@ export function CustomerAIPage() {
     try {
       const result = await searchWithAI({
         message: value.trim(),
+        sessionId,
         ...(image ? { imageName: image.name, imageType: image.type } : {}),
       });
       setReply(result.response);
       setMatches(result.products);
+      setIntent(result.intent);
     } catch (searchError) {
       setError(getErrorMessage(searchError, "The assistant could not search right now."));
       setMatches([]);
@@ -185,6 +199,9 @@ export function CustomerAIPage() {
                 setInput("");
                 setReply("");
                 setMatches([]);
+                setIntent("chat");
+                setPreviousTurns([]);
+                setSessionId(crypto.randomUUID());
                 setError("");
               }}
               className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
@@ -230,7 +247,7 @@ export function CustomerAIPage() {
                 <History className="h-5 w-5" />
               </Link>
             </header>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6">
+            <div ref={chatScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6">
               {!message ? (
                 <div className="mx-auto w-full max-w-3xl py-3 sm:py-8">
                   <div className="flex items-start gap-3">
@@ -262,6 +279,19 @@ export function CustomerAIPage() {
                 </div>
               ) : (
                 <div className="mx-auto max-w-3xl space-y-3 sm:space-y-5">
+                  {previousTurns.map((turn, index) => (
+                    <div key={`${turn.message}-${index}`} className="space-y-3 border-b border-border pb-4">
+                      <div className="ml-auto max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground sm:px-4 sm:py-3">
+                        {turn.message}
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+                          <Sparkles className="h-4 w-4" />
+                        </span>
+                        <p className="pt-1 text-sm">{turn.reply}</p>
+                      </div>
+                    </div>
+                  ))}
                   <div className="ml-auto max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground sm:px-4 sm:py-3">
                     {message}
                   </div>
@@ -348,12 +378,12 @@ export function CustomerAIPage() {
                           );
                         })}
                       </div>
-                      {matches.length === 0 && !error && (
+                      {intent === "shopping" && matches.length === 0 && !error && (
                         <div className="rounded-lg border border-border bg-muted/50 p-4 text-center text-sm text-muted-foreground sm:p-6">
                           No matching live products were found.
                         </div>
                       )}
-                      <div className="rounded-lg border border-dashed border-primary/40 bg-primary-soft p-3 sm:p-4">
+                      {intent === "shopping" && <div className="rounded-lg border border-dashed border-primary/40 bg-primary-soft p-3 sm:p-4">
                         <p className="font-semibold">Couldn&apos;t find the perfect match?</p>
                         <p className="mt-1 text-sm text-muted-foreground">
                           Let verified sellers send you offers that match your exact needs.
@@ -364,7 +394,7 @@ export function CustomerAIPage() {
                         >
                           Create Buyer Request
                         </button>
-                      </div>
+                      </div>}
                     </>
                   )}
                 </div>
@@ -427,7 +457,7 @@ export function CustomerAIPage() {
                 <button
                   type="submit"
                   aria-label="Send"
-                  disabled={!input.trim() && !image}
+                  disabled={loading || (!input.trim() && !image)}
                   className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground disabled:opacity-40"
                 >
                   <Send className="h-4 w-4" />
