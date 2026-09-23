@@ -10,7 +10,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-20 border-t-4 border-primary/30 bg-[#17211b] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
@@ -22,8 +22,8 @@ export function SiteFooter() {
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/65">
-              Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere —
-              from phones to fashion, building materials to baby products.
+              Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere — from phones to
+              fashion, building materials to baby products.
             </p>
             <div className="mt-4 flex gap-3">
               <a
@@ -70,11 +70,38 @@ export function SiteFooter() {
 
           {/* Seller resources */}
           <div>
-            <h3 className="text-sm font-semibold text-white">{isCustomer ? "Store access" : "For Sellers"}</h3>
+            <h3 className="text-sm font-semibold text-white">
+              {isCustomer ? "Store access" : "For Sellers"}
+            </h3>
             <ul className="mt-3 space-y-2">
-              {!isCustomer && <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Start selling</Link></li>}
-              {!isCustomer && <li><Link to="/login" className="text-sm text-white/65 transition-colors hover:text-primary">Seller login</Link></li>}
-              <li><Link to="/explore" className="text-sm text-white/65 transition-colors hover:text-primary">Open a store</Link></li>
+              {!isCustomer && (
+                <li>
+                  <Link
+                    to="/vendor-register"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
+                  >
+                    Start selling
+                  </Link>
+                </li>
+              )}
+              {!isCustomer && (
+                <li>
+                  <Link
+                    to="/login"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
+                  >
+                    Seller login
+                  </Link>
+                </li>
+              )}
+              <li>
+                <Link
+                  to="/explore"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Open a store
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -82,19 +109,48 @@ export function SiteFooter() {
           <div>
             <h3 className="text-sm font-semibold text-white">Company</h3>
             <ul className="mt-3 space-y-2">
-              {!isCustomer && <li><Link to="/vendor-register" className="text-sm text-white/65 transition-colors hover:text-primary">Become a Seller</Link></li>}
-              <li><Link to="/marketplace" className="text-sm text-white/65 transition-colors hover:text-primary">Marketplace</Link></li>
-              <li><Link to="/categories" className="text-sm text-white/65 transition-colors hover:text-primary">All Categories</Link></li>
-              <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Help Center</a></li>
-              <li><a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">Privacy</a></li>
+              {!isCustomer && (
+                <li>
+                  <Link
+                    to="/vendor-register"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
+                  >
+                    Become a Seller
+                  </Link>
+                </li>
+              )}
+              <li>
+                <Link
+                  to="/marketplace"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Marketplace
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/categories"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  All Categories
+                </Link>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">
+                  Help Center
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">
+                  Privacy
+                </a>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-          <p className="text-xs text-white/50">
-            © 2026 Vendura. Made in Lagos, Nigeria.
-          </p>
+          <p className="text-xs text-white/50">© 2026 Vendura. Made in Lagos, Nigeria.</p>
           <div className="flex items-center gap-4 text-xs text-white/50">
             <span>Paystack</span>
             <span>·</span>
