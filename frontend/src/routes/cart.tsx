@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShoppingBasket, Heart, Tag, Trash2, Bookmark } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { QuantityStepper } from "@/components/shared/QuantityStepper";
 import { useCartStore } from "@/store/cart";
@@ -57,7 +56,6 @@ function CartPage() {
             <Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>
           )}
         />
-        <SiteFooter />
       </div>
     );
   }
@@ -269,7 +267,6 @@ function CartPage() {
           </div>
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

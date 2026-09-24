@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Circle, Package, Truck, Home, XCircle, MapPin, Star } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowPanel } from "@/components/shared/EscrowPanel";
 import { DataLoader } from "@/components/shared/DataLoader";
@@ -63,7 +62,6 @@ function OrderDetailPage() {
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
         <DataLoader label="Loading order details" className="min-h-[60dvh]" />
-        <SiteFooter />
       </div>
     );
   }
@@ -81,7 +79,6 @@ function OrderDetailPage() {
             Back to orders
           </Link>
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -345,7 +342,6 @@ function OrderDetailPage() {
           <p className="mt-1 text-xs text-muted-foreground">Method: {order.deliveryMethod}</p>
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

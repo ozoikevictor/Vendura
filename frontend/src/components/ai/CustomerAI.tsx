@@ -19,7 +19,6 @@ import {
   X,
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
@@ -996,7 +995,6 @@ export function CustomerAIListPage({ kind }: { kind: "history" | "requests" | "o
             )}
           </div>
         </main>
-        <SiteFooter />
       </div>
     </CustomerAIGuard>
   );
@@ -1072,7 +1070,6 @@ export function DealRoomPage() {
             </div>
           </div>
         </main>
-        <SiteFooter />
       </div>
     </CustomerAIGuard>
   );

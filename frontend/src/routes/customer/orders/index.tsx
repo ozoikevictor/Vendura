@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Package } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowBadge } from "@/components/shared/EscrowBadge";
@@ -40,7 +39,6 @@ function OrdersPage() {
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
         <DataLoader label="Loading your orders" className="min-h-[60dvh]" />
-        <SiteFooter />
       </div>
     );
   }
@@ -55,7 +53,6 @@ function OrdersPage() {
           description="When you place an order, it'll show up here."
           action={<Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>}
         />
-        <SiteFooter />
       </div>
     );
   }
@@ -104,7 +101,6 @@ function OrdersPage() {
           ))}
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

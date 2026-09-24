@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, ShoppingBasket } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { useWishlistStore } from "@/store/wishlist";
@@ -47,7 +46,6 @@ function WishlistPage() {
           description="Tap the heart on any product to save it here."
           action={browseAction}
         />
-        <SiteFooter />
       </div>
     );
   }
@@ -67,7 +65,6 @@ function WishlistPage() {
           })}
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

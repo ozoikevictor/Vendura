@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { CheckCircle2, LoaderCircle, XCircle } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { verifyPaystackPayment } from "@/services/paymentService";
 import { getErrorMessage } from "@/services/api";
 import { useCartStore } from "@/store/cart";
@@ -42,5 +41,5 @@ function PaymentCallbackPage() {
     <h1 className="mt-4 text-2xl font-bold text-foreground">{result.state === "checking" ? "Confirming payment" : result.state === "success" ? "Payment successful" : "Payment not confirmed"}</h1>
     <p className="mt-2 text-sm text-muted-foreground">{result.message}</p>
     {result.state !== "checking" && <div className="mt-6 flex justify-center gap-3">{result.orderId && <Link to="/customer/orders/$orderId" params={{ orderId: result.orderId }} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">View order</Link>}<Link to="/customer/orders" className="rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground">All orders</Link></div>}
-  </div></main><SiteFooter /></div>;
+  </div></main></div>;
 }

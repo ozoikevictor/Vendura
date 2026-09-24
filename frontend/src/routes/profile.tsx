@@ -4,7 +4,6 @@ import { Camera, Heart, KeyRound, LogOut, Mail, MessageSquare, Package, Phone, S
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useAuthStore } from "@/store/auth";
 import { changePassword, logout, updateProfile } from "@/services/authService";
@@ -116,7 +115,6 @@ function ProfilePage() {
             action={<Link to="/login" className="text-sm font-semibold text-primary hover:underline">Log in</Link>}
           />
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -200,7 +198,6 @@ function ProfilePage() {
         </div>
       </div>
 
-      <SiteFooter />
     </div>
   );
 }

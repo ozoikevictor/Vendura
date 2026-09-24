@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NotificationList } from "@/components/shared/NotificationList";
 import { DataLoader } from "@/components/shared/DataLoader";
@@ -28,5 +27,5 @@ function CustomerNotificationsPage() {
       {unread > 0 && <button type="button" onClick={() => readAll.mutate()} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-accent"><CheckCheck className="h-4 w-4" /> Mark all as read</button>}
     </div>
     {isLoading ? <DataLoader label="Loading notifications" className="min-h-72" /> : notifications.length > 0 ? <NotificationList notifications={notifications} onOpen={openNotification} /> : <EmptyState icon={<Bell className="h-7 w-7" />} title="No notifications" description="Updates about your orders will appear here." />}
-  </main><SiteFooter /></div>;
+  </main></div>;
 }

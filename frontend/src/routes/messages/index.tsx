@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery } from "@tanstack/react-query";
@@ -37,7 +36,6 @@ function MessagesPage() {
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
         <DataLoader label="Loading messages" className="min-h-[60dvh]" />
-        <SiteFooter />
       </div>
     );
   }
@@ -52,7 +50,6 @@ function MessagesPage() {
           description="Start a conversation by messaging a seller from a product page."
           action={<Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>}
         />
-        <SiteFooter />
       </div>
     );
   }
@@ -88,7 +85,6 @@ function MessagesPage() {
           ))}
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

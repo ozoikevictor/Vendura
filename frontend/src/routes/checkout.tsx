@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { User, Phone, MapPin, CreditCard, Truck, Check, ShieldCheck } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
 import { placeOrder } from "@/services/orderService";
@@ -177,7 +176,6 @@ function CheckoutPage() {
             </div>
           </div>
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -195,7 +193,6 @@ function CheckoutPage() {
             Browse Marketplace
           </Link>
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -252,7 +249,6 @@ function CheckoutPage() {
             <SocialAuthButtons showDivider={false} />
           </div>
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -561,7 +557,6 @@ function CheckoutPage() {
           </div>
         </form>
       </div>
-      <SiteFooter />
     </div>
   );
 }

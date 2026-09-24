@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { Send, ArrowLeft, Tag, Check, X, RotateCw, ShoppingBasket } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConversation, getMessages, getOffersForConversation,
@@ -135,7 +134,6 @@ function ConversationPage() {
           <h1 className="text-xl font-semibold text-foreground">Conversation not found</h1>
           <Link to="/messages" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Back to messages</Link>
         </div>
-        <SiteFooter />
       </div>
     );
   }
@@ -260,7 +258,6 @@ function ConversationPage() {
           </form>
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }
