@@ -27,3 +27,5 @@ services:
         sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false

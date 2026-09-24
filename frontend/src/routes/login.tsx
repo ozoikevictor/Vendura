@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
+import { HumanCheck } from "@/components/shared/HumanCheck";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -30,13 +31,18 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRefresh, setCaptchaRefresh] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password || !captchaToken) {
+      if (!captchaToken) toast.error("Complete the security check");
+      return;
+    }
     setLoading(true);
     try {
-      const user = await authService.login({ email, password });
+      const user = await authService.login({ email, password, captchaToken });
       setAuth(user);
       toast.success("Welcome back!");
       if (user.role === "admin") navigate({ to: "/admin" });
@@ -45,6 +51,7 @@ function LoginPage() {
       else navigate({ to: "/marketplace" });
     } catch (error) {
       toast.error(getErrorMessage(error, "Invalid email or password"));
+      setCaptchaRefresh((value) => value + 1);
     } finally {
       setLoading(false);
     }
@@ -115,9 +122,10 @@ function LoginPage() {
               </div>
             </div>
 
+            <HumanCheck onToken={setCaptchaToken} refreshKey={captchaRefresh} />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
               {loading ? "Logging in..." : "Log In"}

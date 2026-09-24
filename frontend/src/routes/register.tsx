@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/services/api";
 import { useStorefrontStore } from "@/store/storefront";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
+import { HumanCheck } from "@/components/shared/HumanCheck";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -38,6 +39,8 @@ function RegisterPage() {
   });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRefresh, setCaptchaRefresh] = useState(0);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -48,6 +51,10 @@ function RegisterPage() {
       toast.error("Passwords don't match");
       return;
     }
+    if (!captchaToken) {
+      toast.error("Complete the security check");
+      return;
+    }
     setLoading(true);
     try {
       const user = await authService.registerCustomer({
@@ -55,6 +62,7 @@ function RegisterPage() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        captchaToken,
       });
       setAuth(user);
       if (user.emailVerified) {
@@ -68,6 +76,7 @@ function RegisterPage() {
       }
     } catch (error) {
       toast.error(getErrorMessage(error, "Could not create account"));
+      setCaptchaRefresh((value) => value + 1);
     } finally {
       setLoading(false);
     }
@@ -158,9 +167,10 @@ function RegisterPage() {
               required
             />
 
+            <HumanCheck onToken={setCaptchaToken} refreshKey={captchaRefresh} />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
               {loading ? "Creating..." : "Create Account"}

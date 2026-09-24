@@ -14,6 +14,7 @@ Add these secret environment values in Render:
 - `FRONTEND_URL` (use the Vercel URL after the frontend is deployed)
 - `RESEND_API_KEY`
 - `EMAIL_FROM` (for example `Vendura <no-reply@yourdomain.com>`)
+- `TURNSTILE_SECRET_KEY` (the private key from your Cloudflare Turnstile widget)
 
 Render generates `JWT_SECRET`. Do not copy any `.env` file into GitHub.
 
@@ -22,6 +23,7 @@ Render generates `JWT_SECRET`. Do not copy any `.env` file into GitHub.
 Import the same repository, set the Root Directory to `frontend`, and add:
 
 - `VITE_API_URL=https://your-render-service.onrender.com/api`
+- `VITE_TURNSTILE_SITE_KEY` (the public site key from the same Turnstile widget)
 - `NITRO_PRESET=vercel`
 
 After Vercel deploys, update `FRONTEND_URL` in Render and redeploy the backend.

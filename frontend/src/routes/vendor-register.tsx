@@ -21,6 +21,7 @@ import { nigerianStates } from "@/data/users";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+import { HumanCheck } from "@/components/shared/HumanCheck";
 
 export const Route = createFileRoute("/vendor-register")({
   head: () => ({
@@ -78,6 +79,8 @@ function VendorRegisterPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRefresh, setCaptchaRefresh] = useState(0);
 
   const set =
     (k: keyof typeof form) =>
@@ -94,6 +97,10 @@ function VendorRegisterPage() {
       toast.error("Please correct the highlighted fields.");
       return;
     }
+    if (!captchaToken) {
+      toast.error("Complete the security check");
+      return;
+    }
     setLoading(true);
     try {
       const user = await authService.registerVendor({
@@ -102,6 +109,7 @@ function VendorRegisterPage() {
         email: form.email,
         phone: form.phone,
         password: form.password,
+        captchaToken,
         businessCategory: form.businessCategory,
         storeDescription: form.storeDescription,
         location: { city: form.city, state: form.state },
@@ -118,6 +126,7 @@ function VendorRegisterPage() {
       const message = getErrorMessage(error, "Could not create store");
       setErrors({ form: message });
       toast.error(message);
+      setCaptchaRefresh((value) => value + 1);
     } finally {
       setLoading(false);
     }
@@ -332,9 +341,10 @@ function VendorRegisterPage() {
               </div>
             )}
 
+            <HumanCheck onToken={setCaptchaToken} refreshKey={captchaRefresh} />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !captchaToken}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
               {loading ? "Creating store..." : "Create Store"}

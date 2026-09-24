@@ -5,12 +5,14 @@ import { nigerianStates } from "@/data/users";
 export interface LoginInput {
   email: string;
   password: string;
+  captchaToken: string;
 }
 export interface CustomerRegisterInput {
   fullName: string;
   email: string;
   phone: string;
   password: string;
+  captchaToken: string;
 }
 export interface VendorRegisterInput {
   fullName: string;
@@ -18,6 +20,7 @@ export interface VendorRegisterInput {
   email: string;
   phone: string;
   password: string;
+  captchaToken: string;
   businessCategory: string;
   storeDescription: string;
   location: { city: string; state: string };
@@ -63,8 +66,8 @@ export async function logout() {
     clearToken();
   }
 }
-export const requestPasswordReset = (email: string) =>
-  api<{ message: string }>("/auth/forgot-password", { method: "POST", ...json({ email }) }).then(
+export const requestPasswordReset = (email: string, captchaToken: string) =>
+  api<{ message: string }>("/auth/forgot-password", { method: "POST", ...json({ email, captchaToken }) }).then(
     () => undefined,
   );
 export const resetPassword = (token: string, newPassword: string) =>

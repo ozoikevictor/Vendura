@@ -4,6 +4,7 @@ import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import * as authService from "@/services/authService";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+import { HumanCheck } from "@/components/shared/HumanCheck";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
@@ -22,17 +23,23 @@ function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRefresh, setCaptchaRefresh] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !captchaToken) {
+      if (!captchaToken) toast.error("Complete the security check");
+      return;
+    }
     setLoading(true);
     try {
-      await authService.requestPasswordReset(email);
+      await authService.requestPasswordReset(email, captchaToken);
       setSent(true);
       toast.success("Reset link sent");
     } catch {
       toast.error("Could not send reset link");
+      setCaptchaRefresh((value) => value + 1);
     } finally {
       setLoading(false);
     }
@@ -71,7 +78,8 @@ function ForgotPasswordPage() {
                     className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
               </div>
-              <button type="submit" disabled={loading}
+              <HumanCheck onToken={setCaptchaToken} refreshKey={captchaRefresh} />
+              <button type="submit" disabled={loading || !captchaToken}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60">
                 {loading ? "Sending..." : "Send Reset Link"}
                 {!loading && <ArrowRight className="h-4 w-4" />}

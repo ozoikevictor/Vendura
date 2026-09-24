@@ -12,6 +12,7 @@ const schema = z.object({
   PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional(),
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
   OPENAI_API_KEY: z.string().startsWith("sk-").optional(),
+  TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>"),
   REQUIRE_EMAIL_VERIFICATION: z.string().default("false").transform((value) => value.toLowerCase() === "true")
 });

@@ -2,20 +2,22 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { asyncRoute, ApiError } from "../lib/errors.js";
 import { created, id, now, ok, publicUser, slugify } from "../lib/helpers.js";
-import { customerRegistration, email, loginSchema, password, vendorRegistration } from "../schemas.js";
+import { captchaToken, customerRegistration, email, loginSchema, password, vendorRegistration } from "../schemas.js";
 import { authenticate, signToken } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
 import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { config } from "../config.js";
 import { resetEmail, sendEmail, verificationEmail } from "../lib/email.js";
+import { verifyHuman } from "../lib/turnstile.js";
 
 export const authRoutes = (db: Database) => {
   const router = Router();
   router.post("/register/customer", asyncRoute(async (req, res) => {
     const input = customerRegistration.parse(req.body);
+    await verifyHuman(input.captchaToken, req.ip);
     if (await db.findOne("users", { email: input.email })) throw new ApiError(409, "An account with that email already exists");
     const verification = config.REQUIRE_EMAIL_VERIFICATION ? createVerification() : undefined;
-    const user = await db.create("users", { id: id("user-customer"), ...input, passwordHash: await bcrypt.hash(input.password, 12), password: undefined, role: "customer", emailVerified: !config.REQUIRE_EMAIL_VERIFICATION, ...verification?.patch, createdAt: now() } as Entity);
+    const user = await db.create("users", { id: id("user-customer"), fullName: input.fullName, email: input.email, phone: input.phone, passwordHash: await bcrypt.hash(input.password, 12), role: "customer", emailVerified: !config.REQUIRE_EMAIL_VERIFICATION, ...verification?.patch, createdAt: now() } as Entity);
     if (verification) {
       try { await sendVerification(user, verification.code); } catch { await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
     }
@@ -23,6 +25,7 @@ export const authRoutes = (db: Database) => {
   }));
   router.post("/register/vendor", asyncRoute(async (req, res) => {
     const input = vendorRegistration.parse(req.body);
+    await verifyHuman(input.captchaToken, req.ip);
     if (await db.findOne("users", { email: input.email })) throw new ApiError(409, "An account with that email already exists");
     const userId = id("user-vendor");
     const storeId = id("store");
@@ -46,6 +49,7 @@ export const authRoutes = (db: Database) => {
   }));
   router.post("/login", asyncRoute(async (req, res) => {
     const input = loginSchema.parse(req.body);
+    await verifyHuman(input.captchaToken, req.ip);
     const user = await db.findOne<Entity>("users", { email: input.email });
     if (!user || typeof user.passwordHash !== "string" || !(await bcrypt.compare(input.password, user.passwordHash))) throw new ApiError(401, "Invalid email or password");
     if (user.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendura support.");
@@ -68,9 +72,10 @@ export const authRoutes = (db: Database) => {
     ok(res, { message: "Password changed successfully" });
   }));
   router.post("/forgot-password", asyncRoute(async (req, res) => {
-    const parsed = email.safeParse(req.body.email);
+    const parsed = zForgotPassword.safeParse(req.body);
     if (!parsed.success) throw parsed.error;
-    const user = await db.findOne<Entity>("users", { email: parsed.data });
+    await verifyHuman(parsed.data.captchaToken, req.ip);
+    const user = await db.findOne<Entity>("users", { email: parsed.data.email });
     if (user) {
       const lastSent = Date.parse(String(user.resetEmailSentAt ?? 0));
       if (Date.now() - lastSent >= 60_000) {
@@ -125,6 +130,7 @@ export const authRoutes = (db: Database) => {
 
 import { z } from "zod";
 const zReset = z.object({ token: z.string().min(1), password });
+const zForgotPassword = z.object({ email, captchaToken });
 const zChangePassword = z.object({ currentPassword: z.string().min(1), newPassword: password });
 const zOtp = z.object({ otp: z.string().regex(/^\d{6}$/) });
 
