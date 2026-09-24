@@ -2,7 +2,7 @@ const API_URL = (import.meta.env["VITE_API_URL"] ?? "http://localhost:4000/api")
 const TOKEN_KEY = "vendura-token";
 
 type ApiEnvelope<T> = { data: T };
-type ApiErrorEnvelope = { error?: { message?: string; details?: unknown } };
+type ApiErrorEnvelope = { error?: { message?: string; details?: unknown } | string; message?: string };
 
 export class ApiError extends Error {
   constructor(
@@ -50,17 +50,27 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     },
   });
 
+  const rawBody = response.status === 204 ? "" : await response.text();
+  const payload = rawBody
+    ? (() => {
+        try {
+          return JSON.parse(rawBody) as ApiEnvelope<T> & ApiErrorEnvelope;
+        } catch {
+          return {} as ApiEnvelope<T> & ApiErrorEnvelope;
+        }
+      })()
+    : ({} as ApiEnvelope<T> & ApiErrorEnvelope);
+
   if (!response.ok) {
-    const payload = (await response.json().catch(() => ({}))) as ApiErrorEnvelope;
+    const apiMessage = typeof payload.error === "string" ? payload.error : payload.error?.message;
     throw new ApiError(
       response.status,
-      payload.error?.message ?? "Request failed",
-      payload.error?.details,
+      apiMessage ?? payload.message ?? (rawBody.trim() || "Request failed"),
+      typeof payload.error === "object" ? payload.error?.details : undefined,
     );
   }
 
   if (response.status === 204) return undefined as T;
-  const payload = (await response.json()) as ApiEnvelope<T>;
   return payload.data;
 }
 

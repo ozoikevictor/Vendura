@@ -31,6 +31,7 @@ function VendorConversationPage() {
   const [counterAmount, setCounterAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerInput = useRef<HTMLInputElement>(null);
 
   const { data: conv } = useQuery({ queryKey: ["vendor-conversation", conversationId], queryFn: () => getConversation(conversationId) });
   const { data: messages } = useQuery({ queryKey: ["vendor-messages", conversationId], queryFn: () => getMessages(conversationId), refetchInterval: 3_000, refetchOnWindowFocus: "always" });
@@ -80,8 +81,8 @@ function VendorConversationPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <div className="flex items-center gap-2 border-b border-border pb-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border pb-3">
         <Link to="/vendor/messages" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{conv.customerName}</p>
@@ -122,7 +123,7 @@ function VendorConversationPage() {
       </div>
 
       {activeOffer && (
-        <div className="border-t border-border pt-2">
+        <div className="shrink-0 border-t border-border pt-2">
           <p className="text-sm text-muted-foreground">Customer offered: <span className="font-semibold text-foreground">{formatNaira(activeOffer.offeredPrice)}</span> (list: {formatNaira(activeOffer.originalPrice)})</p>
           <div className="mt-1 flex items-center gap-2">
             <button onClick={() => handleRespond(activeOffer, "accepted")} disabled={loading} className="flex items-center gap-1 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60">
@@ -131,7 +132,7 @@ function VendorConversationPage() {
             <button onClick={() => handleRespond(activeOffer, "rejected")} disabled={loading} className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60">
               <X className="h-3.5 w-3.5" /> Reject
             </button>
-            <input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Counter ₦" className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+            <input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Counter ₦" className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm" />
             <button onClick={() => counterAmount && handleRespond(activeOffer, "countered", counterAmount)} disabled={loading || !counterAmount} className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60">
               <RotateCw className="h-3.5 w-3.5" /> Counter
             </button>
@@ -139,8 +140,21 @@ function VendorConversationPage() {
         </div>
       )}
 
-      <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-border pt-2">
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message..." className="flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+      <form onSubmit={handleSend} className="flex shrink-0 items-center gap-2 border-t border-border pt-2 pb-[env(safe-area-inset-bottom)]">
+        <input
+          ref={composerInput}
+          value={text}
+          onPointerDown={(event) => {
+            if (document.activeElement !== composerInput.current) {
+              event.preventDefault();
+              composerInput.current?.focus({ preventScroll: true });
+            }
+          }}
+          onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }))}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type a message..."
+          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+        />
         <button type="submit" disabled={!text.trim()} className="flex items-center justify-center rounded-lg bg-primary p-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
           <Send className="h-4 w-4" />
         </button>

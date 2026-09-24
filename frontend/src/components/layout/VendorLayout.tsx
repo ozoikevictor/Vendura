@@ -59,6 +59,7 @@ export function VendorLayout() {
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
   const [authHydrated, setAuthHydrated] = useState(false);
+  const vendorShell = useRef<HTMLDivElement>(null);
   const pageContent = useRef<HTMLElement>(null);
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
@@ -129,12 +130,17 @@ export function VendorLayout() {
 
   useEffect(() => {
     const isAIPage = location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/";
+    const isConversationPage = /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname);
     const content = pageContent.current;
-    if (!isAIPage || !content) return;
+    const shell = vendorShell.current;
+    if ((!isAIPage && !isConversationPage) || !content || !shell) return;
 
     const viewport = window.visualViewport;
     const fitVisibleScreen = () => {
       const visibleHeight = viewport?.height ?? window.innerHeight;
+      shell.style.top = `${viewport?.offsetTop ?? 0}px`;
+      shell.style.bottom = "auto";
+      shell.style.height = `${visibleHeight}px`;
       content.style.height = `${Math.max(visibleHeight - 64, 240)}px`;
     };
 
@@ -146,6 +152,9 @@ export function VendorLayout() {
       viewport?.removeEventListener("resize", fitVisibleScreen);
       viewport?.removeEventListener("scroll", fitVisibleScreen);
       window.removeEventListener("resize", fitVisibleScreen);
+      shell.style.top = "";
+      shell.style.bottom = "";
+      shell.style.height = "";
       content.style.height = "";
     };
   }, [location.pathname]);
@@ -155,7 +164,7 @@ export function VendorLayout() {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    <div ref={vendorShell} className="fixed inset-0 overflow-hidden bg-background">
       {/* Desktop sidebar */}
       <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
         <VendorSidebar collapsed={vendorSidebarCollapsed} {...(store?.slug ? { storeSlug: String(store.slug) } : {})} />
@@ -256,7 +265,7 @@ export function VendorLayout() {
         {/* Page content */}
         <main ref={pageContent} className={cn(
           "h-[calc(100dvh-4rem)] overscroll-contain",
-          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/"
+          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" || /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname)
             ? "overflow-hidden p-0 sm:p-4 lg:p-6"
             : "overflow-y-auto p-4 sm:p-6 lg:p-8",
         )}>
