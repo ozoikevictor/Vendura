@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   BarChart3,
   Bot,
   Boxes,
@@ -99,25 +100,28 @@ export function VendorAIPage() {
           <Plus className="h-4 w-4" /> New chat
         </button>
       </header>
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-3 sm:hidden">
+        <Link to="/vendor" aria-label="Back to dashboard" className="rounded-md p-1 hover:bg-accent">
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <Sparkles className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <h1 className="truncate text-sm font-bold">AI Business Assistant</h1>
+          <p className="truncate text-xs text-success">Connected to your live store</p>
+        </div>
+        <button
+          type="button"
+          onClick={newChat}
+          title="Start a new chat"
+          aria-label="Start a new chat"
+          className="ml-auto flex h-9 shrink-0 items-center rounded-md border border-border px-2.5 text-xs font-semibold hover:bg-accent"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </header>
       <div ref={chatScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6">
-        <header className="-mx-3 -mt-3 mb-4 flex h-16 items-center gap-3 border-b border-border px-3 sm:hidden">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-bold sm:text-base">AI Business Assistant</h1>
-            <p className="text-xs text-success">Connected to your live store</p>
-          </div>
-          <button
-            type="button"
-            onClick={newChat}
-            title="Start a new chat"
-            aria-label="Start a new chat"
-            className="ml-auto flex h-9 items-center gap-2 rounded-md border border-border px-2.5 text-xs font-semibold hover:bg-accent sm:px-3"
-          >
-            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">New chat</span>
-          </button>
-        </header>
         {turns.length === 0 ? (
           <div className="mx-auto max-w-3xl py-4 sm:py-10">
             <div className="flex items-start gap-3">

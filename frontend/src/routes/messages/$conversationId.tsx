@@ -68,7 +68,7 @@ function ConversationPage() {
     const viewport = window.visualViewport;
     const fitVisibleScreen = () => {
       if (!pageShell.current) return;
-      const headerHeight = window.matchMedia("(min-width: 768px)").matches ? 64 : 116;
+      const headerHeight = window.matchMedia("(min-width: 640px)").matches ? 64 : 0;
       const visibleHeight = viewport?.height ?? window.innerHeight;
       pageShell.current.style.height = `${Math.max(visibleHeight - headerHeight, 240)}px`;
       pageShell.current.style.top = `${(viewport?.offsetTop ?? 0) + headerHeight}px`;
@@ -166,8 +166,8 @@ function ConversationPage() {
 
   return (
     <div className="fixed inset-0 overflow-hidden lagoon-wash">
-      <MarketplaceHeader />
-      <div ref={pageShell} className="absolute inset-x-0 top-[7.25rem] flex min-h-0 flex-col overflow-hidden md:top-16">
+      <div className="hidden sm:block"><MarketplaceHeader /></div>
+      <div ref={pageShell} className="absolute inset-x-0 top-0 flex min-h-0 flex-col overflow-hidden sm:top-16">
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-4 sm:px-6">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border pb-3">

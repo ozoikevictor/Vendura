@@ -136,8 +136,9 @@ export function CustomerAIPage() {
     const viewport = window.visualViewport;
     const fitVisibleScreen = () => {
       if (pageShell.current) {
-        pageShell.current.style.height = `${viewport?.height ?? window.innerHeight}px`;
-        pageShell.current.style.top = `${viewport?.offsetTop ?? 0}px`;
+        const headerHeight = window.matchMedia("(min-width: 640px)").matches ? 64 : 0;
+        pageShell.current.style.height = `${Math.max((viewport?.height ?? window.innerHeight) - headerHeight, 240)}px`;
+        pageShell.current.style.top = `${(viewport?.offsetTop ?? 0) + headerHeight}px`;
       }
     };
 
@@ -252,8 +253,8 @@ export function CustomerAIPage() {
   return (
     <CustomerAIGuard>
       <div className="fixed inset-0 overflow-hidden bg-background">
-      <MarketplaceHeader contained />
-      <div ref={pageShell} className="absolute inset-x-0 bottom-0 top-16 flex flex-col overflow-hidden bg-background">
+      <div className="hidden sm:block"><MarketplaceHeader contained /></div>
+      <div ref={pageShell} className="absolute inset-x-0 bottom-0 top-0 flex flex-col overflow-hidden bg-background sm:top-16">
         <main className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 gap-0 overflow-hidden">
           <aside className="hidden w-60 shrink-0 border-r border-border bg-card p-3 sm:block sm:rounded-l-lg sm:border sm:border-r-0">
             <button
@@ -311,22 +312,22 @@ export function CustomerAIPage() {
                 <History className="h-5 w-5" />
               </Link>
             </header>
+            <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-3 sm:hidden">
+              <Link to="/marketplace" aria-label="Back to marketplace" className="rounded-md p-1 hover:bg-accent">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="truncate text-sm font-bold">AI Shopping Assistant</h1>
+                <p className="text-xs text-success">Online</p>
+              </div>
+              <Link to="/customer/ai/history" aria-label="Chat history" className="ml-auto rounded-md p-2 hover:bg-accent">
+                <History className="h-5 w-5" />
+              </Link>
+            </header>
             <div ref={chatScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-6">
-              <header className="-mx-3 -mt-3 mb-4 flex h-14 items-center gap-3 border-b border-border px-3 sm:hidden">
-                <Link to="/marketplace" aria-label="Back to marketplace" className="rounded-md p-1 hover:bg-accent">
-                  <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
-                  <Sparkles className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <h1 className="truncate text-sm font-bold">AI Shopping Assistant</h1>
-                  <p className="text-xs text-success">Online</p>
-                </div>
-                <Link to="/customer/ai/history" aria-label="Chat history" className="ml-auto rounded-md p-2 hover:bg-accent">
-                  <History className="h-5 w-5" />
-                </Link>
-              </header>
               {!message ? (
                 <div className="mx-auto w-full max-w-3xl py-3 sm:py-8">
                   <div className="flex items-start gap-3">

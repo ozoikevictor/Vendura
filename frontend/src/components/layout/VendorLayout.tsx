@@ -138,10 +138,11 @@ export function VendorLayout() {
     const viewport = window.visualViewport;
     const fitVisibleScreen = () => {
       const visibleHeight = viewport?.height ?? window.innerHeight;
+      const headerHeight = window.matchMedia("(min-width: 640px)").matches ? 64 : 0;
       shell.style.top = `${viewport?.offsetTop ?? 0}px`;
       shell.style.bottom = "auto";
       shell.style.height = `${visibleHeight}px`;
-      content.style.height = `${Math.max(visibleHeight - 64, 240)}px`;
+      content.style.height = `${Math.max(visibleHeight - headerHeight, 240)}px`;
     };
 
     fitVisibleScreen();
@@ -162,6 +163,8 @@ export function VendorLayout() {
   if (!authHydrated || !user || (user.role !== "vendor" && user.role !== "admin")) {
     return <div className="min-h-screen bg-background" />;
   }
+
+  const isFocusedMobilePage = location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" || /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname);
 
   return (
     <div ref={vendorShell} className="fixed inset-0 overflow-hidden bg-background">
@@ -192,7 +195,7 @@ export function VendorLayout() {
       {/* Main content */}
       <div className={cn("h-full overflow-hidden transition-[padding] duration-300", vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         {/* Top bar */}
-        <header className={cn("absolute left-0 right-0 top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64")}>
+        <header className={cn("absolute left-0 right-0 top-0 z-20 h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", isFocusedMobilePage ? "hidden sm:flex" : "flex", vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64")}>
           <button
             type="button"
             aria-label="Open menu"
@@ -260,7 +263,7 @@ export function VendorLayout() {
             </div>
           </div>
         </header>
-        <div className="h-16" aria-hidden="true" />
+        <div className={cn("h-16", isFocusedMobilePage && "h-0 sm:h-16")} aria-hidden="true" />
 
         {/* Page content */}
         <main ref={pageContent} className={cn(
