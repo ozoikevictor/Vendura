@@ -1,6 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowLeft, User, Phone, MapPin, CreditCard, Truck, Check, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Phone,
+  MapPin,
+  CreditCard,
+  Truck,
+  Check,
+  ShieldCheck,
+  Mail,
+  Lock,
+} from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
@@ -12,6 +23,8 @@ import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 import { useQueryClient } from "@tanstack/react-query";
+import { HumanCheck } from "@/components/shared/HumanCheck";
+import * as authService from "@/services/authService";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -33,10 +46,16 @@ function CheckoutPage() {
   const items = useMemo(() => allItems.filter((i) => !i.savedForLater), [allItems]);
   const clear = useCartStore((s) => s.clear);
   const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.set);
   const clearAuth = useAuthStore((s) => s.clear);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ orderId: string; orderNumber: string } | null>(null);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPassword, setGuestPassword] = useState("");
+  const [guestCaptchaToken, setGuestCaptchaToken] = useState("");
+  const [guestCaptchaRefresh, setGuestCaptchaRefresh] = useState(0);
+  const [guestLoginLoading, setGuestLoginLoading] = useState(false);
   const [form, setForm] = useState({
     fullName: user?.fullName ?? "",
     phone: user?.phone ?? "",
@@ -66,6 +85,40 @@ function CheckoutPage() {
   const cartFingerprint = JSON.stringify(
     items.map((item) => ({ id: item.id, quantity: item.quantity, price: item.unitPrice })),
   );
+
+  async function handleGuestLogin(e: React.FormEvent) {
+    e.preventDefault();
+    if (!guestEmail || !guestPassword || !guestCaptchaToken) {
+      if (!guestCaptchaToken) toast.error("Complete the security check");
+      return;
+    }
+    setGuestLoginLoading(true);
+    try {
+      const signedInUser = await authService.login({
+        email: guestEmail,
+        password: guestPassword,
+        captchaToken: guestCaptchaToken,
+      });
+      if (signedInUser.role !== "customer") {
+        clearAuth();
+        toast.error("Use a customer account to complete this order.");
+        setGuestCaptchaRefresh((value) => value + 1);
+        return;
+      }
+      setAuth(signedInUser);
+      setForm((current) => ({
+        ...current,
+        fullName: signedInUser.fullName ?? current.fullName,
+        phone: signedInUser.phone ?? current.phone,
+      }));
+      toast.success("Signed in. Your cart is ready.");
+    } catch (caught) {
+      toast.error(getErrorMessage(caught, "Could not sign in. Check your details and try again."));
+      setGuestCaptchaRefresh((value) => value + 1);
+    } finally {
+      setGuestLoginLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -216,41 +269,112 @@ function CheckoutPage() {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-md px-4 py-16 text-center">
-          <h1 className="text-xl font-semibold text-foreground">
-            {sellerSignedIn ? "You are signed in as a seller" : "Customer account required"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {sellerSignedIn
-              ? "Seller accounts manage stores and orders. Switch to a customer account to buy this product."
-              : "Log in or create a customer account to complete this order."}{" "}
-            Your cart will stay here.
-          </p>
-          <div className="mt-5 flex justify-center gap-3">
-            {sellerSignedIn ? (
-              <button
-                type="button"
-                onClick={switchAccount}
-                className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-              >
-                Switch to customer account
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-              >
-                Log in
-              </Link>
-            )}
-            <Link
-              to="/register"
-              className="rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground"
-            >
-              Create account
-            </Link>
+        <div className="mx-auto max-w-md px-4 py-8 sm:py-12">
+          <Link
+            to="/cart"
+            aria-label="Back to cart"
+            title="Back to cart"
+            className="mb-5 inline-flex text-muted-foreground transition-colors hover:text-primary"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-foreground">
+              {sellerSignedIn ? "You are signed in as a seller" : "Customer account required"}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {sellerSignedIn
+                ? "Seller accounts manage stores and orders. Switch to a customer account to buy this product."
+                : "Log in or create a customer account to complete this order."}{" "}
+              Your cart will stay here.
+            </p>
           </div>
-          <div className="mx-auto mt-6 max-w-xs">
+          {sellerSignedIn ? (
+            <div className="mt-5 flex justify-center gap-3">
+              {sellerSignedIn ? (
+                <button
+                  type="button"
+                  onClick={switchAccount}
+                  className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+                >
+                  Switch to customer account
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+                >
+                  Log in
+                </Link>
+              )}
+              <Link
+                to="/register"
+                className="rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground"
+              >
+                Create account
+              </Link>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleGuestLogin}
+              className="mt-6 space-y-4 rounded-lg border border-border bg-card p-5 text-left shadow-sm"
+            >
+              <div>
+                <label
+                  htmlFor="checkout-email"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="checkout-email"
+                    type="email"
+                    required
+                    value={guestEmail}
+                    onChange={(event) => setGuestEmail(event.target.value)}
+                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="checkout-password"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="checkout-password"
+                    type="password"
+                    required
+                    value={guestPassword}
+                    onChange={(event) => setGuestPassword(event.target.value)}
+                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <HumanCheck onToken={setGuestCaptchaToken} refreshKey={guestCaptchaRefresh} />
+              <button
+                type="submit"
+                disabled={guestLoginLoading || !guestCaptchaToken}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {guestLoginLoading ? "Signing in..." : "Sign in and continue"}
+              </button>
+              <p className="text-center text-sm text-muted-foreground">
+                New to Vendura?{" "}
+                <Link to="/register" className="font-semibold text-primary hover:underline">
+                  Create an account
+                </Link>
+              </p>
+            </form>
+          )}
+          <div className="mx-auto mt-6 max-w-xs text-center">
             <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Or use a customer account
             </p>
@@ -266,7 +390,12 @@ function CheckoutPage() {
       <MarketplaceHeader />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
-          <Link to="/cart" aria-label="Back to cart" title="Back to cart" className="text-muted-foreground transition-colors hover:text-primary">
+          <Link
+            to="/cart"
+            aria-label="Back to cart"
+            title="Back to cart"
+            className="text-muted-foreground transition-colors hover:text-primary"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>

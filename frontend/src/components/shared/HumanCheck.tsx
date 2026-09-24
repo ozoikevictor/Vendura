@@ -12,12 +12,20 @@ declare global {
   }
 }
 
-export function HumanCheck({ onToken, refreshKey = 0 }: { onToken: (token: string) => void; refreshKey?: number }) {
+export function HumanCheck({
+  onToken,
+  refreshKey = 0,
+}: {
+  onToken: (token: string) => void;
+  refreshKey?: number;
+}) {
   const container = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
   const onTokenRef = useRef(onToken);
   const instanceId = useId();
-  const siteKey = import.meta.env["VITE_TURNSTILE_SITE_KEY"] || (import.meta.env.DEV ? TEST_SITE_KEY : "");
+  const siteKey = import.meta.env.DEV
+    ? TEST_SITE_KEY
+    : import.meta.env["VITE_TURNSTILE_SITE_KEY"] || "";
 
   useEffect(() => {
     onTokenRef.current = onToken;
@@ -29,11 +37,17 @@ export function HumanCheck({ onToken, refreshKey = 0 }: { onToken: (token: strin
 
     const render = () => {
       if (cancelled || !container.current || !window.turnstile || widgetId.current) return;
+      const compact = container.current.clientWidth < 300;
       widgetId.current = window.turnstile.render(container.current, {
         sitekey: siteKey,
         theme: "auto",
-        size: "flexible",
+        size: compact ? "compact" : "flexible",
         appearance: "always",
+        execution: "render",
+        retry: "auto",
+        "retry-interval": 3000,
+        "refresh-expired": "auto",
+        "refresh-timeout": "auto",
         callback: (token: string) => onTokenRef.current(token),
         "expired-callback": () => onTokenRef.current(""),
         "error-callback": () => onTokenRef.current(""),
@@ -69,10 +83,17 @@ export function HumanCheck({ onToken, refreshKey = 0 }: { onToken: (token: strin
   }, [refreshKey]);
 
   if (!siteKey) {
-    return <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">Security verification is not configured.</p>;
+    return (
+      <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        Security verification is not configured.
+      </p>
+    );
   }
 
   return (
-    <div ref={container} className="min-h-[65px] w-full overflow-hidden" />
+    <div
+      ref={container}
+      className="flex min-h-[65px] w-full justify-center overflow-hidden sm:block"
+    />
   );
 }
