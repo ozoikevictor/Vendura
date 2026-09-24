@@ -39,7 +39,9 @@ function ConversationPage() {
   const [showOffer, setShowOffer] = useState(false);
   const [counterAmount, setCounterAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const pageShell = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerInput = useRef<HTMLInputElement>(null);
 
   const { data: conv } = useQuery({
     queryKey: ["conversation", conversationId],
@@ -61,6 +63,30 @@ function ConversationPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const fitVisibleScreen = () => {
+      if (!pageShell.current) return;
+      const headerHeight = window.matchMedia("(min-width: 768px)").matches ? 64 : 116;
+      const visibleHeight = viewport?.height ?? window.innerHeight;
+      pageShell.current.style.height = `${Math.max(visibleHeight - headerHeight, 240)}px`;
+      pageShell.current.style.top = `${(viewport?.offsetTop ?? 0) + headerHeight}px`;
+    };
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    fitVisibleScreen();
+    viewport?.addEventListener("resize", fitVisibleScreen);
+    viewport?.addEventListener("scroll", fitVisibleScreen);
+    window.addEventListener("resize", fitVisibleScreen);
+    return () => {
+      viewport?.removeEventListener("resize", fitVisibleScreen);
+      viewport?.removeEventListener("scroll", fitVisibleScreen);
+      window.removeEventListener("resize", fitVisibleScreen);
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     if (!conv) return;
@@ -139,9 +165,10 @@ function ConversationPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col lagoon-wash">
+    <div className="fixed inset-0 overflow-hidden lagoon-wash">
       <MarketplaceHeader />
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-4 sm:px-6">
+      <div ref={pageShell} className="absolute inset-x-0 top-[7.25rem] flex min-h-0 flex-col overflow-hidden md:top-16">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-4 sm:px-6">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border pb-3">
           <Link to="/messages" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
@@ -228,7 +255,7 @@ function ConversationPage() {
               </button>
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Counter offer ₦" className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+              <input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Counter offer ₦" className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm" />
               <button onClick={() => counterAmount && handleRespondOffer(activeOffer, "countered", counterAmount)} disabled={actionLoading || !counterAmount} className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60">
                 <RotateCw className="h-3.5 w-3.5" /> Counter
               </button>
@@ -240,7 +267,7 @@ function ConversationPage() {
         <div className="border-t border-border pt-2">
           {showOffer && (
             <div className="mb-2 flex items-center gap-2">
-              <input type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} placeholder={`Offer amount (list: ${formatNaira(conv.productPrice)})`} className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+              <input type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} placeholder={`Offer amount (list: ${formatNaira(conv.productPrice)})`} className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm" />
               <button onClick={handleMakeOffer} disabled={actionLoading || !offerAmount} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">Send offer</button>
               <button onClick={() => setShowOffer(false)} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-accent">Cancel</button>
             </div>
@@ -251,12 +278,26 @@ function ConversationPage() {
                 <Tag className="h-4 w-4" /> Make Offer
               </button>
             )}
-            <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message..." className="flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+            <input
+              ref={composerInput}
+              value={text}
+              onPointerDown={(event) => {
+                if (document.activeElement !== composerInput.current) {
+                  event.preventDefault();
+                  composerInput.current?.focus({ preventScroll: true });
+                }
+              }}
+              onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }))}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type a message..."
+              className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+            />
             <button type="submit" disabled={!text.trim()} className="flex items-center justify-center rounded-lg bg-primary p-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
               <Send className="h-4 w-4" />
             </button>
           </form>
         </div>
+      </div>
       </div>
     </div>
   );
