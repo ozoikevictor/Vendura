@@ -90,7 +90,7 @@ function OrderDetailPage() {
   const isCancelled = order.status === "cancelled";
   const completedSteps = isCancelled
     ? (["placed", "cancelled"] as OrderStatus[])
-    : ORDER_STATUS_FLOW.slice(0, ORDER_STATUS_FLOW.indexOf(order.status) + 1);
+    : ORDER_STATUS_FLOW.slice(0, ORDER_STATUS_FLOW.indexOf(order.status as (typeof ORDER_STATUS_FLOW)[number]) + 1);
 
   const retryPayment = async () => {
     setPaymentLoading(true);
@@ -106,7 +106,10 @@ function OrderDetailPage() {
   };
 
   const submitReview = async (productId: string) => {
-    if (reviewComment.trim().length < 5) return toast.error("Write at least 5 characters about the product");
+    if (reviewComment.trim().length < 5) {
+      toast.error("Write at least 5 characters about the product");
+      return;
+    }
     setReviewSubmitting(true);
     try {
       await createProductReview(productId, { orderId: order.id, rating: reviewRating, comment: reviewComment.trim() });

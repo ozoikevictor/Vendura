@@ -7,7 +7,7 @@ import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 
 export const Route = createFileRoute("/reset-password")({
-  validateSearch: (search: Record<string, unknown>) => ({ token: typeof search.token === "string" ? search.token : "" }),
+  validateSearch: (search: Record<string, unknown>) => ({ token: typeof search["token"] === "string" ? search["token"] : "" }),
   head: () => ({
     meta: [
       { title: "Reset Password — Vendura" },

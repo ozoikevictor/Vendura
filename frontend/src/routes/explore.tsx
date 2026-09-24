@@ -25,7 +25,7 @@ function getStoreSlug(value: string) {
   try {
     const url = new URL(input.includes("://") ? input : `https://${input}`);
     const match = url.pathname.match(/^\/store\/([^/?#]+)/i);
-    if (match) return decodeURIComponent(match[1]);
+    if (match?.[1]) return decodeURIComponent(match[1]);
   } catch {
     // Plain storefront slugs are handled below.
   }

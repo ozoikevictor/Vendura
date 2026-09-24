@@ -28,7 +28,8 @@ function PaymentCallbackPage() {
       window.sessionStorage.removeItem("vendura-pending-payment");
       window.sessionStorage.removeItem("vendura-paystack-attempt");
       clearCart();
-      setResult({ state: "success", message: "Your payment was verified and the seller has been notified.", orderId: payment.orders[0]?.id });
+      const orderId = payment.orders[0]?.id;
+      setResult({ state: "success", message: "Your payment was verified and the seller has been notified.", ...(orderId ? { orderId } : {}) });
     }).catch((error) => {
       if (active) setResult({ state: "error", message: getErrorMessage(error, "We could not verify this payment yet.") });
     });

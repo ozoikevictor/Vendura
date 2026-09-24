@@ -20,7 +20,7 @@ type ProductForm = {
   negotiable: boolean;
 };
 
-type FieldErrors = Partial<Record<keyof ProductForm | "image", string>>;
+type FieldErrors = Partial<Record<keyof ProductForm | "image", string | undefined>>;
 
 export const Route = createFileRoute("/vendor/products/new")({
   head: () => ({

@@ -80,7 +80,7 @@ function VendorOrderDetailPage() {
   }
 
   const isCancelled = order.status === "cancelled";
-  const currentIdx = ORDER_STATUS_FLOW.indexOf(order.status);
+  const currentIdx = ORDER_STATUS_FLOW.indexOf(order.status as (typeof ORDER_STATUS_FLOW)[number]);
   const canConfirm = order.status === "placed";
   const canProcess = order.status === "payment_confirmed";
   const canShip = order.status === "processing";

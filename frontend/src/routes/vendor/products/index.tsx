@@ -180,9 +180,8 @@ function VendorProductsPage() {
                 <button
                   onClick={async () => {
                     const ok = await copyToClipboard(buildProductUrl(p.slug));
-                    ok
-                      ? toast.success("Product link copied — send it to a customer.")
-                      : toast.error("Could not copy the link.");
+                    if (ok) toast.success("Product link copied — send it to a customer.");
+                    else toast.error("Could not copy the link.");
                   }}
                   className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                   aria-label="Copy product link"

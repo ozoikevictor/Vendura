@@ -133,7 +133,7 @@ function ProductDetailPage() {
     if (startingConversation) return;
     setStartingConversation(true);
     try {
-      const conversation = await startConversation(product.id);
+      const conversation = await startConversation(product!.id);
       navigate({ to: "/messages/$conversationId", params: { conversationId: conversation.id } });
     } catch {
       toast.error("Please log in as a customer to message this seller.");

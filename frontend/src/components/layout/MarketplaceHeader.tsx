@@ -112,8 +112,9 @@ export function MarketplaceHeader({ publicMode = false, contained = false }: { p
 
           {/* Logo */}
           <Link
-            to={storefrontSlug ? "/store/$storeSlug" : isCustomer ? "/marketplace" : "/"}
-            params={storefrontSlug ? { storeSlug: storefrontSlug } : undefined}
+            {...(storefrontSlug
+              ? { to: "/store/$storeSlug" as const, params: { storeSlug: storefrontSlug } }
+              : { to: (isCustomer ? "/marketplace" : "/") as "/marketplace" | "/" })}
             className="flex shrink-0 items-center gap-2"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">

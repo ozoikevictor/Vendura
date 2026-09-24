@@ -194,8 +194,8 @@ function VendorSettingsPage() {
   }
 
   async function savePassword() {
-    if (passwords.next.length < 8) return toast.error("New password must be at least 8 characters");
-    if (passwords.next !== passwords.confirm) return toast.error("New passwords do not match");
+    if (passwords.next.length < 8) { toast.error("New password must be at least 8 characters"); return; }
+    if (passwords.next !== passwords.confirm) { toast.error("New passwords do not match"); return; }
     setSaving("password");
     try {
       await changePassword(passwords.current, passwords.next);
@@ -209,8 +209,8 @@ function VendorSettingsPage() {
   }
 
   async function saveBank() {
-    if (!bankForm.bankCode) return toast.error("Select your bank");
-    if (!/^\d{10}$/.test(bankForm.accountNumber)) return toast.error("Enter a valid 10-digit account number");
+    if (!bankForm.bankCode) { toast.error("Select your bank"); return; }
+    if (!/^\d{10}$/.test(bankForm.accountNumber)) { toast.error("Enter a valid 10-digit account number"); return; }
     setSaving("bank");
     try {
       await updateBankAccount(bankForm);

@@ -69,7 +69,7 @@ function ProfilePage() {
   }
 
   async function saveProfile() {
-    if (form.fullName.trim().length < 2) return toast.error("Enter your full name");
+    if (form.fullName.trim().length < 2) { toast.error("Enter your full name"); return; }
     setSaving(true);
     try {
       const updated = await updateProfile({
@@ -89,9 +89,9 @@ function ProfilePage() {
   }
 
   async function savePassword() {
-    if (!passwords.current) return toast.error("Enter your current password");
-    if (passwords.next.length < 8) return toast.error("New password must be at least 8 characters");
-    if (passwords.next !== passwords.confirm) return toast.error("New passwords do not match");
+    if (!passwords.current) { toast.error("Enter your current password"); return; }
+    if (passwords.next.length < 8) { toast.error("New password must be at least 8 characters"); return; }
+    if (passwords.next !== passwords.confirm) { toast.error("New passwords do not match"); return; }
     setSavingPassword(true);
     try {
       await changePassword(passwords.current, passwords.next);

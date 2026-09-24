@@ -58,7 +58,7 @@ export function VendorLayout() {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
-  const [authHydrated, setAuthHydrated] = useState(useAuthStore.persist.hasHydrated());
+  const [authHydrated, setAuthHydrated] = useState(false);
   const pageContent = useRef<HTMLElement>(null);
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
@@ -89,7 +89,13 @@ export function VendorLayout() {
     .toUpperCase();
 
   useEffect(() => {
-    return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
+    let active = true;
+    void Promise.resolve(useAuthStore.persist?.rehydrate()).finally(() => {
+      if (active) setAuthHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -152,7 +158,7 @@ export function VendorLayout() {
     <div className="fixed inset-0 overflow-hidden bg-background">
       {/* Desktop sidebar */}
       <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
-        <VendorSidebar collapsed={vendorSidebarCollapsed} storeSlug={store?.slug} />
+        <VendorSidebar collapsed={vendorSidebarCollapsed} {...(store?.slug ? { storeSlug: String(store.slug) } : {})} />
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -226,8 +232,7 @@ export function VendorLayout() {
               )}
             </Link>
             <Link
-              to={store ? "/store/$storeSlug" : "/vendor"}
-              params={store ? { storeSlug: store.slug } : undefined}
+              {...(store ? { to: "/store/$storeSlug" as const, params: { storeSlug: String(store.slug) } } : { to: "/vendor" as const })}
               className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Store className="h-4 w-4" />

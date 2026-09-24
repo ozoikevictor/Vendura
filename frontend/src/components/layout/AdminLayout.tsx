@@ -19,9 +19,17 @@ export function AdminLayout() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const { vendorSidebarOpen: open, setVendorSidebarOpen: setOpen, adminSidebarCollapsed: collapsed, setAdminSidebarCollapsed: setCollapsed } = useUIStore();
-  const [hydrated, setHydrated] = useState(useAuthStore.persist.hasHydrated());
+  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => useAuthStore.persist.onFinishHydration(() => setHydrated(true)), []);
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve(useAuthStore.persist?.rehydrate()).finally(() => {
+      if (active) setHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;

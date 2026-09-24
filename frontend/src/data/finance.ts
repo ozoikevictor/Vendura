@@ -27,6 +27,7 @@ export const bankAccount: BankAccount = {
 
 export const vendorBalance: VendorBalance = {
   available: 1284500, pending: 612000, totalPaid: 9860000, nextPayoutAt: daysFromNow(3),
+  totalSales: 11200000, deliveryFees: 180000, customerPayments: 11380000, platformFees: 336000,
 };
 
 export const transactions: Transaction[] = [

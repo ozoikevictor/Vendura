@@ -51,7 +51,7 @@ const initialForm = {
 };
 
 type FormKey = keyof typeof initialForm;
-type FormErrors = Partial<Record<FormKey | "form", string>>;
+type FormErrors = Partial<Record<FormKey | "form", string | undefined>>;
 
 function validate(form: typeof initialForm): FormErrors {
   const errors: FormErrors = {};
@@ -370,10 +370,10 @@ function Field({
   id: string;
   type?: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   placeholder?: string;
   required?: boolean;
-  error?: string;
+  error?: string | undefined;
 }) {
   return (
     <div>

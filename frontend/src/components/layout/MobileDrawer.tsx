@@ -133,7 +133,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <Link to={activeStoreSlug ? "/store/$storeSlug" : homeTarget} params={activeStoreSlug ? { storeSlug: activeStoreSlug } : undefined} onClick={close} className="flex items-center gap-2">
+          <Link {...(activeStoreSlug ? { to: "/store/$storeSlug" as const, params: { storeSlug: activeStoreSlug } } : { to: homeTarget })} onClick={close} className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>

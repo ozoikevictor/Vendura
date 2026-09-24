@@ -70,11 +70,24 @@ function getSavedCustomerChat(): CustomerAISession | null {
 export function CustomerAIGuard({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const [authHydrated, setAuthHydrated] = useState(false);
+
   useEffect(() => {
+    let active = true;
+    void Promise.resolve(useAuthStore.persist?.rehydrate()).finally(() => {
+      if (active) setAuthHydrated(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authHydrated) return;
     if (!user || user.role !== "customer")
       navigate({ to: user ? "/vendor" : "/login", replace: true });
-  }, [navigate, user]);
-  if (!user || user.role !== "customer") {
+  }, [authHydrated, navigate, user]);
+  if (!authHydrated || !user || user.role !== "customer") {
     return <div className="min-h-screen bg-background" />;
   }
   return <>{children}</>;
@@ -90,7 +103,7 @@ export function CustomerAIPage() {
   const [matches, setMatches] = useState<AIProduct[]>([]);
   const [intent, setIntent] = useState<"chat" | "shopping">("chat");
   const [previousTurns, setPreviousTurns] = useState<ConversationTurn[]>([]);
-  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const [sessionId, setSessionId] = useState<string>(() => crypto.randomUUID());
   const [sessionRestored, setSessionRestored] = useState(false);
   const [error, setError] = useState("");
   const [image, setImage] = useState<File | null>(null);
