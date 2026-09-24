@@ -43,8 +43,10 @@ export const updateBankAccount = (input: { bankCode: string; accountNumber: stri
   api<BankAccount>("/vendor/bank-account", { method: "PUT", ...json(input) });
 export const getSubscription = () => api<Subscription>("/vendor/subscription");
 export const getPlans = () => api<SubscriptionPlan[]>("/plans");
-export const updateSubscription = (planId: SubscriptionPlan["id"]) =>
-  api<Subscription>("/vendor/subscription", { method: "PATCH", ...json({ planId }) });
+export const initializeSubscriptionPayment = (planId: SubscriptionPlan["id"]) =>
+  api<{ authorizationUrl: string; accessCode: string; reference: string }>("/vendor/subscription/paystack/initialize", { method: "POST", ...json({ planId }) });
+export const verifySubscriptionPayment = (reference: string) =>
+  api<Subscription>(`/vendor/subscription/paystack/verify/${encodeURIComponent(reference)}`);
 export const getDeliverySettings = () => api<DeliverySettings>("/vendor/delivery-settings");
 export const updateDeliverySettings = (input: Partial<DeliverySettings>) =>
   api<DeliverySettings>("/vendor/delivery-settings", { method: "PATCH", ...json(input) });

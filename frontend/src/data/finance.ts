@@ -3,15 +3,15 @@ import { daysAgo, daysFromNow } from "@/utils/format";
 
 export const plans: SubscriptionPlan[] = [
   {
-    id: "starter", name: "Starter", priceMonthly: 3000, productLimit: 50,
-    features: ["Up to 50 products", "Public storefront", "Customer chat", "Basic analytics", "Email support"],
+    id: "starter", name: "Starter", priceMonthly: 3000, productLimit: 20,
+    features: ["Up to 20 products", "Public storefront", "Customer chat", "Basic analytics", "Email support"],
   },
   {
-    id: "growth", name: "Growth", priceMonthly: 7500, productLimit: 500, highlighted: true,
+    id: "growth", name: "Growing Business", priceMonthly: 7500, productLimit: 500, highlighted: true,
     features: ["Up to 500 products", "Price negotiation", "Advanced analytics", "Weekly payouts", "Priority support"],
   },
   {
-    id: "business", name: "Business", priceMonthly: 15000, productLimit: null,
+    id: "business", name: "Enterprise", priceMonthly: 15000, productLimit: null,
     features: ["Unlimited products", "Team access (5 seats)", "Daily payouts", "Featured store placement", "Dedicated account manager"],
   },
 ];

@@ -229,6 +229,48 @@ describe("Vendura API", () => {
     expect(Array.isArray(aiOffers.body.data)).toBe(true);
   });
   it("returns vendor dashboard, AI, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); const overview = await request(app).get("/api/vendor/overview").set(auth(token)); expect(overview.status).toBe(200); expect(overview.body.data.revenueSeries).toHaveLength(7); expect(overview.body.data.ordersSeries).toHaveLength(7); const ai = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "How many products do I have?" }); expect(ai.status).toBe(200); expect(ai.body.data.response).toContain("1 product listing"); expect(ai.body.data.metrics).toEqual(expect.arrayContaining([{ label: "All products", value: "1" }])); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
+  it("enforces monthly subscription status and plan product limits", async () => {
+    const token = await login("vendor@vendura.test");
+    await db.update("subscriptions", "subscription-1", { planId: "starter", status: "active", currentPeriodEnd: new Date(Date.now() + 864e5).toISOString() });
+    for (let index = 2; index <= 20; index += 1) {
+      await db.create("products", { id: `limit-product-${index}`, storeId: "store-technaija", name: `Limit product ${index}` });
+    }
+    const atLimit = await request(app).post("/api/vendor/products").set(auth(token)).send({ name: "One too many", description: "This product exceeds the starter limit.", images: [], price: 5000, categoryId: "cat-electronics", sku: "LIMIT-21", stock: 1 });
+    expect(atLimit.status).toBe(409);
+    expect(atLimit.body.error.message).toContain("20 products");
+
+    await db.update("subscriptions", "subscription-1", { status: "active", currentPeriodEnd: new Date(Date.now() - 1000).toISOString() });
+    const expired = await request(app).post("/api/vendor/products").set(auth(token)).send({ name: "Expired plan product", description: "This product requires a renewed plan.", images: [], price: 5000, categoryId: "cat-electronics", sku: "EXPIRED-1", stock: 1 });
+    expect(expired.status).toBe(402);
+    expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data).toMatchObject({ status: "past_due", isActive: false });
+  });
+  it("activates a paid monthly subscription through Paystack", async () => {
+    const originalKey = config.PAYSTACK_SECRET_KEY;
+    const originalFetch = globalThis.fetch;
+    config.PAYSTACK_SECRET_KEY = "sk_test_abcdefghijklmnopqrstuvwxyz";
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/transaction/initialize")) {
+        return new Response(JSON.stringify({ status: true, message: "Initialized", data: { authorization_url: "https://checkout.paystack.com/subscription", access_code: "sub-access", reference: "provider-reference" } }), { status: 200, headers: { "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ status: true, message: "Verified", data: { status: "success", amount: 300000, currency: "NGN", reference: "provider-reference", paid_at: new Date().toISOString() } }), { status: 200, headers: { "Content-Type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const token = await login("vendor@vendura.test");
+      await db.update("subscriptions", "subscription-1", { status: "past_due", currentPeriodEnd: new Date(Date.now() - 1000).toISOString() });
+      const initialized = await request(app).post("/api/vendor/subscription/paystack/initialize").set(auth(token)).send({ planId: "starter" });
+      expect(initialized.status).toBe(200);
+      expect(initialized.body.data.authorizationUrl).toBe("https://checkout.paystack.com/subscription");
+      const reference = initialized.body.data.reference as string;
+      const verified = await request(app).get(`/api/vendor/subscription/paystack/verify/${reference}`).set(auth(token));
+      expect(verified.status).toBe(200);
+      expect(verified.body.data).toMatchObject({ planId: "starter", status: "active", isActive: true });
+      expect(new Date(verified.body.data.currentPeriodEnd).getTime()).toBeGreaterThan(new Date(verified.body.data.currentPeriodStart).getTime());
+    } finally {
+      config.PAYSTACK_SECRET_KEY = originalKey;
+      globalThis.fetch = originalFetch;
+    }
+  });
   it("answers live vendor business questions and ranks newest orders first", async () => {
     const token = await login("vendor@vendura.test");
     await db.create("orders", { id: "order-old", orderNumber: "VND-OLD", storeId: "store-technaija", customerId: "customer-old", customerName: "Old Customer", total: 10000, status: "placed", placedAt: "2026-01-01T08:00:00.000Z" });
@@ -317,6 +359,9 @@ describe("Vendura API", () => {
     expect(seller.body.data.storefrontPath).toBe("/store/ada-fashion");
 
     const sellerToken = seller.body.data.token as string;
+    const sellerSubscription = await db.findOne("subscriptions", { vendorId: seller.body.data.user.id });
+    expect(sellerSubscription).toBeDefined();
+    await db.update("subscriptions", sellerSubscription!.id, { status: "active", currentPeriodEnd: new Date(Date.now() + 30 * 864e5).toISOString() });
     const product = await request(app).post("/api/vendor/products").set(auth(sellerToken)).send({
       name: "Ankara Wrap Dress",
       description: "A handmade Ankara wrap dress.",

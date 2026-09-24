@@ -33,6 +33,7 @@ export const authRoutes = (db: Database) => {
     const verification = config.REQUIRE_EMAIL_VERIFICATION ? createVerification() : undefined;
     const user = await db.create("users", { id: userId, fullName: input.fullName, email: input.email, phone: input.phone, passwordHash: await bcrypt.hash(input.password, 12), role: "vendor", storeId, emailVerified: !config.REQUIRE_EMAIL_VERIFICATION, ...verification?.patch, createdAt: now() } as Entity);
     const store = await db.create("stores", { id: storeId, slug, name: input.businessName, description: input.storeDescription, ownerId: userId, categoryIds: [input.businessCategory], location: input.location, rating: 0, reviewCount: 0, productCount: 0, followers: 0, verified: false, allowNegotiation: false, policies: { returns: "", shipping: "" }, contact: { phone: input.phone, email: input.email }, joinedAt: now() });
+    await db.create("subscriptions", { id: id("subscription"), vendorId: userId, planId: "starter", status: "past_due", currentPeriodStart: now(), currentPeriodEnd: now(), autoRenew: false });
     if (verification) {
       try { await sendVerification(user, verification.code); } catch { await db.remove("stores", store.id); await db.remove("users", user.id); throw new ApiError(503, "We could not send the verification email. Please try again shortly."); }
     }

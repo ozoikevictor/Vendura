@@ -373,6 +373,9 @@ export interface Subscription {
   currentPeriodStart: ISODate;
   currentPeriodEnd: ISODate;
   autoRenew: boolean;
+  isActive?: boolean;
+  productCount?: number;
+  plan?: SubscriptionPlan;
 }
 
 export type TransactionType = "sale" | "delivery" | "refund" | "payout" | "subscription" | "fee";

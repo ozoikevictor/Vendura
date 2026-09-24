@@ -5,6 +5,7 @@ import { created, id, now, ok, slugify } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import { productSchema } from "../schemas.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
+import { getSubscriptionPlan } from "../lib/subscriptions.js";
 
 export const catalogRoutes = (db: Database) => {
   const router = Router();
@@ -117,17 +118,32 @@ export const catalogRoutes = (db: Database) => {
   }));
   router.post("/vendor/products", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => {
     const input = productSchema.parse(req.body); const storeId = req.user!.storeId ?? String(req.body.storeId ?? ""); if (!storeId) throw new ApiError(400, "Vendor has no store");
+    await enforceProductLimit(db, req);
     const product = await db.create("products", { id: id("product"), ...input, slug: `${slugify(input.name)}-${Date.now().toString().slice(-5)}`, currency: "NGN", storeId, rating: 0, reviewCount: 0, soldCount: 0, createdAt: now(), updatedAt: now() });
     created(res, product);
   }));
   router.get("/vendor/products", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("products")).filter((p) => p.storeId === req.user!.storeId))));
   router.patch("/vendor/products/:id", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => { const current = await ownedProduct(db, String(req.params.id), req); const patch = productSchema.partial().parse(req.body); ok(res, await db.update("products", current.id, { ...patch, updatedAt: now() })); }));
   router.delete("/vendor/products/:id", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => { const productId = String(req.params.id); await ownedProduct(db, productId, req); await db.remove("products", productId); res.status(204).end(); }));
-  router.post("/vendor/products/:id/duplicate", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => { const current = await ownedProduct(db, String(req.params.id), req); const copy = { ...current, id: id("product"), name: `${current.name} (Copy)`, slug: `${current.slug}-copy-${Date.now()}`, status: "draft", createdAt: now(), updatedAt: now() }; created(res, await db.create("products", copy)); }));
+  router.post("/vendor/products/:id/duplicate", authenticate, authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => { const current = await ownedProduct(db, String(req.params.id), req); await enforceProductLimit(db, req); const copy = { ...current, id: id("product"), name: `${current.name} (Copy)`, slug: `${current.slug}-copy-${Date.now()}`, status: "draft", createdAt: now(), updatedAt: now() }; created(res, await db.create("products", copy)); }));
   return router;
 };
 
 async function ownedProduct(db: Database, id: string, req: AuthRequest) { const product = await db.get<Entity>("products", id); if (!product) throw new ApiError(404, "Product not found"); if (req.user!.role !== "admin" && product.storeId !== req.user!.storeId) throw new ApiError(403, "Product belongs to another store"); return product; }
+
+async function enforceProductLimit(db: Database, req: AuthRequest) {
+  if (req.user!.role === "admin") return;
+  const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id });
+  if (!subscription || !["active", "trialing"].includes(String(subscription.status)) || Date.parse(String(subscription.currentPeriodEnd)) <= Date.now()) {
+    if (subscription?.id && subscription.status !== "past_due") await db.update("subscriptions", subscription.id, { status: "past_due" });
+    throw new ApiError(402, "Your monthly subscription has expired. Renew it before adding products.");
+  }
+  const plan = getSubscriptionPlan(String(subscription.planId));
+  if (!plan) throw new ApiError(409, "Your subscription plan is unavailable");
+  if (plan.productLimit === null || plan.productLimit === undefined) return;
+  const count = (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length;
+  if (count >= Number(plan.productLimit)) throw new ApiError(409, `${plan.name} allows ${plan.productLimit} products. Upgrade your plan to add more.`);
+}
 
 function mixProductsByStore(products: Entity[]) {
   const groups = new Map<string, Entity[]>();

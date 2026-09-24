@@ -5,12 +5,15 @@ import { created, id, now, ok } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
 import { config } from "../config.js";
+import { getSubscriptionPlan, SUBSCRIPTION_PLANS } from "../lib/subscriptions.js";
 
 type PaystackResponse<T> = { status: boolean; message: string; data: T };
 type PaystackBank = { id: number; name: string; code: string; active: boolean };
 type ResolvedAccount = { account_number: string; account_name: string };
 type TransferRecipient = { recipient_code: string };
 type PaystackTransfer = { status: string; reference: string; transfer_code?: string };
+type InitializedTransaction = { authorization_url: string; access_code: string; reference: string };
+type VerifiedTransaction = { status: string; amount: number; currency: string; reference: string; paid_at?: string };
 
 export const vendorRoutes = (db: Database) => {
   const router = Router(); router.use(authenticate, authorize("vendor", "admin"));
@@ -109,14 +112,66 @@ export const vendorRoutes = (db: Database) => {
     const existing = await db.get("bankAccounts", req.user!.id);
     ok(res, existing ? await db.update("bankAccounts", req.user!.id, account) : await db.create("bankAccounts", { id: req.user!.id, ...account }));
   }));
-  router.get("/subscription", asyncRoute(async (req: AuthRequest, res) => ok(res, await db.findOne("subscriptions", { vendorId: req.user!.id }))));
-  router.patch("/subscription", asyncRoute(async (req: AuthRequest, res) => { const planId = z.enum(["starter", "growth", "business"]).parse(req.body.planId); const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id }); if (!subscription) throw new ApiError(404, "Subscription not found"); ok(res, await db.update("subscriptions", subscription.id, { planId })); }));
+  router.get("/subscription", asyncRoute(async (req: AuthRequest, res) => {
+    const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id });
+    if (!subscription) throw new ApiError(404, "Subscription not found");
+    const expired = Date.parse(String(subscription.currentPeriodEnd)) <= Date.now();
+    const current = expired && subscription.status !== "past_due"
+      ? await db.update<Entity>("subscriptions", subscription.id, { status: "past_due" })
+      : subscription;
+    const plan = getSubscriptionPlan(String(current?.planId));
+    const productCount = (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length;
+    ok(res, { ...current, plan, productCount, isActive: Boolean(current && ["active", "trialing"].includes(String(current.status)) && !expired) });
+  }));
+  router.post("/subscription/paystack/initialize", asyncRoute(async (req: AuthRequest, res) => {
+    if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet. Add your test secret key to the backend environment.");
+    const { planId } = z.object({ planId: z.enum(["starter", "growth", "business"]) }).parse(req.body);
+    const plan = getSubscriptionPlan(planId);
+    const [subscription, user] = await Promise.all([
+      db.findOne<Entity>("subscriptions", { vendorId: req.user!.id }),
+      db.get<Entity>("users", req.user!.id),
+    ]);
+    if (!plan || !subscription) throw new ApiError(404, "Subscription plan was not found");
+    if (!user?.email) throw new ApiError(400, "Your account needs an email address before you can subscribe");
+    const reference = `VENDURA-SUB-${Date.now()}-${id("subpay").slice(-8)}`;
+    const callbackUrl = `${config.FRONTEND_URL.split(",")[0].replace(/\/$/, "")}/vendor/subscription`;
+    const payment = await paystackRequest<InitializedTransaction>("/transaction/initialize", {
+      method: "POST",
+      body: JSON.stringify({ email: user.email, amount: Math.round(Number(plan.priceMonthly) * 100), currency: "NGN", reference, callback_url: callbackUrl, metadata: { type: "vendor_subscription", vendorId: req.user!.id, planId } })
+    });
+    await db.update("subscriptions", subscription.id, { pendingPlanId: planId, pendingPaymentReference: reference });
+    ok(res, { authorizationUrl: payment.authorization_url, accessCode: payment.access_code, reference });
+  }));
+  router.get("/subscription/paystack/verify/:reference", asyncRoute(async (req: AuthRequest, res) => {
+    if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
+    const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id });
+    const reference = String(req.params.reference);
+    if (!subscription || subscription.pendingPaymentReference !== reference) throw new ApiError(404, "Subscription payment was not found");
+    const plan = getSubscriptionPlan(String(subscription.pendingPlanId));
+    if (!plan) throw new ApiError(404, "Subscription plan was not found");
+    const payment = await paystackRequest<VerifiedTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
+    if (payment.status !== "success" || payment.currency !== "NGN" || payment.amount !== Math.round(Number(plan.priceMonthly) * 100)) throw new ApiError(409, "The subscription payment could not be verified");
+    const paidAt = new Date(payment.paid_at ?? now());
+    const currentEnd = new Date(String(subscription.currentPeriodEnd));
+    const isRenewingActivePlan = subscription.planId === plan.id
+      && ["active", "trialing"].includes(String(subscription.status))
+      && currentEnd.getTime() > paidAt.getTime();
+    const periodStart = isRenewingActivePlan ? new Date(String(subscription.currentPeriodStart)) : paidAt;
+    const periodEnd = new Date(isRenewingActivePlan ? currentEnd : paidAt);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    const updated = await db.update<Entity>("subscriptions", subscription.id, {
+      planId: plan.id, status: "active", currentPeriodStart: periodStart.toISOString(), currentPeriodEnd: periodEnd.toISOString(),
+      autoRenew: false, lastPaymentAt: paidAt.toISOString(), lastPaymentAmount: Number(plan.priceMonthly), lastPaymentReference: reference,
+      pendingPlanId: undefined, pendingPaymentReference: undefined,
+    });
+    ok(res, { ...updated, plan, productCount: (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length, isActive: true });
+  }));
   router.get("/delivery-settings", asyncRoute(async (req: AuthRequest, res) => ok(res, await db.get("deliverySettings", req.user!.storeId!))));
   router.patch("/delivery-settings", asyncRoute(async (req: AuthRequest, res) => ok(res, await db.update("deliverySettings", req.user!.storeId!, req.body))));
   return router;
 };
 
-export const planRoutes = (db: Database) => { const router = Router(); router.get("/plans", asyncRoute(async (_req, res) => ok(res, await db.list("plans")))); return router; };
+export const planRoutes = (_db: Database) => { const router = Router(); router.get("/plans", asyncRoute(async (_req, res) => ok(res, SUBSCRIPTION_PLANS))); return router; };
 
 function monthlyRevenueSeries(sales: Entity[]) {
   const now = new Date();

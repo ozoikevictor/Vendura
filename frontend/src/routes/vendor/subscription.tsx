@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPlans, getSubscription, updateSubscription } from "@/services/vendorService";
+import { getPlans, getSubscription, initializeSubscriptionPayment, verifySubscriptionPayment } from "@/services/vendorService";
 import { formatNaira, formatDate } from "@/utils/format";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getErrorMessage } from "@/services/api";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/vendor/subscription")({
@@ -23,18 +24,32 @@ export const Route = createFileRoute("/vendor/subscription")({
 function VendorSubscriptionPage() {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: getPlans });
   const { data: sub } = useQuery({ queryKey: ["subscription"], queryFn: getSubscription });
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("reference") ?? params.get("trxref") ?? window.sessionStorage.getItem("vendura-subscription-payment");
+    if (!reference) return;
+    setVerifying(true);
+    verifySubscriptionPayment(reference).then(() => {
+      window.history.replaceState({}, "", "/vendor/subscription");
+      window.sessionStorage.removeItem("vendura-subscription-payment");
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success("Subscription activated for one month");
+    }).catch((error) => toast.error(getErrorMessage(error, "Subscription payment could not be verified")))
+      .finally(() => setVerifying(false));
+  }, [queryClient]);
+
   async function handleSwitch(planId: "starter" | "growth" | "business") {
-    if (planId === sub?.planId) return;
     setLoading(true);
     try {
-      await updateSubscription(planId);
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      toast.success("Plan updated — billing is handled by the backend");
-    } catch { toast.error("Failed to update plan"); } finally { setLoading(false); }
+      const payment = await initializeSubscriptionPayment(planId);
+      window.sessionStorage.setItem("vendura-subscription-payment", payment.reference);
+      window.location.assign(payment.authorizationUrl);
+    } catch (error) { toast.error(getErrorMessage(error, "Could not start subscription payment")); setLoading(false); }
   }
 
   if (!plans || !sub) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
@@ -43,7 +58,8 @@ function VendorSubscriptionPage() {
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">Subscription</h1>
-        <p className="text-sm text-muted-foreground">Current plan: <span className="font-semibold text-foreground capitalize">{sub.planId}</span> · Renews {formatDate(sub.currentPeriodEnd)}</p>
+        <p className="text-sm text-muted-foreground">Status: <span className={cn("font-semibold", sub.isActive ? "text-success" : "text-destructive")}>{sub.isActive ? "Active" : "Payment due"}</span> · {sub.isActive ? `Valid until ${formatDate(sub.currentPeriodEnd)}` : "Choose a plan to reactivate your store"}</p>
+        {sub.plan && <p className="mt-1 text-xs text-muted-foreground">{sub.productCount ?? 0} of {sub.plan.productLimit ?? "unlimited"} products used</p>}
       </div>
 
       {/* Plan cards */}
@@ -64,11 +80,11 @@ function VendorSubscriptionPage() {
               </ul>
               <button
                 onClick={() => handleSwitch(plan.id)}
-                disabled={isCurrent || loading}
+                disabled={loading || verifying}
                 className={cn("mt-5 w-full rounded-lg py-2.5 text-sm font-semibold transition-colors",
                   isCurrent ? "border border-border text-muted-foreground" : plan.highlighted ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border text-foreground hover:bg-accent")}
               >
-                {isCurrent ? "Current Plan" : `Switch to ${plan.name}`}
+                {verifying ? "Verifying payment..." : isCurrent && sub.isActive ? "Renew Current Plan" : `Choose ${plan.name}`}
               </button>
             </div>
           );
@@ -85,10 +101,10 @@ function VendorSubscriptionPage() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Auto-renew</p>
-            <p className="text-sm font-medium text-foreground">{sub.autoRenew ? "Enabled" : "Disabled"}</p>
+            <p className="text-sm font-medium text-foreground">Manual monthly renewal</p>
           </div>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Billing and payments are processed by the backend. No recurring billing logic runs in the frontend.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Each successful payment activates the selected plan for one calendar month. Paystack verifies every payment on the backend.</p>
       </div>
     </div>
   );

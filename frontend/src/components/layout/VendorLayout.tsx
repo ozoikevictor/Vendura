@@ -28,6 +28,7 @@ import { useAuthStore } from "@/store/auth";
 import { useQuery } from "@tanstack/react-query";
 import { getVendorStore } from "@/services/storeService";
 import { getNotifications } from "@/services/notificationService";
+import { getSubscription } from "@/services/vendorService";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -70,6 +71,12 @@ export function VendorLayout() {
     queryFn: () => getNotifications(user!.id),
     enabled: Boolean(user),
     refetchInterval: 10_000,
+    refetchOnWindowFocus: "always",
+  });
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+    enabled: Boolean(user),
     refetchOnWindowFocus: "always",
   });
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
@@ -250,6 +257,16 @@ export function VendorLayout() {
         )}>
           <Outlet />
         </main>
+        {subscription && !subscription.isActive && !location.pathname.startsWith("/vendor/subscription") && (
+          <div className="absolute inset-x-0 bottom-0 top-16 z-30 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm lg:left-0">
+            <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-xl">
+              <CreditCard className="mx-auto h-8 w-8 text-primary" />
+              <h2 className="mt-3 text-xl font-bold">Monthly subscription due</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Renew your Vendura plan to access the vendor dashboard and continue managing products.</p>
+              <Link to="/vendor/subscription" className="mt-5 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Choose a plan and pay</Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
