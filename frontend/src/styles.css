@@ -2,6 +2,11 @@
 @source "../src";
 @import "tw-animate-css";
 
+@keyframes vendura-loading {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(410%); }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*

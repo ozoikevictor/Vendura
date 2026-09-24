@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { getErrorMessage } from "@/services/api";
 import { cn } from "@/lib/utils";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/vendor/subscription")({
   head: () => ({
@@ -52,7 +53,7 @@ function VendorSubscriptionPage() {
     } catch (error) { toast.error(getErrorMessage(error, "Could not start subscription payment")); setLoading(false); }
   }
 
-  if (!plans || !sub) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+  if (!plans || !sub) return <DataLoader label="Loading subscription" />;
 
   return (
     <div className="space-y-5">
