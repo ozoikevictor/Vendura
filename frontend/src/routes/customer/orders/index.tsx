@@ -1,14 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Package } from "lucide-react";
+import { Package, Trash2 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowBadge } from "@/components/shared/EscrowBadge";
 import { DataLoader } from "@/components/shared/DataLoader";
-import { useQuery } from "@tanstack/react-query";
-import { getCustomerOrders } from "@/services/orderService";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCustomerOrders, removeOrderFromHistory } from "@/services/orderService";
 import { useAuthStore } from "@/store/auth";
 import { formatNaira, formatDate } from "@/utils/format";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/customer/orders/")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/customer/orders/")({
 
 function OrdersPage() {
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   const { data: orders, isLoading } = useQuery({
     queryKey: ["customer-orders", user?.id],
     queryFn: () => getCustomerOrders(user?.id ?? "user-cust-1"),
@@ -32,6 +34,14 @@ function OrdersPage() {
     refetchOnMount: "always",
     refetchOnWindowFocus: "always",
     refetchInterval: 10_000,
+  });
+  const remove = useMutation({
+    mutationFn: removeOrderFromHistory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
+      toast.success("Order removed from your history");
+    },
+    onError: () => toast.error("Order could not be removed"),
   });
 
   if (isLoading) {
@@ -64,12 +74,8 @@ function OrdersPage() {
         <h1 className="font-display text-2xl font-bold text-foreground">Your Orders</h1>
         <div className="mt-4 space-y-3">
           {orders.map((order) => (
-            <Link
-              key={order.id}
-              to="/customer/orders/$orderId"
-              params={{ orderId: order.id }}
-              className="block rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/30"
-            >
+            <div key={order.id} className="relative rounded-xl border border-border bg-card transition-colors hover:border-primary/30">
+              <Link to="/customer/orders/$orderId" params={{ orderId: order.id }} className="block p-4 pr-14">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
@@ -97,7 +103,11 @@ function OrdersPage() {
                   </div>
                 )}
               </div>
-            </Link>
+              </Link>
+              <button type="button" title="Remove order" aria-label={`Remove order ${order.orderNumber} from history`} disabled={remove.isPending} onClick={() => { if (window.confirm("Remove this order from your history? The order record will remain safe.")) remove.mutate(order.id); }} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive-soft hover:text-destructive disabled:opacity-50">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       </div>

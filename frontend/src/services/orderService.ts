@@ -25,6 +25,8 @@ export const getCustomerOrders = (_customerId: ID) => api<Order[]>("/orders");
 export const getOrder = (orderId: ID) => api<Order>(`/orders/${encodeURIComponent(orderId)}`);
 export const getVendorOrders = (_storeId: ID) => api<Order[]>("/vendor/orders");
 export const getVendorOrder = (orderId: ID) => api<Order>(`/orders/${encodeURIComponent(orderId)}`);
+export const removeOrderFromHistory = (orderId: ID) =>
+  api<void>(`/orders/${encodeURIComponent(orderId)}`, { method: "DELETE" });
 export async function placeOrder(
   input: PlaceOrderInput,
 ): Promise<{ orderId: ID; orderNumber: string; orders: Order[] }> {

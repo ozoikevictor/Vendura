@@ -17,7 +17,7 @@ export const orderRoutes = (db: Database) => {
     const createdOrders: Entity[] = [];
     for (const [storeId, items] of groups) { const store = await db.get<Entity>("stores", storeId); const orderItems = await Promise.all(items.map(async (item) => { const product = products.find((p) => p.id === item.productId)!; let unitPrice = Number(product.price); if (item.negotiated) { const offer = await db.get<Entity>("offers", item.negotiated.offerId); if (!offer || offer.status !== "accepted" || offer.productId !== item.productId) throw new ApiError(400, "Negotiated offer is invalid"); unitPrice = Number(offer.counterPrice ?? offer.offeredPrice); } const remainingStock = Number(product.stock) - item.quantity; await db.update("products", product.id, { stock: remainingStock, status: remainingStock === 0 ? "out_of_stock" : product.status, soldCount: Number(product.soldCount) + item.quantity }); return { id: id("order-item"), productId: product.id, productName: product.name, productImage: (product.images as string[])[0] ?? "", quantity: item.quantity, unitPrice, negotiated: Boolean(item.negotiated), subtotal: unitPrice * item.quantity }; }));
       const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0); const deliveryFee = calculateDeliveryFee(subtotal, input.deliveryMethod); const placedAt = now();
-      const order = await db.create("orders", { id: id("order"), orderNumber: `VND-${Date.now().toString().slice(-8)}-${createdOrders.length + 1}`, customerId: req.user!.id, customerName: user?.fullName ?? "Customer", customerPhone: user?.phone ?? input.deliveryAddress.phone, storeId, storeName: store?.name ?? "Store", items: orderItems, subtotal, deliveryFee, total: subtotal + deliveryFee, status: "placed", paymentStatus: "pending", paymentMethod: input.paymentMethod, deliveryAddress: input.deliveryAddress, deliveryMethod: input.deliveryMethod, timeline: [{ status: "placed", at: placedAt }], escrow: { status: "not_funded", amount: subtotal + deliveryFee }, placedAt });
+      const order = await db.create("orders", { id: id("order"), orderNumber: `VND-${Date.now().toString().slice(-8)}-${createdOrders.length + 1}`, customerId: req.user!.id, customerName: user?.fullName ?? "Customer", customerPhone: user?.phone ?? input.deliveryAddress.phone, storeId, storeName: store?.name ?? "Store", items: orderItems, subtotal, deliveryFee, total: subtotal + deliveryFee, status: "placed", paymentStatus: "pending", paymentMethod: input.paymentMethod, deliveryAddress: input.deliveryAddress, deliveryMethod: input.deliveryMethod, timeline: [{ status: "placed", at: placedAt }], escrow: { status: "not_funded", amount: subtotal + deliveryFee }, placedAt, hiddenForCustomer: false, hiddenForVendor: false });
       if (store?.ownerId) {
         await createNotification(db, {
           userId: String(store.ownerId),
@@ -30,9 +30,10 @@ export const orderRoutes = (db: Database) => {
       createdOrders.push(order); }
     created(res, createdOrders.length === 1 ? createdOrders[0] : createdOrders);
   }));
-  router.get("/orders", authorize("customer", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((o) => req.user!.role === "admin" || o.customerId === req.user!.id))));
+  router.get("/orders", authorize("customer", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((order) => req.user!.role === "admin" || (order.customerId === req.user!.id && !order.hiddenForCustomer)).sort(byNewestOrder))));
   router.get("/orders/:id", asyncRoute(async (req: AuthRequest, res) => ok(res, await accessibleOrder(db, req.params.id, req))));
-  router.get("/vendor/orders", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((o) => req.user!.role === "admin" || o.storeId === req.user!.storeId).sort((a, b) => +new Date(String(b.placedAt ?? b.createdAt ?? "")) - +new Date(String(a.placedAt ?? a.createdAt ?? ""))))));
+  router.get("/vendor/orders", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((order) => req.user!.role === "admin" || (order.storeId === req.user!.storeId && !order.hiddenForVendor)).sort(byNewestOrder))));
+  router.delete("/orders/:id", authorize("customer", "vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => { const order = await accessibleOrder(db, req.params.id, req); if (req.user!.role === "admin") throw new ApiError(400, "Administrators cannot hide account order history"); const role = order.customerId === req.user!.id ? "customer" : "vendor"; await db.update("orders", order.id, { [role === "customer" ? "hiddenForCustomer" : "hiddenForVendor"]: true }); res.status(204).end(); }));
   router.patch("/vendor/orders/:id/status", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => {
     const order = await accessibleOrder(db, req.params.id, req);
     const action = z.discriminatedUnion("type", [
@@ -134,4 +135,8 @@ function customerNotification(action: string, order: Entity, status: string): Om
 function calculateDeliveryFee(subtotal: number, method: string) {
   if (method === "pickup" || subtotal >= 500000) return 0;
   return method === "express" ? 5000 : 2500;
+}
+
+function byNewestOrder(a: Entity, b: Entity) {
+  return +new Date(String(b.placedAt ?? b.createdAt ?? "")) - +new Date(String(a.placedAt ?? a.createdAt ?? ""));
 }

@@ -51,3 +51,5 @@ export const respondToOffer = (offerId: ID, status: OfferStatus, counterPrice?: 
   });
 export const markConversationRead = (conversationId: ID, _role: "customer" | "vendor") =>
   api<void>(`/conversations/${encodeURIComponent(conversationId)}/read`, { method: "POST" });
+export const removeConversation = (conversationId: ID) =>
+  api<void>(`/conversations/${encodeURIComponent(conversationId)}`, { method: "DELETE" });

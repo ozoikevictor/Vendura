@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Trash2 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { DataLoader } from "@/components/shared/DataLoader";
-import { useQuery } from "@tanstack/react-query";
-import { getCustomerConversations } from "@/services/messageService";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCustomerConversations, removeConversation } from "@/services/messageService";
 import { useAuthStore } from "@/store/auth";
 import { timeAgo } from "@/utils/format";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/messages/")({
   head: () => ({
@@ -24,11 +25,20 @@ export const Route = createFileRoute("/messages/")({
 
 function MessagesPage() {
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
   const { data: conversations, isLoading } = useQuery({
     queryKey: ["customer-conversations"],
     queryFn: () => getCustomerConversations(user?.id ?? "user-cust-1"),
     refetchInterval: 3_000,
     refetchOnWindowFocus: "always",
+  });
+  const remove = useMutation({
+    mutationFn: removeConversation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customer-conversations"] });
+      toast.success("Conversation removed from your history");
+    },
+    onError: () => toast.error("Conversation could not be removed"),
   });
 
   if (isLoading) {
@@ -61,12 +71,8 @@ function MessagesPage() {
         <h1 className="font-display text-2xl font-bold text-foreground">Messages</h1>
         <div className="mt-4 space-y-2">
           {conversations.map((conv) => (
-            <Link
-              key={conv.id}
-              to="/messages/$conversationId"
-              params={{ conversationId: conv.id }}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/30"
-            >
+            <div key={conv.id} className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/30">
+              <Link to="/messages/$conversationId" params={{ conversationId: conv.id }} className="flex min-w-0 flex-1 items-center gap-3">
               <img src={conv.productImage} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-border object-cover" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
@@ -81,7 +87,11 @@ function MessagesPage() {
                   {conv.unreadForCustomer}
                 </span>
               )}
-            </Link>
+              </Link>
+              <button type="button" title="Remove conversation" aria-label={`Remove conversation with ${conv.storeName}`} disabled={remove.isPending} onClick={() => { if (window.confirm("Remove this conversation from your history?")) remove.mutate(conv.id); }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive-soft hover:text-destructive disabled:opacity-50">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       </div>

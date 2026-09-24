@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Package } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getVendorOrders, ORDER_STATUS_FLOW } from "@/services/orderService";
+import { Search, Package, Trash2 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getVendorOrders, removeOrderFromHistory } from "@/services/orderService";
 import { ORDER_STATUS_LABEL } from "@/data/orders";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/auth";
 import { formatNaira, formatDate } from "@/utils/format";
 import { cn } from "@/lib/utils";
 import type { OrderStatus } from "@/types";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/vendor/orders/")({
   head: () => ({
@@ -36,6 +37,7 @@ const tabs: { id: "all" | OrderStatus; label: string }[] = [
 
 function VendorOrdersPage() {
   const user = useAuthStore((state) => state.user);
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
   const [search, setSearch] = useState("");
 
@@ -52,6 +54,14 @@ function VendorOrdersPage() {
     refetchOnMount: "always",
     refetchOnWindowFocus: "always",
     refetchInterval: 10_000,
+  });
+  const remove = useMutation({
+    mutationFn: removeOrderFromHistory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendor-orders"] });
+      toast.success("Order removed from your history");
+    },
+    onError: () => toast.error("Order could not be removed"),
   });
 
   const filtered = orders?.filter((o) => {
@@ -135,12 +145,8 @@ function VendorOrdersPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((order) => (
-            <Link
-              key={order.id}
-              to="/vendor/orders/$orderId"
-              params={{ orderId: order.id }}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/30"
-            >
+            <div key={order.id} className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/30">
+              <Link to="/vendor/orders/$orderId" params={{ orderId: order.id }} className="flex min-w-0 flex-1 items-center gap-3">
               <img
                 src={order.items[0]?.productImage}
                 alt=""
@@ -160,7 +166,11 @@ function VendorOrdersPage() {
                 <p className="text-sm font-bold text-foreground">{formatNaira(order.total)}</p>
                 <PaymentStatusBadge status={order.paymentStatus} />
               </div>
-            </Link>
+              </Link>
+              <button type="button" title="Remove order" aria-label={`Remove order ${order.orderNumber} from history`} disabled={remove.isPending} onClick={() => { if (window.confirm("Remove this order from your history? The order record will remain safe.")) remove.mutate(order.id); }} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive-soft hover:text-destructive disabled:opacity-50">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       )}

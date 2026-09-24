@@ -211,6 +211,29 @@ describe("Vendura API", () => {
     const messages = await request(app).get(`/api/conversations/${conversationId}/messages`).set(auth(customer));
     expect(messages.body.data.map((message: { text: string }) => message.text)).toEqual(["Is this available?", "Yes, it is available."]);
     expect((await request(app).post(`/api/conversations/${conversationId}/offers`).set(auth(customer)).send({ offeredPrice: 220000 })).status).toBe(201);
+
+    expect((await request(app).delete(`/api/conversations/${conversationId}`).set(auth(customer))).status).toBe(204);
+    expect((await request(app).get("/api/conversations").set(auth(customer))).body.data).toHaveLength(0);
+    expect((await request(app).get("/api/conversations").set(auth(vendor))).body.data).toHaveLength(1);
+    await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(vendor)).send({ text: "I have sent an update." });
+    expect((await request(app).get("/api/conversations").set(auth(customer))).body.data[0].id).toBe(conversationId);
+  });
+  it("sorts order history newest first and hides it separately for each account", async () => {
+    const customer = await login("customer@vendura.test");
+    const vendor = await login("vendor@vendura.test");
+    const address = { fullName: "Demo Customer", phone: "+2348000000001", street: "1 Test Street", city: "Ikeja", state: "Lagos" };
+    const older = await request(app).post("/api/orders").set(auth(customer)).send({ items: [{ productId: "product-phone-1", quantity: 1 }], deliveryAddress: address, deliveryMethod: "standard", paymentMethod: "pay_on_delivery" });
+    const newer = await request(app).post("/api/orders").set(auth(customer)).send({ items: [{ productId: "product-phone-1", quantity: 1 }], deliveryAddress: address, deliveryMethod: "standard", paymentMethod: "pay_on_delivery" });
+    await db.update("orders", older.body.data.id, { placedAt: "2026-01-01T10:00:00.000Z" });
+    await db.update("orders", newer.body.data.id, { placedAt: "2026-01-02T10:00:00.000Z" });
+
+    expect((await request(app).get("/api/orders").set(auth(customer))).body.data.map((order: { id: string }) => order.id)).toEqual([newer.body.data.id, older.body.data.id]);
+    expect((await request(app).get("/api/vendor/orders").set(auth(vendor))).body.data.map((order: { id: string }) => order.id)).toEqual([newer.body.data.id, older.body.data.id]);
+    expect((await request(app).delete(`/api/orders/${newer.body.data.id}`).set(auth(customer))).status).toBe(204);
+    expect((await request(app).get("/api/orders").set(auth(customer))).body.data.map((order: { id: string }) => order.id)).toEqual([older.body.data.id]);
+    expect((await request(app).get("/api/vendor/orders").set(auth(vendor))).body.data).toHaveLength(2);
+    expect((await request(app).delete(`/api/orders/${newer.body.data.id}`).set(auth(vendor))).status).toBe(204);
+    expect((await request(app).get("/api/vendor/orders").set(auth(vendor))).body.data.map((order: { id: string }) => order.id)).toEqual([older.body.data.id]);
   });
   it("derives public store product counts from live active listings", async () => {
     await db.update("stores", "store-technaija", { productCount: 999 });
