@@ -37,7 +37,7 @@ function VendorConversationPage() {
   const { data: messages } = useQuery({ queryKey: ["vendor-messages", conversationId], queryFn: () => getMessages(conversationId), refetchInterval: 3_000, refetchOnWindowFocus: "always" });
   const { data: offers } = useQuery({ queryKey: ["vendor-offers", conversationId], queryFn: () => getOffersForConversation(conversationId) });
 
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages]);
 
   useEffect(() => {
     if (!conv) return;
@@ -53,6 +53,7 @@ function VendorConversationPage() {
     if (!text.trim() || !conv) return;
     const msg = text;
     setText("");
+    composerInput.current?.blur();
     try {
       await sendMessage(conv.id, "user-vendor-1", "vendor", msg);
       queryClient.invalidateQueries({ queryKey: ["vendor-messages", conversationId] });
@@ -81,8 +82,8 @@ function VendorConversationPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex shrink-0 items-center gap-2 border-b border-border pb-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border px-3 py-2 sm:px-0 sm:pb-3 sm:pt-0">
         <Link to="/vendor/messages" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{conv.customerName}</p>
@@ -95,7 +96,7 @@ function VendorConversationPage() {
         )}
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto py-4 scrollbar-none">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 scrollbar-none sm:px-0 sm:py-4">
         {messages?.map((msg) => {
           const isVendor = msg.senderRole === "vendor";
           const isSystem = msg.senderRole === "system";
@@ -123,7 +124,7 @@ function VendorConversationPage() {
       </div>
 
       {activeOffer && (
-        <div className="shrink-0 border-t border-border pt-2">
+        <div className="mx-3 shrink-0 border-t border-border pt-2 sm:mx-0">
           <p className="text-sm text-muted-foreground">Customer offered: <span className="font-semibold text-foreground">{formatNaira(activeOffer.offeredPrice)}</span> (list: {formatNaira(activeOffer.originalPrice)})</p>
           <div className="mt-1 flex items-center gap-2">
             <button onClick={() => handleRespond(activeOffer, "accepted")} disabled={loading} className="flex items-center gap-1 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60">
@@ -140,7 +141,7 @@ function VendorConversationPage() {
         </div>
       )}
 
-      <form onSubmit={handleSend} className="flex shrink-0 items-center gap-2 border-t border-border pt-2 pb-[env(safe-area-inset-bottom)]">
+      <form onSubmit={handleSend} className="flex shrink-0 items-center gap-2 border-t border-border bg-card px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 sm:bg-transparent sm:px-0 sm:pb-[env(safe-area-inset-bottom)]">
         <input
           ref={composerInput}
           value={text}

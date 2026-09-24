@@ -61,7 +61,7 @@ function ConversationPage() {
   });
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages]);
 
   useEffect(() => {
@@ -104,6 +104,7 @@ function ConversationPage() {
     if (!text.trim() || !conv) return;
     const msgText = text;
     setText("");
+    composerInput.current?.blur();
     try {
       await sendMessage(conv.id, user?.id ?? "user-cust-1", "customer", msgText);
       queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
@@ -168,7 +169,7 @@ function ConversationPage() {
     <div className="fixed inset-0 overflow-hidden lagoon-wash">
       <div className="hidden sm:block"><MarketplaceHeader /></div>
       <div ref={pageShell} className="absolute inset-x-0 top-0 flex min-h-0 flex-col overflow-hidden sm:top-16">
-      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-4 sm:px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-3 py-2 sm:px-6 sm:py-4">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border pb-3">
           <Link to="/messages" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>

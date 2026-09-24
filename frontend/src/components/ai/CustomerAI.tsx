@@ -158,7 +158,7 @@ export function CustomerAIPage() {
 
   useEffect(() => {
     const container = chatScroll.current;
-    if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    if (container) container.scrollTo({ top: container.scrollHeight });
   }, [loading, message, reply, previousTurns]);
 
   useEffect(() => {
@@ -482,6 +482,8 @@ export function CustomerAIPage() {
             <form
               onSubmit={(event: FormEvent) => {
                 event.preventDefault();
+                if (!input.trim() && !image) return;
+                composerInput.current?.blur();
                 submit();
               }}
               className="shrink-0 border-t border-border bg-card p-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4"
