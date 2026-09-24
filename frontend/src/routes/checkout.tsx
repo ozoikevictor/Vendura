@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { User, Phone, MapPin, CreditCard, Truck, Check, ShieldCheck } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, CreditCard, Truck, Check, ShieldCheck } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { useCartStore } from "@/store/cart";
 import { useAuthStore } from "@/store/auth";
@@ -257,7 +257,12 @@ function CheckoutPage() {
     <div className="min-h-screen lagoon-wash">
       <MarketplaceHeader />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>
+        <div className="flex items-center gap-3">
+          <Link to="/cart" aria-label="Back to cart" title="Back to cart" className="text-muted-foreground transition-colors hover:text-primary">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="font-display text-2xl font-bold text-foreground">Checkout</h1>
+        </div>
 
         <form onSubmit={handleSubmit} className="mt-4 grid gap-6 lg:grid-cols-[1fr_22rem]">
           {/* Left: forms */}

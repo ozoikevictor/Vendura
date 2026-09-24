@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShoppingBasket, Heart, Tag, Trash2, Bookmark } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, ShoppingBasket, Heart, Tag, Trash2, Bookmark } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { QuantityStepper } from "@/components/shared/QuantityStepper";
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
+  const navigate = useNavigate();
   const activeStoreSlug = useStorefrontStore((state) => state.activeStoreSlug);
   const items = useCartStore((s) => s.items);
   const remove = useCartStore((s) => s.remove);
@@ -41,6 +42,18 @@ function CartPage() {
   }, {});
 
   const subtotal = activeItems.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    if (activeStoreSlug) {
+      navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug }, hash: "store-products" });
+      return;
+    }
+    navigate({ to: "/marketplace" });
+  };
 
   if (items.length === 0) {
     return (
@@ -64,8 +77,13 @@ function CartPage() {
     <div className="min-h-screen lagoon-wash">
       <MarketplaceHeader />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-foreground">Cart</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={goBack} aria-label="Go back" title="Go back" className="text-muted-foreground transition-colors hover:text-primary">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="font-display text-2xl font-bold text-foreground">Cart</h1>
+          </div>
           <button
             onClick={() => {
               clear();
