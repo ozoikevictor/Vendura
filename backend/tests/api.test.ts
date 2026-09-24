@@ -152,7 +152,24 @@ describe("Vendura API", () => {
     expect(repeated.status).toBe(409);
     expect((await db.get("products", "product-phone-1"))?.stock).toBe(10);
   });
-  it("creates a conversation, message, and offer", async () => { const token = await login("customer@vendura.test"); const conversation = await request(app).post("/api/conversations").set(auth(token)).send({ productId: "product-phone-1" }); expect(conversation.status).toBe(201); const conversationId = conversation.body.data.id; expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(token)).send({ text: "Can we negotiate?" })).status).toBe(201); expect((await request(app).post(`/api/conversations/${conversationId}/offers`).set(auth(token)).send({ offeredPrice: 220000 })).status).toBe(201); });
+  it("connects customer and vendor messages in one conversation", async () => {
+    const customer = await login("customer@vendura.test");
+    const vendor = await login("vendor@vendura.test");
+    const conversation = await request(app).post("/api/conversations").set(auth(customer)).send({ productId: "product-phone-1" });
+    expect(conversation.status).toBe(201);
+    const conversationId = conversation.body.data.id;
+
+    expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(customer)).send({ text: "Is this available?" })).status).toBe(201);
+    const vendorInbox = await request(app).get("/api/conversations").set(auth(vendor));
+    expect(vendorInbox.body.data[0]).toMatchObject({ id: conversationId, lastMessage: "Is this available?", unreadForVendor: 1 });
+
+    expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(vendor)).send({ text: "Yes, it is available." })).status).toBe(201);
+    const customerInbox = await request(app).get("/api/conversations").set(auth(customer));
+    expect(customerInbox.body.data[0]).toMatchObject({ id: conversationId, lastMessage: "Yes, it is available.", unreadForCustomer: 1 });
+    const messages = await request(app).get(`/api/conversations/${conversationId}/messages`).set(auth(customer));
+    expect(messages.body.data.map((message: { text: string }) => message.text)).toEqual(["Is this available?", "Yes, it is available."]);
+    expect((await request(app).post(`/api/conversations/${conversationId}/offers`).set(auth(customer)).send({ offeredPrice: 220000 })).status).toBe(201);
+  });
   it("searches live products through the authenticated shopping assistant", async () => {
     expect((await request(app).post("/api/ai/search").send({ message: "I need a phone" })).status).toBe(401);
     const vendor = await login("vendor@vendura.test");

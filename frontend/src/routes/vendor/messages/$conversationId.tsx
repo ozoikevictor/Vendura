@@ -4,7 +4,7 @@ import { Send, ArrowLeft, Tag, Check, X, RotateCw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConversation, getMessages, getOffersForConversation,
-  sendMessage, respondToOffer,
+  sendMessage, respondToOffer, markConversationRead,
 } from "@/services/messageService";
 import { timeAgo, formatNaira } from "@/utils/format";
 import { toast } from "sonner";
@@ -33,10 +33,17 @@ function VendorConversationPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: conv } = useQuery({ queryKey: ["vendor-conversation", conversationId], queryFn: () => getConversation(conversationId) });
-  const { data: messages } = useQuery({ queryKey: ["vendor-messages", conversationId], queryFn: () => getMessages(conversationId) });
+  const { data: messages } = useQuery({ queryKey: ["vendor-messages", conversationId], queryFn: () => getMessages(conversationId), refetchInterval: 3_000, refetchOnWindowFocus: "always" });
   const { data: offers } = useQuery({ queryKey: ["vendor-offers", conversationId], queryFn: () => getOffersForConversation(conversationId) });
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [messages]);
+
+  useEffect(() => {
+    if (!conv) return;
+    markConversationRead(conversationId, "vendor").then(() => {
+      queryClient.invalidateQueries({ queryKey: ["vendor-conversations"] });
+    }).catch(() => undefined);
+  }, [conv, conversationId, messages?.length, queryClient]);
 
   const activeOffer = offers?.find((o) => o.status === "pending" && o.by === "customer");
 

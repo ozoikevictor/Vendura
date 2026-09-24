@@ -23,6 +23,8 @@ function VendorMessagesPage() {
   const { data: conversations, isLoading } = useQuery({
     queryKey: ["vendor-conversations"],
     queryFn: () => getVendorConversations(CURRENT_VENDOR_STORE_ID),
+    refetchInterval: 3_000,
+    refetchOnWindowFocus: "always",
   });
 
   if (isLoading) {

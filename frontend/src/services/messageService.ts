@@ -3,6 +3,11 @@ import { api, json } from "./api";
 
 export const getCustomerConversations = (_customerId: ID) => api<Conversation[]>("/conversations");
 export const getVendorConversations = (_storeId: ID) => api<Conversation[]>("/conversations");
+export const startConversation = (productId: ID) =>
+  api<Conversation>("/conversations", {
+    method: "POST",
+    ...json({ productId }),
+  });
 export const getConversation = (id: ID) =>
   api<Conversation>(`/conversations/${encodeURIComponent(id)}`);
 export const getMessages = (conversationId: ID) =>

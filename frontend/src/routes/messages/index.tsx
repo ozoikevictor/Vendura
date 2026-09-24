@@ -27,6 +27,8 @@ function MessagesPage() {
   const { data: conversations, isLoading } = useQuery({
     queryKey: ["customer-conversations"],
     queryFn: () => getCustomerConversations(user?.id ?? "user-cust-1"),
+    refetchInterval: 3_000,
+    refetchOnWindowFocus: "always",
   });
 
   if (isLoading) {

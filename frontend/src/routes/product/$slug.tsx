@@ -14,6 +14,7 @@ import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { getProductBySlug, getProductReviews, getRelatedProducts } from "@/services/productService";
 import { getStoreById } from "@/services/storeService";
+import { startConversation } from "@/services/messageService";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { stores } from "@/data/stores";
@@ -42,6 +43,7 @@ function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariantIdx, setselectedVariantIdx] = useState(0);
   const [qty, setQty] = useState(1);
+  const [startingConversation, setStartingConversation] = useState(false);
   const openedFromAI = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "customer-ai";
 
   const goBack = () => {
@@ -127,8 +129,17 @@ function ProductDetailPage() {
     navigate({ to: "/cart" });
   };
 
-  function handleMessageSeller() {
-    navigate({ to: "/messages" });
+  async function handleMessageSeller() {
+    if (startingConversation) return;
+    setStartingConversation(true);
+    try {
+      const conversation = await startConversation(product.id);
+      navigate({ to: "/messages/$conversationId", params: { conversationId: conversation.id } });
+    } catch {
+      toast.error("Please log in as a customer to message this seller.");
+    } finally {
+      setStartingConversation(false);
+    }
   }
 
   return (
@@ -284,10 +295,11 @@ function ProductDetailPage() {
               </button>
               <button
                 onClick={handleMessageSeller}
+                disabled={startingConversation}
                 className="flex items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
               >
                 <MessageSquare className="h-4 w-4" />
-                Message Seller
+                {startingConversation ? "Opening..." : "Message Seller"}
               </button>
             </div>
 

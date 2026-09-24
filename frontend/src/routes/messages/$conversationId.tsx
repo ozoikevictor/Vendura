@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getConversation, getMessages, getOffersForConversation,
-  sendMessage, makeOffer, respondToOffer,
+  sendMessage, makeOffer, respondToOffer, markConversationRead,
 } from "@/services/messageService";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
@@ -50,6 +50,8 @@ function ConversationPage() {
   const { data: messages } = useQuery({
     queryKey: ["messages", conversationId],
     queryFn: () => getMessages(conversationId),
+    refetchInterval: 3_000,
+    refetchOnWindowFocus: "always",
   });
 
   const { data: offers } = useQuery({
@@ -60,6 +62,13 @@ function ConversationPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!conv) return;
+    markConversationRead(conversationId, "customer").then(() => {
+      queryClient.invalidateQueries({ queryKey: ["customer-conversations"] });
+    }).catch(() => undefined);
+  }, [conv, conversationId, messages?.length, queryClient]);
 
   const activeOffer = offers?.find((o) => o.status === "pending" || o.status === "countered");
   const acceptedOffer = offers?.find((o) => o.status === "accepted");
