@@ -137,9 +137,19 @@ export function CustomerAIPage() {
     const fitVisibleScreen = () => {
       if (pageShell.current) {
         const headerHeight = window.matchMedia("(min-width: 640px)").matches ? 64 : 0;
-        pageShell.current.style.height = `${Math.max((viewport?.height ?? window.innerHeight) - headerHeight, 240)}px`;
-        pageShell.current.style.top = `${(viewport?.offsetTop ?? 0) + headerHeight}px`;
+        const activeElement = document.activeElement;
+        const isEditing = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+        const visibleHeight = isEditing
+          ? (viewport?.height ?? window.innerHeight)
+          : Math.max(viewport?.height ?? 0, window.innerHeight);
+        pageShell.current.style.height = `${Math.max(visibleHeight - headerHeight, 240)}px`;
+        pageShell.current.style.top = `${(isEditing ? (viewport?.offsetTop ?? 0) : 0) + headerHeight}px`;
       }
+    };
+    const restoreFullScreen = () => {
+      requestAnimationFrame(fitVisibleScreen);
+      window.setTimeout(fitVisibleScreen, 150);
+      window.setTimeout(fitVisibleScreen, 350);
     };
 
     const previousBodyOverflow = document.body.style.overflow;
@@ -148,10 +158,12 @@ export function CustomerAIPage() {
     viewport?.addEventListener("resize", fitVisibleScreen);
     viewport?.addEventListener("scroll", fitVisibleScreen);
     window.addEventListener("resize", fitVisibleScreen);
+    document.addEventListener("focusout", restoreFullScreen);
     return () => {
       viewport?.removeEventListener("resize", fitVisibleScreen);
       viewport?.removeEventListener("scroll", fitVisibleScreen);
       window.removeEventListener("resize", fitVisibleScreen);
+      document.removeEventListener("focusout", restoreFullScreen);
       document.body.style.overflow = previousBodyOverflow;
     };
   }, []);

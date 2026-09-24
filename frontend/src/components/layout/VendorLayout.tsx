@@ -143,6 +143,9 @@ export function VendorLayout() {
       shell.style.bottom = "auto";
       shell.style.height = `${visibleHeight}px`;
       content.style.height = `${Math.max(visibleHeight - headerHeight, 240)}px`;
+      if (isConversationPage && document.activeElement?.closest("[data-vendor-composer]")) {
+        requestAnimationFrame(() => document.activeElement?.scrollIntoView({ block: "nearest" }));
+      }
     };
 
     fitVisibleScreen();

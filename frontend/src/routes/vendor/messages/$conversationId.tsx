@@ -48,6 +48,11 @@ function VendorConversationPage() {
 
   const activeOffer = offers?.find((o) => o.status === "pending" && o.by === "customer");
 
+  function keepComposerVisible() {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    composerInput.current?.scrollIntoView({ block: "nearest" });
+  }
+
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim() || !conv) return;
@@ -141,17 +146,15 @@ function VendorConversationPage() {
         </div>
       )}
 
-      <form onSubmit={handleSend} className="flex shrink-0 items-center gap-2 border-t border-border bg-card px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 sm:bg-transparent sm:px-0 sm:pb-[env(safe-area-inset-bottom)]">
+      <form data-vendor-composer onSubmit={handleSend} className="relative z-10 flex shrink-0 items-center gap-2 border-t border-border bg-card px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 sm:bg-transparent sm:px-0 sm:pb-[env(safe-area-inset-bottom)]">
         <input
           ref={composerInput}
           value={text}
-          onPointerDown={(event) => {
-            if (document.activeElement !== composerInput.current) {
-              event.preventDefault();
-              composerInput.current?.focus({ preventScroll: true });
-            }
+          onFocus={() => {
+            requestAnimationFrame(keepComposerVisible);
+            window.setTimeout(keepComposerVisible, 150);
+            window.setTimeout(keepComposerVisible, 350);
           }}
-          onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }))}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
           className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
