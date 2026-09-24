@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Store,
@@ -58,6 +58,7 @@ export function VendorLayout() {
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
   const [authHydrated, setAuthHydrated] = useState(useAuthStore.persist.hasHydrated());
+  const pageContent = useRef<HTMLElement>(null);
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
     queryKey: ["vendor-store", user?.storeId],
@@ -112,6 +113,29 @@ export function VendorLayout() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [vendorSidebarOpen, setVendorSidebarOpen]);
+
+  useEffect(() => {
+    const isAIPage = location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/";
+    const content = pageContent.current;
+    if (!isAIPage || !content) return;
+
+    const viewport = window.visualViewport;
+    const fitVisibleScreen = () => {
+      const visibleHeight = viewport?.height ?? window.innerHeight;
+      content.style.height = `${Math.max(visibleHeight - 64, 240)}px`;
+    };
+
+    fitVisibleScreen();
+    viewport?.addEventListener("resize", fitVisibleScreen);
+    viewport?.addEventListener("scroll", fitVisibleScreen);
+    window.addEventListener("resize", fitVisibleScreen);
+    return () => {
+      viewport?.removeEventListener("resize", fitVisibleScreen);
+      viewport?.removeEventListener("scroll", fitVisibleScreen);
+      window.removeEventListener("resize", fitVisibleScreen);
+      content.style.height = "";
+    };
+  }, [location.pathname]);
 
   if (!authHydrated || !user || (user.role !== "vendor" && user.role !== "admin")) {
     return <div className="min-h-screen bg-background" />;
@@ -218,7 +242,7 @@ export function VendorLayout() {
         <div className="h-16" aria-hidden="true" />
 
         {/* Page content */}
-        <main className={cn(
+        <main ref={pageContent} className={cn(
           "h-[calc(100dvh-4rem)] overscroll-contain",
           location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/"
             ? "overflow-hidden p-0 sm:p-4 lg:p-6"
