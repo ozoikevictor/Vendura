@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/services/api";
 import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const allItems = useCartStore((s) => s.items);
   const items = useMemo(() => allItems.filter((i) => !i.savedForLater), [allItems]);
   const clear = useCartStore((s) => s.clear);
@@ -122,6 +124,12 @@ function CheckoutPage() {
         deliveryMethod: form.deliveryMethod,
         paymentMethod: form.paymentMethod,
       });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
+        queryClient.invalidateQueries({ queryKey: ["store-products"] }),
+        queryClient.invalidateQueries({ queryKey: ["stores"] }),
+        queryClient.invalidateQueries({ queryKey: ["store"] }),
+      ]);
       if (form.paymentMethod === "card") {
         const orderIds = result.orders.map((order) => order.id);
         window.sessionStorage.setItem(

@@ -152,6 +152,34 @@ describe("Vendura API", () => {
     expect(repeated.status).toBe(409);
     expect((await db.get("products", "product-phone-1"))?.stock).toBe(10);
   });
+  it("removes sold-out products from public listings and restores them after cancellation", async () => {
+    await db.update("products", "product-phone-1", { stock: 1, status: "active" });
+    const customer = await login("customer@vendura.test");
+    const placed = await request(app).post("/api/orders").set(auth(customer)).send({
+      items: [{ productId: "product-phone-1", quantity: 1 }],
+      deliveryAddress: { fullName: "Demo Customer", phone: "+2348000000001", street: "1 Test Street", city: "Ikeja", state: "Lagos" },
+      deliveryMethod: "standard",
+      paymentMethod: "pay_on_delivery"
+    });
+    expect(placed.status).toBe(201);
+    expect(await db.get("products", "product-phone-1")).toMatchObject({ stock: 0, status: "out_of_stock" });
+    expect((await request(app).get("/api/products")).body.data.total).toBe(0);
+    expect((await request(app).get("/api/storefronts/technaija")).body.data).toMatchObject({
+      store: { productCount: 0 },
+      products: []
+    });
+    const vendor = await login("vendor@vendura.test");
+    expect((await request(app).get("/api/vendor/overview").set(auth(vendor))).body.data.productsCount).toBe(0);
+    expect((await request(app).get("/api/vendor/products").set(auth(vendor))).body.data[0]).toMatchObject({ status: "out_of_stock", stock: 0 });
+
+    const cancelled = await request(app)
+      .patch(`/api/vendor/orders/${placed.body.data.id}/status`)
+      .set(auth(vendor))
+      .send({ type: "cancel", reason: "Customer changed their mind" });
+    expect(cancelled.status).toBe(200);
+    expect(await db.get("products", "product-phone-1")).toMatchObject({ stock: 1, status: "active" });
+    expect((await request(app).get("/api/products")).body.data.total).toBe(1);
+  });
   it("connects customer and vendor messages in one conversation", async () => {
     const customer = await login("customer@vendura.test");
     const vendor = await login("vendor@vendura.test");

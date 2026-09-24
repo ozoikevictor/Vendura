@@ -31,13 +31,14 @@ export const vendorRoutes = (db: Database) => {
       db.list<Entity>("transactions")
     ]);
     const products = allProducts.filter((product) => product.storeId === req.user!.storeId);
+    const liveProducts = products.filter((product) => product.status === "active" && Number(product.stock) > 0);
     const orders = allOrders.filter((order) => order.storeId === req.user!.storeId);
     const transactions = allTransactions.filter((transaction) => transaction.vendorId === req.user!.id);
     const sales = transactions.filter((transaction) => transaction.type === "sale" && transaction.status !== "reversed");
     ok(res, {
       totalRevenue: sales.reduce((sum, transaction) => sum + Number(transaction.amount), 0),
       ordersCount: orders.length,
-      productsCount: products.length,
+      productsCount: liveProducts.length,
       customersCount: new Set(orders.map((order) => order.customerId)).size,
       pendingOrders: orders.filter((order) => ["placed", "payment_confirmed", "processing"].includes(String(order.status))).length,
       lowStockCount: products.filter((product) => Number(product.stock) <= Number(product.lowStockThreshold)).length,

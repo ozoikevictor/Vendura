@@ -15,7 +15,7 @@ export const orderRoutes = (db: Database) => {
     const groups = new Map<string, typeof input.items>();
     for (const item of input.items) { const product = products.find((p) => p.id === item.productId); if (!product || product.status !== "active") throw new ApiError(400, `Product unavailable: ${item.productId}`); if (Number(product.stock) < item.quantity) throw new ApiError(409, `Insufficient stock: ${product.name}`); const list = groups.get(String(product.storeId)) ?? []; list.push(item); groups.set(String(product.storeId), list); }
     const createdOrders: Entity[] = [];
-    for (const [storeId, items] of groups) { const store = await db.get<Entity>("stores", storeId); const orderItems = await Promise.all(items.map(async (item) => { const product = products.find((p) => p.id === item.productId)!; let unitPrice = Number(product.price); if (item.negotiated) { const offer = await db.get<Entity>("offers", item.negotiated.offerId); if (!offer || offer.status !== "accepted" || offer.productId !== item.productId) throw new ApiError(400, "Negotiated offer is invalid"); unitPrice = Number(offer.counterPrice ?? offer.offeredPrice); } await db.update("products", product.id, { stock: Number(product.stock) - item.quantity, soldCount: Number(product.soldCount) + item.quantity }); return { id: id("order-item"), productId: product.id, productName: product.name, productImage: (product.images as string[])[0] ?? "", quantity: item.quantity, unitPrice, negotiated: Boolean(item.negotiated), subtotal: unitPrice * item.quantity }; }));
+    for (const [storeId, items] of groups) { const store = await db.get<Entity>("stores", storeId); const orderItems = await Promise.all(items.map(async (item) => { const product = products.find((p) => p.id === item.productId)!; let unitPrice = Number(product.price); if (item.negotiated) { const offer = await db.get<Entity>("offers", item.negotiated.offerId); if (!offer || offer.status !== "accepted" || offer.productId !== item.productId) throw new ApiError(400, "Negotiated offer is invalid"); unitPrice = Number(offer.counterPrice ?? offer.offeredPrice); } const remainingStock = Number(product.stock) - item.quantity; await db.update("products", product.id, { stock: remainingStock, status: remainingStock === 0 ? "out_of_stock" : product.status, soldCount: Number(product.soldCount) + item.quantity }); return { id: id("order-item"), productId: product.id, productName: product.name, productImage: (product.images as string[])[0] ?? "", quantity: item.quantity, unitPrice, negotiated: Boolean(item.negotiated), subtotal: unitPrice * item.quantity }; }));
       const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0); const deliveryFee = calculateDeliveryFee(subtotal, input.deliveryMethod); const placedAt = now();
       const order = await db.create("orders", { id: id("order"), orderNumber: `VND-${Date.now().toString().slice(-8)}-${createdOrders.length + 1}`, customerId: req.user!.id, customerName: user?.fullName ?? "Customer", customerPhone: user?.phone ?? input.deliveryAddress.phone, storeId, storeName: store?.name ?? "Store", items: orderItems, subtotal, deliveryFee, total: subtotal + deliveryFee, status: "placed", paymentStatus: "pending", paymentMethod: input.paymentMethod, deliveryAddress: input.deliveryAddress, deliveryMethod: input.deliveryMethod, timeline: [{ status: "placed", at: placedAt }], escrow: { status: "not_funded", amount: subtotal + deliveryFee }, placedAt });
       if (store?.ownerId) {
@@ -82,8 +82,10 @@ export const orderRoutes = (db: Database) => {
       for (const item of order.items as Entity[]) {
         const product = await db.get<Entity>("products", String(item.productId));
         if (product) {
+          const restoredStock = Number(product.stock) + Number(item.quantity);
           await db.update("products", product.id, {
-            stock: Number(product.stock) + Number(item.quantity),
+            stock: restoredStock,
+            status: restoredStock > 0 && product.status === "out_of_stock" ? "active" : product.status,
             soldCount: Math.max(0, Number(product.soldCount) - Number(item.quantity))
           });
         }
