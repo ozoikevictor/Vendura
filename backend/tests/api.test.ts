@@ -229,6 +229,14 @@ describe("Vendura API", () => {
     expect(Array.isArray(aiOffers.body.data)).toBe(true);
   });
   it("returns vendor dashboard, AI, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); const overview = await request(app).get("/api/vendor/overview").set(auth(token)); expect(overview.status).toBe(200); expect(overview.body.data.revenueSeries).toHaveLength(7); expect(overview.body.data.ordersSeries).toHaveLength(7); const ai = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "How many products do I have?" }); expect(ai.status).toBe(200); expect(ai.body.data.response).toContain("1 product listing"); expect(ai.body.data.metrics).toEqual(expect.arrayContaining([{ label: "All products", value: "1" }])); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
+  it("creates a payment-due starter subscription for an existing vendor", async () => {
+    await db.remove("subscriptions", "subscription-1");
+    const token = await login("vendor@vendura.test");
+    const response = await request(app).get("/api/vendor/subscription").set(auth(token));
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ vendorId: "user-vendor-1", planId: "starter", status: "past_due", isActive: false });
+    expect(response.body.data.plan).toMatchObject({ productLimit: 20 });
+  });
   it("enforces monthly subscription status and plan product limits", async () => {
     const token = await login("vendor@vendura.test");
     await db.update("subscriptions", "subscription-1", { planId: "starter", status: "active", currentPeriodEnd: new Date(Date.now() + 864e5).toISOString() });

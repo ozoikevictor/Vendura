@@ -113,8 +113,7 @@ export const vendorRoutes = (db: Database) => {
     ok(res, existing ? await db.update("bankAccounts", req.user!.id, account) : await db.create("bankAccounts", { id: req.user!.id, ...account }));
   }));
   router.get("/subscription", asyncRoute(async (req: AuthRequest, res) => {
-    const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id });
-    if (!subscription) throw new ApiError(404, "Subscription not found");
+    const subscription = await findOrCreateSubscription(db, req.user!.id);
     const expired = Date.parse(String(subscription.currentPeriodEnd)) <= Date.now();
     const current = expired && subscription.status !== "past_due"
       ? await db.update<Entity>("subscriptions", subscription.id, { status: "past_due" })
@@ -128,10 +127,10 @@ export const vendorRoutes = (db: Database) => {
     const { planId } = z.object({ planId: z.enum(["starter", "growth", "business"]) }).parse(req.body);
     const plan = getSubscriptionPlan(planId);
     const [subscription, user] = await Promise.all([
-      db.findOne<Entity>("subscriptions", { vendorId: req.user!.id }),
+      findOrCreateSubscription(db, req.user!.id),
       db.get<Entity>("users", req.user!.id),
     ]);
-    if (!plan || !subscription) throw new ApiError(404, "Subscription plan was not found");
+    if (!plan) throw new ApiError(404, "Subscription plan was not found");
     if (!user?.email) throw new ApiError(400, "Your account needs an email address before you can subscribe");
     const reference = `VENDURA-SUB-${Date.now()}-${id("subpay").slice(-8)}`;
     const callbackUrl = `${config.FRONTEND_URL.split(",")[0].replace(/\/$/, "")}/vendor/subscription`;
@@ -172,6 +171,21 @@ export const vendorRoutes = (db: Database) => {
 };
 
 export const planRoutes = (_db: Database) => { const router = Router(); router.get("/plans", asyncRoute(async (_req, res) => ok(res, SUBSCRIPTION_PLANS))); return router; };
+
+async function findOrCreateSubscription(db: Database, vendorId: string) {
+  const existing = await db.findOne<Entity>("subscriptions", { vendorId });
+  if (existing) return existing;
+  const startedAt = now();
+  return db.create<Entity>("subscriptions", {
+    id: id("subscription"),
+    vendorId,
+    planId: "starter",
+    status: "past_due",
+    currentPeriodStart: startedAt,
+    currentPeriodEnd: startedAt,
+    autoRenew: false,
+  });
+}
 
 function monthlyRevenueSeries(sales: Entity[]) {
   const now = new Date();
