@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Heart, ShoppingBasket, MessageSquare, Zap, Check,
+  ArrowLeft, Heart, ShoppingBasket, MessageSquare, Zap, Check,
   Truck, ShieldCheck, Star, ChevronRight, Plus, Minus,
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
@@ -42,6 +42,15 @@ function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariantIdx, setselectedVariantIdx] = useState(0);
   const [qty, setQty] = useState(1);
+  const openedFromAI = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "customer-ai";
+
+  const goBack = () => {
+    if (openedFromAI && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    window.location.assign(openedFromAI ? "/customer/ai" : "/marketplace");
+  };
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", slug],
@@ -129,7 +138,13 @@ function ProductDetailPage() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Link to="/marketplace" className="hover:text-primary">Marketplace</Link>
+          {openedFromAI ? (
+            <button type="button" onClick={goBack} className="flex items-center gap-1 hover:text-primary">
+              <ArrowLeft className="h-4 w-4" /> AI Assistant
+            </button>
+          ) : (
+            <Link to="/marketplace" className="hover:text-primary">Marketplace</Link>
+          )}
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-foreground line-clamp-1">{product.name}</span>
         </div>

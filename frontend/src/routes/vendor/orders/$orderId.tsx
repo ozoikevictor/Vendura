@@ -44,6 +44,15 @@ function VendorOrderDetailPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [showCancel, setShowCancel] = useState(false);
   const [loading, setLoading] = useState(false);
+  const openedFromAI = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "vendor-ai";
+
+  const goBack = () => {
+    if (openedFromAI && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+    window.location.assign(openedFromAI ? "/vendor/ai" : "/vendor/orders");
+  };
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["vendor-order", orderId],
@@ -97,9 +106,9 @@ function VendorOrderDetailPage() {
   return (
     <div className="max-w-3xl space-y-5">
       <div className="flex items-center gap-2">
-        <Link to="/vendor/orders" className="text-muted-foreground hover:text-primary">
+        <button type="button" onClick={goBack} aria-label={openedFromAI ? "Back to AI Business Assistant" : "Back to orders"} className="text-muted-foreground hover:text-primary">
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold text-foreground">{order.orderNumber}</h1>

@@ -46,6 +46,26 @@ const prompts = [
 ];
 
 type ConversationTurn = { message: string; reply: string };
+type CustomerAISession = {
+  message: string;
+  reply: string;
+  matches: AIProduct[];
+  intent: "chat" | "shopping";
+  previousTurns: ConversationTurn[];
+  sessionId: string;
+  saved: string[];
+};
+
+const CUSTOMER_AI_SESSION_KEY = "vendura-customer-ai-chat";
+
+function getSavedCustomerChat(): CustomerAISession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(sessionStorage.getItem(CUSTOMER_AI_SESSION_KEY) ?? "null") as CustomerAISession | null;
+  } catch {
+    return null;
+  }
+}
 
 export function CustomerAIGuard({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -71,6 +91,7 @@ export function CustomerAIPage() {
   const [intent, setIntent] = useState<"chat" | "shopping">("chat");
   const [previousTurns, setPreviousTurns] = useState<ConversationTurn[]>([]);
   const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const [sessionRestored, setSessionRestored] = useState(false);
   const [error, setError] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [listening, setListening] = useState(false);
@@ -83,6 +104,20 @@ export function CustomerAIPage() {
   const imageInput = useRef<HTMLInputElement>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    const savedChat = getSavedCustomerChat();
+    if (savedChat) {
+      setMessage(savedChat.message);
+      setReply(savedChat.reply);
+      setMatches(savedChat.matches);
+      setIntent(savedChat.intent);
+      setPreviousTurns(savedChat.previousTurns);
+      setSessionId(savedChat.sessionId);
+      setSaved(savedChat.saved);
+    }
+    setSessionRestored(true);
+  }, []);
 
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -111,6 +146,19 @@ export function CustomerAIPage() {
     const container = chatScroll.current;
     if (container) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [loading, message, reply, previousTurns]);
+
+  useEffect(() => {
+    if (!sessionRestored) return;
+    sessionStorage.setItem(CUSTOMER_AI_SESSION_KEY, JSON.stringify({
+      message,
+      reply,
+      matches,
+      intent,
+      previousTurns,
+      sessionId,
+      saved,
+    } satisfies CustomerAISession));
+  }, [intent, matches, message, previousTurns, reply, saved, sessionId, sessionRestored]);
 
   const submit = async (value = input) => {
     if (loading || (!value.trim() && !image)) return;
@@ -197,6 +245,7 @@ export function CustomerAIPage() {
           <aside className="hidden w-60 shrink-0 border-r border-border bg-card p-3 sm:block sm:rounded-l-lg sm:border sm:border-r-0">
             <button
               onClick={() => {
+                sessionStorage.removeItem(CUSTOMER_AI_SESSION_KEY);
                 setMessage("");
                 setInput("");
                 setReply("");
@@ -358,13 +407,12 @@ export function CustomerAIPage() {
                                   Condition: New · Delivery 1-2 days
                                 </p>
                                 <div className="mt-3 grid grid-cols-2 gap-2">
-                                  <Link
-                                    to="/product/$slug"
-                                    params={{ slug: product.slug }}
+                                  <a
+                                    href={`/product/${product.slug}?from=customer-ai`}
                                     className="rounded-md border border-border px-2 py-2 text-center text-xs font-semibold"
                                   >
                                     View
-                                  </Link>
+                                  </a>
                                   <button
                                     onClick={() => addItem(product, 1)}
                                     className="flex items-center justify-center gap-1 rounded-md bg-primary px-2 py-2 text-xs font-semibold text-primary-foreground"

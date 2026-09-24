@@ -26,20 +26,41 @@ const vendorPrompts = [
 ];
 
 type VendorTurn = VendorAIResult & { message: string };
+const VENDOR_AI_SESSION_KEY = "vendura-vendor-ai-chat";
+
+function getSavedVendorTurns() {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(sessionStorage.getItem(VENDOR_AI_SESSION_KEY) ?? "[]") as VendorTurn[];
+  } catch {
+    return [];
+  }
+}
 
 export function VendorAIPage() {
   const user = useAuthStore((s) => s.user)!;
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<VendorTurn[]>([]);
+  const [sessionRestored, setSessionRestored] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const chatScroll = useRef<HTMLDivElement>(null);
   const composerInput = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    setTurns(getSavedVendorTurns());
+    setSessionRestored(true);
+  }, []);
+
+  useEffect(() => {
     if (turns.length === 0 && !loading) return;
     chatScroll.current?.scrollTo({ top: chatScroll.current.scrollHeight, behavior: "smooth" });
   }, [turns, loading]);
+
+  useEffect(() => {
+    if (!sessionRestored) return;
+    sessionStorage.setItem(VENDOR_AI_SESSION_KEY, JSON.stringify(turns));
+  }, [sessionRestored, turns]);
 
   const send = async (value = input) => {
     const message = value.trim();
@@ -59,6 +80,7 @@ export function VendorAIPage() {
 
   const newChat = () => {
     setTurns([]);
+    sessionStorage.removeItem(VENDOR_AI_SESSION_KEY);
     setInput("");
     setError("");
   };
@@ -134,7 +156,7 @@ export function VendorAIPage() {
                 {turn.items.length > 0 && (
                   <div className="space-y-2 pl-0 sm:pl-11">
                     {turn.items.map((item) => (
-                      <a key={`${item.type}-${item.id}`} href={item.href} className="flex items-center gap-3 rounded-md border border-border bg-background p-3 hover:border-primary hover:bg-primary-soft">
+                      <a key={`${item.type}-${item.id}`} href={`${item.href}${item.href.includes("?") ? "&" : "?"}from=vendor-ai`} className="flex items-center gap-3 rounded-md border border-border bg-background p-3 hover:border-primary hover:bg-primary-soft">
                         {item.image ? <img src={item.image} alt="" className="h-12 w-12 shrink-0 rounded object-cover" /> : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-primary-soft text-primary"><Boxes className="h-4 w-4" /></span>}
                         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{item.title}</span><span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span><span className="mt-0.5 block text-xs text-muted-foreground">{item.meta}</span></span>
                         <span className="text-xs font-semibold text-primary">Open</span>
