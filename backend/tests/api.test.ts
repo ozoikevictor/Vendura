@@ -162,13 +162,48 @@ describe("Vendura API", () => {
     expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(customer)).send({ text: "Is this available?" })).status).toBe(201);
     const vendorInbox = await request(app).get("/api/conversations").set(auth(vendor));
     expect(vendorInbox.body.data[0]).toMatchObject({ id: conversationId, lastMessage: "Is this available?", unreadForVendor: 1 });
+    const vendorNotifications = await request(app).get("/api/notifications").set(auth(vendor));
+    expect(vendorNotifications.body.data[0]).toMatchObject({
+      type: "new_message",
+      title: "New message from Demo Customer",
+      href: `/vendor/messages/${conversationId}`,
+      read: false,
+    });
 
     expect((await request(app).post(`/api/conversations/${conversationId}/messages`).set(auth(vendor)).send({ text: "Yes, it is available." })).status).toBe(201);
     const customerInbox = await request(app).get("/api/conversations").set(auth(customer));
     expect(customerInbox.body.data[0]).toMatchObject({ id: conversationId, lastMessage: "Yes, it is available.", unreadForCustomer: 1 });
+    const customerNotifications = await request(app).get("/api/notifications").set(auth(customer));
+    expect(customerNotifications.body.data[0]).toMatchObject({
+      type: "new_message",
+      title: "New message from TechNaija",
+      href: `/messages/${conversationId}`,
+      read: false,
+    });
     const messages = await request(app).get(`/api/conversations/${conversationId}/messages`).set(auth(customer));
     expect(messages.body.data.map((message: { text: string }) => message.text)).toEqual(["Is this available?", "Yes, it is available."]);
     expect((await request(app).post(`/api/conversations/${conversationId}/offers`).set(auth(customer)).send({ offeredPrice: 220000 })).status).toBe(201);
+  });
+  it("derives public store product counts from live active listings", async () => {
+    await db.update("stores", "store-technaija", { productCount: 999 });
+    await db.create("products", {
+      id: "draft-count-test",
+      storeId: "store-technaija",
+      name: "Unpublished draft",
+      description: "This draft should not appear publicly",
+      status: "draft",
+      categoryId: "cat-electronics",
+      tags: [],
+      images: [],
+      price: 1,
+      stock: 1,
+      createdAt: new Date().toISOString(),
+    });
+    const storefront = await request(app).get("/api/storefronts/technaija");
+    expect(storefront.body.data.store.productCount).toBe(storefront.body.data.products.length);
+    expect(storefront.body.data.store.productCount).toBe(1);
+    const stores = await request(app).get("/api/stores");
+    expect(stores.body.data.find((store: { id: string }) => store.id === "store-technaija").productCount).toBe(1);
   });
   it("searches live products through the authenticated shopping assistant", async () => {
     expect((await request(app).post("/api/ai/search").send({ message: "I need a phone" })).status).toBe(401);

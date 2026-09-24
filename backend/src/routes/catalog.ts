@@ -38,7 +38,12 @@ export const catalogRoutes = (db: Database) => {
     ok(res, item);
   }));
   router.get("/stores", asyncRoute(async (req, res) => {
-    let items = await db.list<Entity>("stores");
+    const [stores, products] = await Promise.all([
+      db.list<Entity>("stores"),
+      db.list<Entity>("products"),
+    ]);
+    const activeCounts = countActiveProductsByStore(products);
+    let items: Entity[] = stores.map((store) => ({ ...store, productCount: activeCounts.get(store.id) ?? 0 }));
     if (req.query.featured === "true") items = items.filter((item) => item.verified).slice(0, Number(req.query.limit ?? 6));
     res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=300");
     ok(res, items);
@@ -46,19 +51,21 @@ export const catalogRoutes = (db: Database) => {
   router.get("/stores/slug/:slug", asyncRoute(async (req, res) => {
     const item = await db.findOne("stores", { slug: req.params.slug });
     if (!item) throw new ApiError(404, "Store not found");
-    ok(res, item);
+    const products = (await db.list<Entity>("products")).filter((product) => product.storeId === item.id && product.status === "active");
+    ok(res, { ...item, productCount: products.length });
   }));
   router.get("/stores/:id", asyncRoute(async (req, res) => {
     const item = await db.get("stores", String(req.params.id));
     if (!item) throw new ApiError(404, "Store not found");
-    ok(res, item);
+    const products = (await db.list<Entity>("products")).filter((product) => product.storeId === item.id && product.status === "active");
+    ok(res, { ...item, productCount: products.length });
   }));
   router.get("/storefronts/:slug", asyncRoute(async (req, res) => {
     const store = await db.findOne<Entity>("stores", { slug: req.params.slug });
     if (!store) throw new ApiError(404, "Storefront not found");
     const products = (await db.list<Entity>("products"))
       .filter((product) => product.storeId === store.id && product.status === "active");
-    ok(res, { store, products });
+    ok(res, { store: { ...store, productCount: products.length }, products });
   }));
   router.get("/products", asyncRoute(async (req, res) => {
     const query = z.object({ q: z.string().optional(), categorySlug: z.string().optional(), subcategorySlug: z.string().optional(), storeId: z.string().optional(), minPrice: z.coerce.number().optional(), maxPrice: z.coerce.number().optional(), negotiableOnly: z.enum(["true", "false"]).optional(), inStockOnly: z.enum(["true", "false"]).optional(), sort: z.enum(["relevance", "newest", "price_asc", "price_desc", "rating", "popular"]).default("relevance"), page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().min(1).max(100).default(24) }).parse(req.query);
@@ -159,4 +166,14 @@ function mixProductsByStore(products: Entity[]) {
     }
   }
   return mixed;
+}
+
+function countActiveProductsByStore(products: Entity[]) {
+  const counts = new Map<string, number>();
+  for (const product of products) {
+    if (product.status !== "active") continue;
+    const storeId = String(product.storeId);
+    counts.set(storeId, (counts.get(storeId) ?? 0) + 1);
+  }
+  return counts;
 }
