@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowBadge } from "@/components/shared/EscrowBadge";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerOrders } from "@/services/orderService";
 import { useAuthStore } from "@/store/auth";
@@ -38,9 +39,7 @@ function OrdersPage() {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-4xl px-4 py-6 space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl bg-muted" />)}
-        </div>
+        <DataLoader label="Loading your orders" className="min-h-[60dvh]" />
         <SiteFooter />
       </div>
     );

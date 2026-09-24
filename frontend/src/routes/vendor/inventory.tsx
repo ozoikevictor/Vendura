@@ -3,6 +3,7 @@ import { Boxes, AlertTriangle, CheckCircle2, XCircle, Plus } from "lucide-react"
 import { useQuery } from "@tanstack/react-query";
 import { getVendorProducts } from "@/services/productService";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { CURRENT_VENDOR_STORE_ID } from "@/data/stores";
 import { formatNaira } from "@/utils/format";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,7 @@ function VendorInventoryPage() {
     { id: "outofstock", label: "Out of Stock", count: outOfStock, icon: <XCircle className="h-4 w-4" />, tint: "text-destructive" },
   ];
 
-  if (isLoading) return <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />)}</div>;
+  if (isLoading) return <DataLoader label="Loading inventory" className="min-h-72" />;
 
   return (
     <div className="space-y-5">

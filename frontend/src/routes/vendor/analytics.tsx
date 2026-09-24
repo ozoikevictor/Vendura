@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getVendorOverview } from "@/services/vendorService";
 import { formatNaira } from "@/utils/format";
 import { cn } from "@/lib/utils";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/vendor/analytics")({
   head: () => ({
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/vendor/analytics")({
 function VendorAnalyticsPage() {
   const { data: ov, isLoading } = useQuery({ queryKey: ["vendor-overview"], queryFn: getVendorOverview });
 
-  if (isLoading || !ov) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+  if (isLoading || !ov) return <DataLoader label="Loading analytics" className="min-h-72" />;
 
   const maxRev = Math.max(1, ...ov.revenueSeries.map((d) => d.value));
   const maxOrders = Math.max(1, ...ov.ordersSeries.map((d) => d.value));

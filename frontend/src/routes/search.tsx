@@ -4,7 +4,7 @@ import { Search as SearchIcon } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
@@ -91,9 +91,7 @@ function SearchPage() {
             icon={<SearchIcon className="h-8 w-8" />}
           />
         ) : isLoading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-          </div>
+          <DataLoader label="Searching products" className="min-h-80" />
         ) : products.length === 0 ? (
           <EmptyState
             title={`No results for "${q}"`}

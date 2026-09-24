@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { useQuery } from "@tanstack/react-query";
@@ -114,9 +114,7 @@ function CategoryDetailPage() {
         {/* Products */}
         <div className="mt-6">
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-            </div>
+            <DataLoader label="Loading category products" className="min-h-80" />
           ) : products.length === 0 ? (
             <EmptyState title="No products in this category" description="Check back later or browse other categories." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">Browse categories</Link>} />
           ) : (

@@ -6,7 +6,7 @@ import {
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { useQuery } from "@tanstack/react-query";
@@ -62,12 +62,7 @@ function StorePage() {
     return (
       <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="h-40 animate-pulse rounded-xl bg-muted" />
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-          </div>
-        </div>
+        <DataLoader label="Loading storefront" className="min-h-[65dvh] flex-1" />
         <SiteFooter />
       </div>
     );
@@ -159,9 +154,7 @@ function StorePage() {
         <div id="store-products" className="mt-8 scroll-mt-28">
           <h2 className="font-display text-lg font-bold text-foreground">Products</h2>
           {productsLoading ? (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-            </div>
+            <DataLoader label="Loading store products" className="min-h-72" />
           ) : !products || products.length === 0 ? (
             <EmptyState title="No products yet" description="This store hasn't listed any products." />
           ) : (

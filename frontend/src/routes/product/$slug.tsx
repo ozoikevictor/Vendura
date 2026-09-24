@@ -10,7 +10,7 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { PriceTag } from "@/components/shared/PriceTag";
 import { QuantityStepper } from "@/components/shared/QuantityStepper";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery } from "@tanstack/react-query";
 import { getProductBySlug, getProductReviews, getRelatedProducts } from "@/services/productService";
 import { getStoreById } from "@/services/storeService";
@@ -81,16 +81,7 @@ function ProductDetailPage() {
     return (
       <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="aspect-square animate-pulse rounded-xl bg-muted" />
-            <div className="space-y-4">
-              <div className="h-8 w-3/4 animate-pulse rounded bg-muted" />
-              <div className="h-6 w-1/2 animate-pulse rounded bg-muted" />
-              <div className="h-32 animate-pulse rounded bg-muted" />
-            </div>
-          </div>
-        </div>
+        <DataLoader label="Loading product details" className="min-h-[65dvh] flex-1" />
         <SiteFooter />
       </div>
     );

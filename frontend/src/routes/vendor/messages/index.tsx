@@ -3,6 +3,7 @@ import { MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getVendorConversations } from "@/services/messageService";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { CURRENT_VENDOR_STORE_ID } from "@/data/stores";
 import { timeAgo } from "@/utils/format";
 
@@ -28,7 +29,7 @@ function VendorMessagesPage() {
   });
 
   if (isLoading) {
-    return <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />)}</div>;
+    return <DataLoader label="Loading messages" className="min-h-72" />;
   }
 
   if (!conversations || conversations.length === 0) {

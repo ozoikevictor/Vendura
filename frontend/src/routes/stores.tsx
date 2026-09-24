@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { StoreCard } from "@/components/shared/StoreCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { getStores } from "@/services/storeService";
 
 export const Route = createFileRoute("/stores")({
@@ -65,11 +66,7 @@ function StoresPage() {
 
         <div className="mt-6">
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="h-44 animate-pulse rounded-xl border border-border bg-card" />
-              ))}
-            </div>
+            <DataLoader label="Loading stores" className="min-h-80" />
           ) : filteredStores.length === 0 ? (
             <EmptyState
               title="No stores found"

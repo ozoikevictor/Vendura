@@ -6,6 +6,7 @@ import { getVendorOrders, ORDER_STATUS_FLOW } from "@/services/orderService";
 import { ORDER_STATUS_LABEL } from "@/data/orders";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useAuthStore } from "@/store/auth";
 import { formatNaira, formatDate } from "@/utils/format";
 import { cn } from "@/lib/utils";
@@ -124,11 +125,7 @@ function VendorOrdersPage() {
           </button>
         </div>
       ) : isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
+        <DataLoader label="Loading orders" className="min-h-72" />
       ) : !filtered || filtered.length === 0 ? (
         <EmptyState
           icon={<Package className="h-7 w-7" />}

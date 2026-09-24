@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import type { ProductQuery } from "@/types";
@@ -256,14 +257,7 @@ function MarketplacePage() {
 
             {/* Grid */}
             {isLoading ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-72 animate-pulse rounded-xl border border-border bg-card"
-                  />
-                ))}
-              </div>
+              <DataLoader label="Loading marketplace products" className="min-h-80" />
             ) : products.length === 0 ? (
               <EmptyState
                 title="No products found"

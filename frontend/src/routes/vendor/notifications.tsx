@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckCheck } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { NotificationList } from "@/components/shared/NotificationList";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/notificationService";
 import { useAuthStore } from "@/store/auth";
 import type { Notification } from "@/types";
@@ -20,7 +21,7 @@ function VendorNotificationsPage() {
   const unread = notifications.filter((notification) => !notification.read).length;
   const openNotification = (notification: Notification) => { if (!notification.read) readOne.mutate(notification.id); };
 
-  if (isLoading) return <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-lg bg-muted" />)}</div>;
+  if (isLoading) return <DataLoader label="Loading notifications" className="min-h-72" />;
   return <div className="space-y-5">
     <div className="flex items-start justify-between gap-4"><div><h1 className="font-display text-2xl font-bold text-foreground">Notifications</h1><p className="text-sm text-muted-foreground">{unread} unread, {notifications.length} total</p></div>
       {unread > 0 && <button type="button" onClick={() => readAll.mutate()} className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:bg-accent"><CheckCheck className="h-4 w-4" /> Mark all as read</button>}

@@ -6,6 +6,7 @@ import { getDeliverySettings, updateDeliverySettings } from "@/services/vendorSe
 import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/vendor/delivery")({
   head: () => ({
@@ -31,7 +32,7 @@ function VendorDeliveryPage() {
     if (settings) setForm({ pickupAvailable: settings.pickupAvailable, pickupAddress: settings.pickupAddress ?? "", freeDeliveryAbove: settings.freeDeliveryAbove ?? 0 });
   }, [settings]);
 
-  if (!settings) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+  if (!settings) return <DataLoader label="Loading delivery settings" className="min-h-72" />;
 
   async function handleSave() {
     setSaving(true);

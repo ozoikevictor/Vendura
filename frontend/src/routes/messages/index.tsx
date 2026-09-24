@@ -3,6 +3,7 @@ import { MessageSquare } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerConversations } from "@/services/messageService";
 import { useAuthStore } from "@/store/auth";
@@ -35,9 +36,7 @@ function MessagesPage() {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-2xl px-4 py-6 space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />)}
-        </div>
+        <DataLoader label="Loading messages" className="min-h-[60dvh]" />
         <SiteFooter />
       </div>
     );

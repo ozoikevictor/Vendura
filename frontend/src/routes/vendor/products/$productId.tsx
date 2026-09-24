@@ -8,6 +8,7 @@ import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/services/api";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/vendor/products/$productId")({
   head: () => ({
@@ -89,7 +90,7 @@ function EditProductPage() {
   }
 
   if (productsLoading) {
-    return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
+    return <DataLoader label="Loading product" className="min-h-72" />;
   }
 
   if (!product) {

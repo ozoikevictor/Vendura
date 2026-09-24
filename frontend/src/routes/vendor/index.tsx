@@ -14,6 +14,7 @@ import { getVendorOverview, getVendorBalance } from "@/services/vendorService";
 import { getVendorOrders } from "@/services/orderService";
 import { OrderStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { StoreLinkCard } from "@/components/vendor/StoreLinkCard";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { getVendorStore } from "@/services/storeService";
 import { useAuthStore } from "@/store/auth";
 import { formatNaira, formatDate } from "@/utils/format";
@@ -63,16 +64,7 @@ function VendorOverviewPage() {
   });
 
   if (isLoading || storeLoading || !overview || !store) {
-    return (
-      <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-muted" />
-          ))}
-        </div>
-        <div className="h-64 animate-pulse rounded-xl bg-muted" />
-      </div>
-    );
+    return <DataLoader label="Loading dashboard" className="min-h-[65dvh]" />;
   }
 
   const stats = [

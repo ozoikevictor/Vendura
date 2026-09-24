@@ -16,6 +16,7 @@ import {
   updateVendorOrderStatus,
   ORDER_STATUS_FLOW,
 } from "@/services/orderService";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { ORDER_STATUS_LABEL } from "@/data/orders";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowBadge } from "@/components/shared/EscrowBadge";
@@ -63,7 +64,7 @@ function VendorOrderDetailPage() {
   });
 
   if (isLoading) {
-    return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+    return <DataLoader label="Loading order details" className="min-h-72" />;
   }
   if (!order) {
     return (

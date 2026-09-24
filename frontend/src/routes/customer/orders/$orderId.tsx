@@ -4,6 +4,7 @@ import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowPanel } from "@/components/shared/EscrowPanel";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getOrder, ORDER_STATUS_FLOW } from "@/services/orderService";
 import { initializePaystackPayment } from "@/services/paymentService";
@@ -61,9 +62,7 @@ function OrderDetailPage() {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
-        <div className="mx-auto max-w-3xl px-4 py-6">
-          <div className="h-64 animate-pulse rounded-xl bg-muted" />
-        </div>
+        <DataLoader label="Loading order details" className="min-h-[60dvh]" />
         <SiteFooter />
       </div>
     );

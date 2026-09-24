@@ -10,6 +10,7 @@ import { formatNaira, formatDateTime } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/services/api";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/vendor/payouts")({
   head: () => ({
@@ -66,7 +67,7 @@ function VendorPayoutsPage() {
     finally { setSavingBank(false); }
   }
 
-  if (!balance || bank === undefined) return <div className="h-64 animate-pulse rounded-xl bg-muted" />;
+  if (!balance || bank === undefined) return <DataLoader label="Loading payout information" className="min-h-72" />;
 
   return (
     <div className="min-w-0 max-w-full space-y-5 overflow-x-hidden">

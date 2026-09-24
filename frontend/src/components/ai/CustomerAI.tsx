@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { formatNaira } from "@/utils/format";
@@ -868,11 +869,7 @@ export function CustomerAIListPage({ kind }: { kind: "history" | "requests" | "o
           </p>
           <div className="mt-6 space-y-3">
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="h-24 animate-pulse rounded-lg bg-muted" />
-                ))}
-              </div>
+              <DataLoader label={`Loading ${title.toLowerCase()}`} className="min-h-72" />
             ) : loadError ? (
               <div className="rounded-lg border border-destructive/20 bg-destructive-soft p-4 text-sm text-destructive">
                 {loadError}

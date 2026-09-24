@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getVendorProducts, deleteVendorProduct, duplicateVendorProduct,
 } from "@/services/productService";
-import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CURRENT_VENDOR_STORE_ID } from "@/data/stores";
 import { formatNaira } from "@/utils/format";
@@ -117,9 +117,7 @@ function VendorProductsPage() {
 
       {/* Product list */}
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => <ProductCardSkeleton key={i} />)}
-        </div>
+        <DataLoader label="Loading products" className="min-h-72" />
       ) : !filtered || filtered.length === 0 ? (
         <EmptyState
           icon={<Package className="h-7 w-7" />}
