@@ -212,6 +212,22 @@ describe("Vendura API", () => {
     expect(Array.isArray(aiOffers.body.data)).toBe(true);
   });
   it("returns vendor dashboard, AI, settings, subscription, and finance data", async () => { const token = await login("vendor@vendura.test"); const overview = await request(app).get("/api/vendor/overview").set(auth(token)); expect(overview.status).toBe(200); expect(overview.body.data.revenueSeries).toHaveLength(7); expect(overview.body.data.ordersSeries).toHaveLength(7); const ai = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "How many products do I have?" }); expect(ai.status).toBe(200); expect(ai.body.data.response).toContain("1 product listing"); expect(ai.body.data.metrics).toEqual(expect.arrayContaining([{ label: "All products", value: "1" }])); expect((await request(app).get("/api/vendor/delivery-settings").set(auth(token))).body.data.pickupAvailable).toBe(true); expect((await request(app).get("/api/vendor/subscription").set(auth(token))).body.data.planId).toBe("growth"); expect((await request(app).get("/api/plans")).body.data).toHaveLength(3); });
+  it("answers live vendor business questions and ranks newest orders first", async () => {
+    const token = await login("vendor@vendura.test");
+    await db.create("orders", { id: "order-old", orderNumber: "VND-OLD", storeId: "store-technaija", customerId: "customer-old", customerName: "Old Customer", total: 10000, status: "placed", placedAt: "2026-01-01T08:00:00.000Z" });
+    await db.create("orders", { id: "order-new", orderNumber: "VND-NEW", storeId: "store-technaija", customerId: "customer-new", customerName: "New Customer", total: 20000, status: "placed", placedAt: "2026-09-24T08:00:00.000Z" });
+    await db.update("products", "product-phone-1", { stock: 0, status: "out_of_stock" });
+    await db.create("payouts", { id: "payout-ai", vendorId: "user-vendor-1", amount: 5000, status: "paid", requestedAt: new Date().toISOString() });
+    const orders = await request(app).get("/api/vendor/orders").set(auth(token));
+    expect(orders.body.data.map((order: { id: string }) => order.id)).toEqual(["order-new", "order-old"]);
+    const latest = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "What is my newest order?" });
+    expect(latest.body.data.response).toContain("VND-NEW");
+    expect(latest.body.data.items[0]).toMatchObject({ id: "order-new", type: "order" });
+    const stock = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "Which products are out of stock?" });
+    expect(stock.body.data.items[0]).toMatchObject({ id: "product-phone-1", type: "product" });
+    const payout = await request(app).post("/api/vendor/ai/search").set(auth(token)).send({ message: "Show my payouts for today" });
+    expect(payout.body.data.metrics).toEqual(expect.arrayContaining([{ label: "Amount", value: "₦5,000" }]));
+  });
   it("lists banks and verifies a seller bank account through Paystack", async () => {
     const originalKey = config.PAYSTACK_SECRET_KEY;
     const originalFetch = globalThis.fetch;

@@ -60,7 +60,7 @@ function VendorOrdersPage() {
       o.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
       o.customerName.toLowerCase().includes(search.toLowerCase());
     return matchesTab && matchesSearch;
-  });
+  }).sort((a, b) => +new Date(b.placedAt) - +new Date(a.placedAt));
 
   return (
     <div className="space-y-5">

@@ -17,10 +17,11 @@ import { getErrorMessage } from "@/services/api";
 import { searchVendorAI, type VendorAIResult } from "@/services/vendorService";
 
 const vendorPrompts = [
-  "Show me products running low on stock",
-  "Summarize my orders",
-  "How much revenue did I make this month?",
-  "Which products are selling the most?",
+  "What is my total revenue?",
+  "Show my payouts for today",
+  "What is my newest order?",
+  "Which products are out of stock?",
+  "What do I need to restock?",
   "Show buyer requests matching my products",
 ];
 
@@ -36,6 +37,7 @@ export function VendorAIPage() {
   const composerInput = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (turns.length === 0 && !loading) return;
     chatScroll.current?.scrollTo({ top: chatScroll.current.scrollHeight, behavior: "smooth" });
   }, [turns, loading]);
 
@@ -62,7 +64,7 @@ export function VendorAIPage() {
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-lg border border-border bg-card">
+    <div className="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden bg-card sm:rounded-lg sm:border sm:border-border">
       <header className="hidden h-16 shrink-0 items-center gap-3 border-b border-border px-5 sm:flex">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
           <Sparkles className="h-5 w-5" />
@@ -147,7 +149,7 @@ export function VendorAIPage() {
         {loading && <div className="mx-auto flex max-w-3xl items-center gap-3 text-sm text-muted-foreground"><span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary-soft text-primary"><Sparkles className="h-4 w-4 animate-pulse" /></span>Checking your store data...</div>}
       </div>
 
-      <form onSubmit={(event: FormEvent) => { event.preventDefault(); send(); }} className="shrink-0 border-t border-border bg-card p-2 sm:p-4">
+      <form onSubmit={(event: FormEvent) => { event.preventDefault(); send(); }} className="shrink-0 border-t border-border bg-card p-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4">
         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-lg border border-input bg-background p-2">
           <textarea ref={composerInput} value={input} onPointerDown={(event) => { if (document.activeElement !== composerInput.current) { event.preventDefault(); composerInput.current?.focus({ preventScroll: true }); } }} onFocus={() => { requestAnimationFrame(() => chatScroll.current?.scrollTo({ top: chatScroll.current.scrollHeight })); }} onChange={(event) => { setInput(event.target.value); if (error) setError(""); }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} rows={1} placeholder="Ask about your store..." className="max-h-28 min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-2 py-2 text-base outline-none sm:text-sm" />
           <button type="submit" disabled={loading || !input.trim()} aria-label="Send" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground disabled:opacity-40"><Send className="h-4 w-4" /></button>

@@ -32,7 +32,7 @@ export const orderRoutes = (db: Database) => {
   }));
   router.get("/orders", authorize("customer", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((o) => req.user!.role === "admin" || o.customerId === req.user!.id))));
   router.get("/orders/:id", asyncRoute(async (req: AuthRequest, res) => ok(res, await accessibleOrder(db, req.params.id, req))));
-  router.get("/vendor/orders", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((o) => req.user!.role === "admin" || o.storeId === req.user!.storeId))));
+  router.get("/vendor/orders", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("orders")).filter((o) => req.user!.role === "admin" || o.storeId === req.user!.storeId).sort((a, b) => +new Date(String(b.placedAt ?? b.createdAt ?? "")) - +new Date(String(a.placedAt ?? a.createdAt ?? ""))))));
   router.patch("/vendor/orders/:id/status", authorize("vendor", "admin"), asyncRoute(async (req: AuthRequest, res) => {
     const order = await accessibleOrder(db, req.params.id, req);
     const action = z.discriminatedUnion("type", [

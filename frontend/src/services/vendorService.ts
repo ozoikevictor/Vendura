@@ -15,7 +15,7 @@ import { api, json } from "./api";
 
 export interface VendorAIResultItem {
   id: string;
-  type: "product" | "order" | "request";
+  type: "product" | "order" | "request" | "payout";
   title: string;
   subtitle: string;
   meta: string;

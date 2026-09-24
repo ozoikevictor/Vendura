@@ -57,7 +57,6 @@ export function VendorLayout() {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const [searchValue, setSearchValue] = useState("");
-  const [mobileViewport, setMobileViewport] = useState<{ height: number; offsetTop: number } | null>(null);
   const [authHydrated, setAuthHydrated] = useState(useAuthStore.persist.hasHydrated());
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
@@ -83,26 +82,6 @@ export function VendorLayout() {
 
   useEffect(() => {
     return useAuthStore.persist.onFinishHydration(() => setAuthHydrated(true));
-  }, []);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    const syncViewport = () => {
-      if (!viewport || !window.matchMedia("(max-width: 1023px)").matches) {
-        setMobileViewport(null);
-        return;
-      }
-      setMobileViewport({ height: viewport.height, offsetTop: viewport.offsetTop });
-    };
-    syncViewport();
-    viewport?.addEventListener("resize", syncViewport);
-    viewport?.addEventListener("scroll", syncViewport);
-    window.addEventListener("resize", syncViewport);
-    return () => {
-      viewport?.removeEventListener("resize", syncViewport);
-      viewport?.removeEventListener("scroll", syncViewport);
-      window.removeEventListener("resize", syncViewport);
-    };
   }, []);
 
   useEffect(() => {
@@ -139,10 +118,7 @@ export function VendorLayout() {
   }
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 h-[100dvh] overflow-hidden bg-background"
-      style={mobileViewport ? { height: `${mobileViewport.height}px`, transform: `translateY(${mobileViewport.offsetTop}px)` } : undefined}
-    >
+    <div className="fixed inset-0 overflow-hidden bg-background">
       {/* Desktop sidebar */}
       <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
         <VendorSidebar collapsed={vendorSidebarCollapsed} storeSlug={store?.slug} />
@@ -243,8 +219,10 @@ export function VendorLayout() {
 
         {/* Page content */}
         <main className={cn(
-          "h-[calc(100dvh-4rem)] overscroll-contain p-4 sm:p-6 lg:p-8",
-          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" ? "overflow-hidden" : "overflow-y-auto",
+          "h-[calc(100dvh-4rem)] overscroll-contain",
+          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/"
+            ? "overflow-hidden p-0 sm:p-4 lg:p-6"
+            : "overflow-y-auto p-4 sm:p-6 lg:p-8",
         )}>
           <Outlet />
         </main>

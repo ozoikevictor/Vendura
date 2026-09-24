@@ -46,18 +46,20 @@ export const vendorRoutes = (db: Database) => {
   }));
   router.post("/ai/search", asyncRoute(async (req: AuthRequest, res) => {
     const { message } = z.object({ message: z.string().trim().min(1).max(1000) }).parse(req.body);
-    const [store, allProducts, allOrders, allTransactions, allRequests] = await Promise.all([
+    const [store, allProducts, allOrders, allTransactions, allRequests, allPayouts] = await Promise.all([
       db.get<Entity>("stores", req.user!.storeId!),
       db.list<Entity>("products"),
       db.list<Entity>("orders"),
       db.list<Entity>("transactions"),
       db.list<Entity>("buyerRequests"),
+      db.list<Entity>("payouts"),
     ]);
     if (!store) throw new ApiError(404, "Store not found");
     const products = allProducts.filter((product) => product.storeId === store.id);
     const orders = allOrders.filter((order) => order.storeId === store.id);
     const transactions = allTransactions.filter((transaction) => transaction.vendorId === req.user!.id && transaction.status !== "reversed");
-    const result = answerVendorAI(message, store, products, orders, transactions, allRequests);
+    const payouts = allPayouts.filter((payout) => payout.vendorId === req.user!.id);
+    const result = answerVendorAI(message, store, products, orders, transactions, allRequests, payouts);
     ok(res, result);
   }));
   router.get("/transactions", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id))));
@@ -150,28 +152,50 @@ function weeklyOrderSeries(orders: Entity[]) {
   });
 }
 
-function answerVendorAI(message: string, store: Entity, products: Entity[], orders: Entity[], transactions: Entity[], requests: Entity[]) {
+function answerVendorAI(message: string, store: Entity, products: Entity[], orders: Entity[], transactions: Entity[], requests: Entity[], payouts: Entity[]) {
   const query = message.toLowerCase();
   const activeProducts = products.filter((product) => product.status === "active");
   const lowStock = activeProducts
     .filter((product) => Number(product.stock) <= Number(product.lowStockThreshold ?? 0))
     .sort((a, b) => Number(a.stock) - Number(b.stock));
-  const pendingOrders = orders.filter((order) => ["placed", "payment_confirmed", "processing"].includes(String(order.status)));
+  const rankedOrders = [...orders].sort((a, b) => entityTime(b, "placedAt") - entityTime(a, "placedAt"));
+  const pendingOrders = rankedOrders.filter((order) => ["placed", "payment_confirmed", "processing"].includes(String(order.status)));
+  const outOfStock = products.filter((product) => Number(product.stock) <= 0 || product.status === "out_of_stock");
+  const hiddenProducts = products.filter((product) => product.status !== "active");
   const sales = transactions.filter((transaction) => transaction.type === "sale");
   const period = /today/.test(query) ? "today" : /week/.test(query) ? "week" : /month/.test(query) ? "month" : "all";
   const periodSales = sales.filter((transaction) => isInPeriod(String(transaction.createdAt ?? ""), period));
   const revenue = periodSales.reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
+  if (/payout|withdrawal/.test(query)) {
+    const periodPayouts = payouts
+      .filter((payout) => isInPeriod(String(payout.requestedAt ?? ""), period))
+      .sort((a, b) => entityTime(b, "requestedAt") - entityTime(a, "requestedAt"));
+    const total = periodPayouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
+    const label = period === "today" ? "today" : period === "week" ? "this week" : period === "month" ? "this month" : "in total";
+    return vendorAIResult(`You have ${periodPayouts.length} ${periodPayouts.length === 1 ? "payout" : "payouts"} ${label}, worth ${formatNaira(total)}.`, periodPayouts.slice(0, 8).map((payout) => ({ id: String(payout.id), type: "payout", title: formatNaira(Number(payout.amount)), subtitle: humanize(String(payout.status)), meta: formatBusinessDate(String(payout.requestedAt)), href: "/vendor/payouts" })), [
+      { label: "Payouts", value: String(periodPayouts.length) },
+      { label: "Amount", value: formatNaira(total) },
+    ]);
+  }
+
   if (/^(hi|hello|hey|good morning|good afternoon|good evening)[!.?\s]*$/i.test(message.trim())) {
     return vendorAIResult(`Hello! I can help you understand ${store.name}'s products, orders, stock, revenue, customers, and buyer opportunities. What would you like to check?`);
   }
   if (/low.?stock|running low|restock|inventory alert/.test(query)) {
+    const restock = [...new Map([...outOfStock, ...lowStock].map((product) => [product.id, product])).values()];
     return vendorAIResult(
-      lowStock.length > 0
-        ? `${lowStock.length} ${lowStock.length === 1 ? "product needs" : "products need"} attention. ${lowStock.slice(0, 4).map((product) => `${product.name} has ${product.stock} left`).join("; ")}.`
+      restock.length > 0
+        ? `${restock.length} ${restock.length === 1 ? "product needs" : "products need"} restocking. ${restock.slice(0, 4).map((product) => `${product.name} has ${product.stock} left`).join("; ")}.`
         : "None of your active products are currently at or below their low-stock threshold.",
-      lowStock.slice(0, 8).map(productAIItem),
+      restock.slice(0, 8).map(productAIItem),
     );
+  }
+  if (/out of stock|not available|unavailable|sold out|zero stock/.test(query)) {
+    return vendorAIResult(outOfStock.length > 0 ? `${outOfStock.length} ${outOfStock.length === 1 ? "product is" : "products are"} currently out of stock.` : "None of your products are currently out of stock.", outOfStock.slice(0, 8).map(productAIItem));
+  }
+  if (/not (on|showing|listed)|missing.*(page|store)|draft|inactive|archived/.test(query)) {
+    return vendorAIResult(hiddenProducts.length > 0 ? `${hiddenProducts.length} ${hiddenProducts.length === 1 ? "product is" : "products are"} not visible as active listings.` : "All of your product listings are active and visible.", hiddenProducts.slice(0, 8).map(productAIItem));
   }
   if (/best.?sell|top product|selling (the )?most|most sold/.test(query)) {
     const top = [...activeProducts].sort((a, b) => Number(b.soldCount ?? 0) - Number(a.soldCount ?? 0)).slice(0, 5);
@@ -202,12 +226,15 @@ function answerVendorAI(message: string, store: Entity, products: Entity[], orde
     ]);
   }
   if (/order/.test(query)) {
-    const relevant = /pending|new|summar/.test(query) ? pendingOrders : orders;
+    const todayOrders = rankedOrders.filter((order) => isInPeriod(String(order.placedAt ?? ""), "today"));
+    const wantsLatest = /latest|recent|newest|just received|order now|last order/.test(query);
+    const wantsOpen = /pending|new orders?|summar/.test(query);
+    const relevant = wantsLatest ? rankedOrders.slice(0, 1) : /today/.test(query) ? todayOrders : wantsOpen ? pendingOrders : rankedOrders;
     return vendorAIResult(
       relevant.length > 0
-        ? `You have ${relevant.length} ${/pending|new|summar/.test(query) ? "open" : "total"} ${relevant.length === 1 ? "order" : "orders"}.`
-        : `You do not have any ${/pending|new|summar/.test(query) ? "open " : ""}orders right now.`,
-      relevant.slice(0, 8).map((order) => ({ id: String(order.id), type: "order", title: String(order.orderNumber), subtitle: `${order.customerName ?? "Customer"} · ${formatNaira(Number(order.total))}`, meta: humanize(String(order.status)), href: `/vendor/orders/${order.id}` })),
+        ? wantsLatest ? `Your newest order is ${relevant[0].orderNumber} from ${relevant[0].customerName ?? "a customer"}, worth ${formatNaira(Number(relevant[0].total))}.` : `You have ${relevant.length} ${/today/.test(query) ? "today" : wantsOpen ? "open" : "total"} ${relevant.length === 1 ? "order" : "orders"}.`
+        : wantsLatest ? "You do not have any orders yet." : `You do not have any ${wantsOpen ? "open " : ""}orders right now.`,
+      relevant.slice(0, 8).map((order) => ({ id: String(order.id), type: "order", title: String(order.orderNumber), subtitle: `${order.customerName ?? "Customer"} · ${formatNaira(Number(order.total))}`, meta: `${humanize(String(order.status))} · ${formatBusinessDate(String(order.placedAt))}`, href: `/vendor/orders/${order.id}` })),
     );
   }
   if (/customer/.test(query)) {
@@ -234,6 +261,16 @@ function vendorAIResult(response: string, items: Array<Record<string, unknown>> 
 
 function productAIItem(product: Entity) {
   return { id: String(product.id), type: "product", title: String(product.name), subtitle: formatNaira(Number(product.price)), meta: `${Number(product.stock)} in stock · ${Number(product.soldCount ?? 0)} sold`, image: (product.images as string[] | undefined)?.[0], href: `/vendor/products/${product.id}` };
+}
+
+function entityTime(entity: Entity, field: string) {
+  const value = new Date(String(entity[field] ?? entity.createdAt ?? "")).getTime();
+  return Number.isFinite(value) ? value : 0;
+}
+
+function formatBusinessDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" });
 }
 
 function requestMatchScore(request: Entity, products: Entity[]) {
