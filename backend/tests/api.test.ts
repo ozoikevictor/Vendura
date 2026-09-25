@@ -496,7 +496,10 @@ describe("Vendura API", () => {
         carrierName: "Test Logistics",
         trackingNumber: "TRACK-100",
         shippingDate: new Date().toISOString(),
-        evidenceFiles: [{ fileUrl: "data:image/png;base64,aGVsbG8=", fileName: "receipt.png", fileType: "image/png", fileSize: 5 }],
+        evidenceFiles: [
+          { evidenceType: "package_photo", fileUrl: "data:image/png;base64,iVBORw0KGgo=", fileName: "package.png", fileType: "image/png", fileSize: 8 },
+          { evidenceType: "shipping_document", fileUrl: "data:image/png;base64,iVBORw0KGgo=", fileName: "receipt.png", fileType: "image/png", fileSize: 8 },
+        ],
       };
       const shipped = await request(app).post(`/api/vendor/orders/${placed.body.data.id}/shipment`).set(auth(vendor)).send(shipmentInput);
       expect(shipped.status).toBe(200);

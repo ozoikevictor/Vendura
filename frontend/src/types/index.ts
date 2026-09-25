@@ -245,6 +245,7 @@ export interface OrderTimelineEvent {
 }
 
 export interface EvidenceFile {
+  evidenceType?: "package_photo" | "shipping_document" | "customer_evidence";
   fileUrl: string;
   fileName: string;
   fileType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";

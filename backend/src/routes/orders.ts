@@ -184,14 +184,26 @@ export const orderRoutes = (db: Database) => {
 };
 
 const evidenceFileSchema = z.object({
-  fileUrl: z.string().refine((value) => /^https?:\/\//i.test(value) || /^data:(image\/(jpeg|png|webp)|application\/pdf);base64,/i.test(value), "Use a JPG, PNG, WebP, PDF, or secure URL"),
+  evidenceType: z.enum(["package_photo", "shipping_document", "customer_evidence"]).optional(),
+  fileUrl: z.string().refine(validEvidencePayload, "The uploaded file contents do not match a valid JPG, PNG, WebP, or PDF"),
   fileName: z.string().trim().min(1).max(160),
   fileType: z.enum(["image/jpeg", "image/png", "image/webp", "application/pdf"]),
   fileSize: z.number().int().positive().max(2_000_000),
   uploadedAt: z.string().datetime().optional(),
 });
-const shipmentSchema = z.object({ deliveryMethod: z.enum(DELIVERY_METHODS), carrierName: z.string().trim().max(160).optional(), trackingNumber: z.string().trim().max(160).optional(), shippingDate: z.string().datetime(), evidenceFiles: z.array(evidenceFileSchema).min(1).max(4), additionalNote: z.string().trim().max(1000).optional() }).superRefine((value, ctx) => { if (["transport_park", "courier"].includes(value.deliveryMethod) && !value.carrierName) ctx.addIssue({ code: "custom", path: ["carrierName"], message: "Transport or courier name is required" }); });
+const shipmentSchema = z.object({ deliveryMethod: z.enum(DELIVERY_METHODS), carrierName: z.string().trim().max(160).optional(), trackingNumber: z.string().trim().max(160).optional(), shippingDate: z.string().datetime(), evidenceFiles: z.array(evidenceFileSchema).min(1).max(4), additionalNote: z.string().trim().max(1000).optional() }).superRefine((value, ctx) => { const formal = ["transport_park", "courier"].includes(value.deliveryMethod); if (formal && !value.carrierName) ctx.addIssue({ code: "custom", path: ["carrierName"], message: "Transport or courier name is required" }); if (formal && !value.trackingNumber) ctx.addIssue({ code: "custom", path: ["trackingNumber"], message: "Waybill or tracking number is required" }); if (!value.evidenceFiles.some((file) => file.evidenceType === "package_photo")) ctx.addIssue({ code: "custom", path: ["evidenceFiles"], message: "A package photo is required" }); if (formal && !value.evidenceFiles.some((file) => file.evidenceType === "shipping_document")) ctx.addIssue({ code: "custom", path: ["evidenceFiles"], message: "A receipt or waybill is required" }); });
 const disputeSchema = z.object({ reason: z.enum(["not_received", "seller_did_not_ship", "wrong_product", "not_as_described", "incomplete_package", "damaged", "suspected_fraud", "other"]), description: z.string().trim().min(10).max(2000), evidenceFiles: z.array(evidenceFileSchema).max(4).default([]) });
+function validEvidencePayload(value: string) {
+  if (/^https:\/\//i.test(value)) return true;
+  const match = value.match(/^data:(image\/(jpeg|png|webp)|application\/pdf);base64,([A-Za-z0-9+/=]+)$/i);
+  if (!match) return false;
+  const bytes = Buffer.from(match[3]!, "base64");
+  const mime = match[1]!.toLowerCase();
+  if (mime === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (mime === "image/png") return bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mime === "image/webp") return bytes.subarray(0, 4).toString() === "RIFF" && bytes.subarray(8, 12).toString() === "WEBP";
+  return bytes.subarray(0, 5).toString() === "%PDF-";
+}
 async function accessibleOrder(db: Database, id: string | string[], req: AuthRequest) { const order = await db.get<Entity>("orders", String(id)); if (!order) throw new ApiError(404, "Order not found"); const allowed = req.user!.role === "admin" || order.customerId === req.user!.id || order.storeId === req.user!.storeId; if (!allowed) throw new ApiError(403, "Order belongs to another account"); return order; }
 
 async function createNotification(db: Database, input: Omit<Entity, "id">) {
