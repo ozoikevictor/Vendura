@@ -1,69 +1,109 @@
 import type { Database, Entity } from "../types.js";
 
 const TABLES = [
-  "users", "addresses", "categories", "stores", "products", "orders",
-  "conversations", "messages", "offers", "notifications", "plans",
-  "subscriptions", "bank_accounts", "delivery_settings", "transactions", "payouts"
+  "users",
+  "addresses",
+  "categories",
+  "stores",
+  "products",
+  "orders",
+  "conversations",
+  "messages",
+  "offers",
+  "notifications",
+  "plans",
+  "subscriptions",
+  "bank_accounts",
+  "delivery_settings",
+  "transactions",
+  "payouts",
 ] as const;
 
 const collectionTable: Record<string, string> = {
-  users: "users", addresses: "addresses", categories: "categories",
-  stores: "stores", products: "products", orders: "orders",
-  conversations: "conversations", messages: "messages", offers: "offers",
-  notifications: "notifications", plans: "plans", subscriptions: "subscriptions",
-  bankAccounts: "bank_accounts", deliverySettings: "delivery_settings",
-  transactions: "transactions", payouts: "payouts",
-  aiHistory: "messages", buyerRequests: "messages"
+  users: "users",
+  addresses: "addresses",
+  categories: "categories",
+  stores: "stores",
+  products: "products",
+  orders: "orders",
+  conversations: "conversations",
+  messages: "messages",
+  offers: "offers",
+  notifications: "notifications",
+  plans: "plans",
+  subscriptions: "subscriptions",
+  bankAccounts: "bank_accounts",
+  deliverySettings: "delivery_settings",
+  transactions: "transactions",
+  payouts: "payouts",
+  aiHistory: "messages",
+  buyerRequests: "messages",
+  supportRequests: "messages",
 };
 
 type EntityRow = { id: string; data: Entity };
 
 export class SupabaseDatabase implements Database {
   private headers: Record<string, string>;
-  private catalogCache = new Map<string, { expiresAt: number; rows: EntityRow[] }>();
+  private catalogCache = new Map<
+    string,
+    { expiresAt: number; rows: EntityRow[] }
+  >();
   private catalogRequests = new Map<string, Promise<EntityRow[]>>();
 
-  constructor(private url: string, serviceRoleKey: string) {
+  constructor(
+    private url: string,
+    serviceRoleKey: string,
+  ) {
     this.url = url.replace(/\/$/, "");
     this.headers = {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     };
   }
 
   private table(collection: string) {
     const table = collectionTable[collection];
-    if (!table) throw new Error(`Unsupported database collection: ${collection}`);
+    if (!table)
+      throw new Error(`Unsupported database collection: ${collection}`);
     return table;
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.url}/rest/v1/${path}`, {
       ...init,
-      headers: { ...this.headers, ...init.headers }
+      headers: { ...this.headers, ...init.headers },
     });
     if (!response.ok) {
       const detail = await response.text();
-      throw new Error(`Supabase database error (${response.status}): ${detail}`);
+      throw new Error(
+        `Supabase database error (${response.status}): ${detail}`,
+      );
     }
     if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
   }
 
-  async connect() { await this.request<EntityRow[]>("plans?select=id&limit=1"); }
+  async connect() {
+    await this.request<EntityRow[]>("plans?select=id&limit=1");
+  }
   async close() {}
 
   async reset() {
     for (const table of [...TABLES].reverse()) {
-      await this.request(`${table}?id=not.is.null`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      await this.request(`${table}?id=not.is.null`, {
+        method: "DELETE",
+        headers: { Prefer: "return=minimal" },
+      });
     }
     this.catalogCache.clear();
   }
 
   async list<T extends Entity>(collection: string): Promise<T[]> {
     const table = this.table(collection);
-    const cacheable = table === "products" || table === "categories" || table === "stores";
+    const cacheable =
+      table === "products" || table === "categories" || table === "stores";
     let rows: EntityRow[];
     const cached = cacheable ? this.catalogCache.get(table) : undefined;
     if (cached && cached.expiresAt > Date.now()) {
@@ -75,7 +115,11 @@ export class SupabaseDatabase implements Database {
       if (cacheable) this.catalogRequests.set(table, request);
       try {
         rows = await request;
-        if (cacheable) this.catalogCache.set(table, { expiresAt: Date.now() + 60_000, rows });
+        if (cacheable)
+          this.catalogCache.set(table, {
+            expiresAt: Date.now() + 60_000,
+            rows,
+          });
       } finally {
         if (cacheable) this.catalogRequests.delete(table);
       }
@@ -83,20 +127,34 @@ export class SupabaseDatabase implements Database {
     return rows.map((row) => ({ ...row.data, id: row.id }) as T);
   }
 
-  async get<T extends Entity>(collection: string, id: string): Promise<T | null> {
-    const rows = await this.request<EntityRow[]>(`${this.table(collection)}?select=id,data&id=eq.${encodeURIComponent(id)}&limit=1`);
+  async get<T extends Entity>(
+    collection: string,
+    id: string,
+  ): Promise<T | null> {
+    const rows = await this.request<EntityRow[]>(
+      `${this.table(collection)}?select=id,data&id=eq.${encodeURIComponent(id)}&limit=1`,
+    );
     return rows[0] ? ({ ...rows[0].data, id: rows[0].id } as T) : null;
   }
 
-  async findOne<T extends Entity>(collection: string, query: Partial<T>): Promise<T | null> {
+  async findOne<T extends Entity>(
+    collection: string,
+    query: Partial<T>,
+  ): Promise<T | null> {
     const items = await this.list<T>(collection);
-    return items.find((item) => Object.entries(query).every(([key, value]) => item[key] === value)) ?? null;
+    return (
+      items.find((item) =>
+        Object.entries(query).every(([key, value]) => item[key] === value),
+      ) ?? null
+    );
   }
 
   async create<T extends Entity>(collection: string, value: T): Promise<T> {
     const { id, ...data } = value;
     const rows = await this.request<EntityRow[]>(this.table(collection), {
-      method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ id, data })
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ id, data }),
     });
     const saved = rows[0];
     if (!saved) throw new Error("Supabase did not return the created record");
@@ -104,22 +162,35 @@ export class SupabaseDatabase implements Database {
     return { ...saved.data, id: saved.id } as T;
   }
 
-  async update<T extends Entity>(collection: string, id: string, patch: Partial<T>): Promise<T | null> {
+  async update<T extends Entity>(
+    collection: string,
+    id: string,
+    patch: Partial<T>,
+  ): Promise<T | null> {
     const current = await this.get<T>(collection, id);
     if (!current) return null;
     const { id: _ignored, ...data } = { ...current, ...patch, id };
-    const rows = await this.request<EntityRow[]>(`${this.table(collection)}?id=eq.${encodeURIComponent(id)}`, {
-      method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ data })
-    });
+    const rows = await this.request<EntityRow[]>(
+      `${this.table(collection)}?id=eq.${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({ data }),
+      },
+    );
     const saved = rows[0];
     this.catalogCache.delete(this.table(collection));
     return saved ? ({ ...saved.data, id: saved.id } as T) : null;
   }
 
   async remove(collection: string, id: string): Promise<boolean> {
-    const rows = await this.request<Array<{ id: string }>>(`${this.table(collection)}?id=eq.${encodeURIComponent(id)}&select=id`, {
-      method: "DELETE", headers: { Prefer: "return=representation" }
-    });
+    const rows = await this.request<Array<{ id: string }>>(
+      `${this.table(collection)}?id=eq.${encodeURIComponent(id)}&select=id`,
+      {
+        method: "DELETE",
+        headers: { Prefer: "return=representation" },
+      },
+    );
     if (rows.length > 0) this.catalogCache.delete(this.table(collection));
     return rows.length > 0;
   }

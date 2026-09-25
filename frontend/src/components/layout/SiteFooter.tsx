@@ -136,14 +136,60 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">
+                <Link
+                  to="/help"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm text-white/65 transition-colors hover:text-primary">
+                <Link
+                  to="/contact"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Contact Vendura
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacy"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
                   Privacy
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/terms"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/returns"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Returns
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/delivery-policy"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Delivery
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/safety"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Safety Center
+                </Link>
               </li>
             </ul>
           </div>
