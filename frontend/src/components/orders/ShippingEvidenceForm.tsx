@@ -20,42 +20,45 @@ export function ShippingEvidenceForm({
   const [note, setNote] = useState("");
   const [files, setFiles] = useState<EvidenceFile[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function showError(message: string) {
+    setError(message);
+    toast.error(message);
+  }
 
   async function addFiles(
     list: FileList | null,
     evidenceType: NonNullable<EvidenceFile["evidenceType"]>,
   ) {
     if (!list) return;
-    const accepted = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    setError("");
     for (const file of Array.from(list).slice(0, 4 - files.length)) {
-      if (!accepted.includes(file.type) || file.size > 2_000_000) {
-        toast.error(`${file.name} must be JPG, PNG, WebP, or PDF under 2 MB`);
+      const isImage = file.type.startsWith("image/");
+      const isPdf = file.type === "application/pdf";
+      if (!isImage && !isPdf) {
+        showError(`${file.name} must be a photo or PDF`);
         continue;
       }
-      if (evidenceType === "package_photo" && file.type === "application/pdf") {
-        toast.error("The package photo must be a real JPG, PNG, or WebP image");
+      if (evidenceType === "package_photo" && isPdf) {
+        showError("The package photo must be a real JPG, PNG, or WebP image");
         continue;
       }
-      if (file.type.startsWith("image/") && !(await hasUsefulImageSize(file))) {
-        toast.error(
-          `${file.name} is too small or unreadable. Use a clear photo at least 640 × 480.`,
-        );
+      let prepared: PreparedUpload;
+      try {
+        prepared = isImage ? await preparePhonePhoto(file) : await prepareDocument(file);
+      } catch (caught) {
+        showError(caught instanceof Error ? caught.message : `Could not read ${file.name}`);
         continue;
       }
-      const fileUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
       setFiles((current) => [
         ...current,
         {
           evidenceType,
-          fileUrl,
-          fileName: file.name,
-          fileType: file.type as EvidenceFile["fileType"],
-          fileSize: file.size,
+          fileUrl: prepared.fileUrl,
+          fileName: prepared.fileName,
+          fileType: prepared.fileType,
+          fileSize: prepared.fileSize,
           uploadedAt: new Date().toISOString(),
         },
       ]);
@@ -63,35 +66,30 @@ export function ShippingEvidenceForm({
   }
 
   async function submit() {
+    setError("");
     if (files.length === 0) {
-      toast.error("Add at least one shipping receipt or package photo");
+      showError("Add at least one shipping receipt or package photo");
       return;
     }
     if (!files.some((file) => file.evidenceType === "package_photo")) {
-      toast.error("Take or upload a clear photo of the packed product");
+      showError("Take or upload a clear photo of the packed product");
       return;
     }
     if (["courier", "transport_park"].includes(method) && !carrierName.trim()) {
-      toast.error("Enter the courier or transport name");
+      showError("Enter the courier or transport name");
       return;
     }
     if (["courier", "transport_park"].includes(method) && !trackingNumber.trim()) {
-      toast.error("Enter the waybill or tracking number from the receipt");
+      showError("Enter the waybill or tracking number from the receipt");
       return;
     }
     if (
       ["courier", "transport_park"].includes(method) &&
       !files.some((file) => file.evidenceType === "shipping_document")
     ) {
-      toast.error("Upload the courier receipt or waybill as a separate document");
+      showError("Upload the courier receipt or waybill as a separate document");
       return;
     }
-    if (
-      !window.confirm(
-        "Submit this evidence and mark the order as shipped? You cannot replace it after submission.",
-      )
-    )
-      return;
     setSaving(true);
     try {
       const updated = await submitShippingEvidence(order.id, {
@@ -106,7 +104,7 @@ export function ShippingEvidenceForm({
       onSaved(updated);
       onClose();
     } catch (error) {
-      toast.error(getErrorMessage(error, "Could not save shipping evidence"));
+      showError(getErrorMessage(error, "Could not save shipping evidence"));
     } finally {
       setSaving(false);
     }
@@ -123,7 +121,7 @@ export function ShippingEvidenceForm({
               {order.deliveryAddress.state}
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close">
+          <button type="button" onClick={onClose} aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -172,7 +170,7 @@ export function ShippingEvidenceForm({
               <Camera className="h-4 w-4" /> Take Package Photo
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 capture="environment"
                 onChange={(e) => addFiles(e.target.files, "package_photo")}
                 className="sr-only"
@@ -182,7 +180,7 @@ export function ShippingEvidenceForm({
               <ImagePlus className="h-4 w-4" /> Upload From Phone
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 onChange={(e) => addFiles(e.target.files, "package_photo")}
                 className="sr-only"
               />
@@ -191,7 +189,7 @@ export function ShippingEvidenceForm({
               <FileText className="h-4 w-4" /> Upload Receipt / Waybill
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
+                accept="image/*,application/pdf"
                 multiple
                 onChange={(e) => addFiles(e.target.files, "shipping_document")}
                 className="sr-only"
@@ -210,6 +208,7 @@ export function ShippingEvidenceForm({
                   {file.evidenceType?.replaceAll("_", " ")}
                 </span>
                 <button
+                  type="button"
                   onClick={() => setFiles((current) => current.filter((_, index) => index !== i))}
                   aria-label={`Remove ${file.fileName}`}
                 >
@@ -229,11 +228,25 @@ export function ShippingEvidenceForm({
             className="mt-1 w-full rounded-md border border-input bg-background p-2.5"
           />
         </label>
+        {error && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+          >
+            {error}
+          </div>
+        )}
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button onClick={onClose} className="rounded-md border px-4 py-2 text-sm font-semibold">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border px-4 py-2 text-sm font-semibold"
+          >
             Cancel
           </button>
           <button
+            type="button"
             onClick={submit}
             disabled={saving}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
@@ -246,18 +259,70 @@ export function ShippingEvidenceForm({
   );
 }
 
-function hasUsefulImageSize(file: File) {
-  return new Promise<boolean>((resolve) => {
+type PreparedUpload = Pick<EvidenceFile, "fileUrl" | "fileName" | "fileType" | "fileSize">;
+
+async function prepareDocument(file: File): Promise<PreparedUpload> {
+  if (file.size > 2_000_000) throw new Error(`${file.name} must be under 2 MB`);
+  return {
+    fileUrl: await readAsDataUrl(file),
+    fileName: file.name,
+    fileType: "application/pdf",
+    fileSize: file.size,
+  };
+}
+
+async function preparePhonePhoto(file: File): Promise<PreparedUpload> {
+  const image = await loadImage(file);
+  if (image.naturalWidth < 640 || image.naturalHeight < 480) {
+    throw new Error(`${file.name} is too small. Use a clear photo at least 640 × 480.`);
+  }
+  const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.naturalWidth * scale);
+  canvas.height = Math.round(image.naturalHeight * scale);
+  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  let quality = 0.84;
+  let fileUrl = canvas.toDataURL("image/jpeg", quality);
+  while (dataUrlSize(fileUrl) > 2_000_000 && quality > 0.42) {
+    quality -= 0.08;
+    fileUrl = canvas.toDataURL("image/jpeg", quality);
+  }
+  const fileSize = dataUrlSize(fileUrl);
+  if (fileSize > 2_000_000)
+    throw new Error("This photo is too large to prepare. Try another photo.");
+  return {
+    fileUrl,
+    fileName: `${file.name.replace(/\.[^.]+$/, "") || "package-photo"}.jpg`,
+    fileType: "image/jpeg",
+    fileSize,
+  };
+}
+
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const image = new Image();
     image.onload = () => {
       URL.revokeObjectURL(url);
-      resolve(image.naturalWidth >= 640 && image.naturalHeight >= 480);
+      resolve(image);
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve(false);
+      reject(new Error(`${file.name} could not be read. Choose a JPEG, PNG, or WebP photo.`));
     };
     image.src = url;
   });
+}
+
+function readAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function dataUrlSize(value: string) {
+  return Math.ceil(((value.split(",")[1]?.length ?? 0) * 3) / 4);
 }
