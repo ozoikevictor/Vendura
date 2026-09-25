@@ -649,6 +649,11 @@ describe("Vendura API", () => {
       (await request(app).get("/api/vendor/products").set(auth(vendor))).body
         .data[0],
     ).toMatchObject({ status: "out_of_stock", stock: 0 });
+    expect(
+      (await db.list("notifications")).find(
+        (notification) => notification.dedupeKey === "stock:product-phone-1:0",
+      ),
+    ).toMatchObject({ type: "out_of_stock", userId: "user-vendor-1" });
 
     const cancelled = await request(app)
       .patch(`/api/vendor/orders/${placed.body.data.id}/status`)
@@ -660,6 +665,26 @@ describe("Vendura API", () => {
       status: "active",
     });
     expect((await request(app).get("/api/products")).body.data.total).toBe(1);
+  });
+  it("notifies a vendor when inventory reaches five items", async () => {
+    await db.update("products", "product-phone-1", { stock: 6, lowStockThreshold: 3, status: "active" });
+    const customer = await login("customer@vendura.test");
+    const placed = await request(app)
+      .post("/api/orders")
+      .set(auth(customer))
+      .send({
+        items: [{ productId: "product-phone-1", quantity: 1 }],
+        deliveryAddress: { fullName: "Demo Customer", phone: "+2348000000001", street: "1 Test Street", city: "Ikeja", state: "Lagos" },
+        deliveryMethod: "standard",
+        paymentMethod: "pay_on_delivery",
+      });
+    expect(placed.status).toBe(201);
+    expect(await db.get("products", "product-phone-1")).toMatchObject({ stock: 5, status: "active" });
+    expect(
+      (await db.list("notifications")).find(
+        (notification) => notification.dedupeKey === "stock:product-phone-1:5",
+      ),
+    ).toMatchObject({ type: "low_stock", userId: "user-vendor-1" });
   });
   it("connects customer and vendor messages in one conversation", async () => {
     const customer = await login("customer@vendura.test");
