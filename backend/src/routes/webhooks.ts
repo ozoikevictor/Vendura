@@ -10,6 +10,11 @@ type TransferEvent = {
   data?: { reference?: string; amount?: number; currency?: string; transferred_at?: string; reason?: string };
 };
 
+type RefundEvent = {
+  event: "refund.pending" | "refund.processing" | "refund.needs-attention" | "refund.failed" | "refund.processed" | string;
+  data?: { transaction_reference?: string; refund_reference?: string; amount?: string | number; currency?: string; status?: string };
+};
+
 export const webhookRoutes = (db: Database) => {
   const router = Router();
   router.post("/webhooks/paystack", asyncRoute(async (req: AuthRequest, res) => {
@@ -17,7 +22,20 @@ export const webhookRoutes = (db: Database) => {
       res.status(401).json({ error: { message: "Invalid Paystack signature" } });
       return;
     }
-    const event = req.body as TransferEvent;
+    const event = req.body as TransferEvent & RefundEvent;
+    if (event.event.startsWith("refund.") && event.data?.transaction_reference) {
+      const refund = await db.findOne<Entity>("refunds", { kind: "refund", transactionReference: event.data.transaction_reference });
+      if (!refund || event.data.currency !== "NGN" || Number(event.data.amount) !== Math.round(Number(refund.amount) * 100)) { res.sendStatus(200); return; }
+      const providerStatus = event.event.replace("refund.", "");
+      if (refund.providerStatus !== providerStatus) {
+        await db.update("refunds", refund.id, { providerStatus, refundReference: event.data.refund_reference ?? refund.refundReference, updatedAt: now(), completedAt: providerStatus === "processed" ? now() : undefined });
+        const order = await db.get<Entity>("orders", String(refund.orderId));
+        if (order && providerStatus === "processed") await db.update("orders", order.id, { status: "refunded", paymentStatus: "refunded", refundStatus: "refunded", escrow: { ...(order.escrow as object), status: "refunded" }, timeline: [...((order.timeline as unknown[]) ?? []), { status: "refunded", at: now(), note: "Paystack confirmed the refund" }] });
+        if (order && providerStatus === "failed") await db.update("orders", order.id, { status: "disputed", refundStatus: "failed", timeline: [...((order.timeline as unknown[]) ?? []), { status: "disputed", at: now(), note: "Paystack reported that the refund failed" }] });
+        if (order) await db.create("notifications", { id: id("notification"), userId: order.customerId, type: "refund_update", title: `Refund update for ${order.orderNumber}`, body: providerStatus === "processed" ? "Paystack has processed your refund." : `Your refund status is now ${providerStatus.replaceAll("-", " ")}.`, href: `/customer/orders/${order.id}`, read: false, createdAt: now(), dedupeKey: `refund:${refund.id}:${providerStatus}` });
+      }
+      res.sendStatus(200); return;
+    }
     if (!["transfer.success", "transfer.failed", "transfer.reversed"].includes(event.event) || !event.data?.reference) {
       res.sendStatus(200);
       return;

@@ -9,6 +9,14 @@ const statusStyles: Record<OrderStatus, string> = {
   shipped: "bg-primary-soft text-primary",
   out_for_delivery: "bg-primary-soft text-primary",
   delivered: "bg-success-soft text-success",
+  awaiting_delivery_confirmation: "bg-warning-soft text-warning-foreground",
+  payout_pending: "bg-info-soft text-info",
+  completed: "bg-success-soft text-success",
+  disputed: "bg-destructive-soft text-destructive",
+  awaiting_admin_review: "bg-warning-soft text-warning-foreground",
+  refund_approved: "bg-info-soft text-info",
+  refund_processing: "bg-warning-soft text-warning-foreground",
+  refunded: "bg-muted text-muted-foreground",
   cancelled: "bg-destructive-soft text-destructive",
 };
 

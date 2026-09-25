@@ -1,21 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  Check,
-  Truck,
-  Package,
-  XCircle,
-  RotateCcw,
-  ArrowLeft,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { Check, Truck, Package, XCircle, ArrowLeft, MapPin, ShieldCheck } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getVendorOrder,
   updateVendorOrderStatus,
   ORDER_STATUS_FLOW,
+  requestOrderConfirmation,
 } from "@/services/orderService";
+import { ShippingEvidenceForm } from "@/components/orders/ShippingEvidenceForm";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { ORDER_STATUS_LABEL } from "@/data/orders";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
@@ -41,11 +34,13 @@ export const Route = createFileRoute("/vendor/orders/$orderId")({
 function VendorOrderDetailPage() {
   const { orderId } = Route.useParams();
   const queryClient = useQueryClient();
-  const [trackingNumber, setTrackingNumber] = useState("");
+  const [showShipping, setShowShipping] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [showCancel, setShowCancel] = useState(false);
   const [loading, setLoading] = useState(false);
-  const openedFromAI = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") === "vendor-ai";
+  const openedFromAI =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("from") === "vendor-ai";
 
   const goBack = () => {
     if (openedFromAI && window.history.length > 1) {
@@ -96,9 +91,21 @@ function VendorOrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["vendor-orders"] });
       toast.success("Order updated");
       setShowCancel(false);
-      setTrackingNumber("");
     } catch (error) {
       toast.error(getErrorMessage(error, "Failed to update order"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function requestConfirmation() {
+    setLoading(true);
+    try {
+      const updated = await requestOrderConfirmation(orderId);
+      queryClient.setQueryData(["vendor-order", orderId], updated);
+      toast.success("The customer was asked to confirm or report a problem");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Could not request confirmation"));
     } finally {
       setLoading(false);
     }
@@ -107,7 +114,12 @@ function VendorOrderDetailPage() {
   return (
     <div className="max-w-3xl space-y-5">
       <div className="flex items-center gap-2">
-        <button type="button" onClick={goBack} aria-label={openedFromAI ? "Back to AI Business Assistant" : "Back to orders"} className="text-muted-foreground hover:text-primary">
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label={openedFromAI ? "Back to AI Business Assistant" : "Back to orders"}
+          className="text-muted-foreground hover:text-primary"
+        >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
@@ -144,29 +156,21 @@ function VendorOrderDetailPage() {
             </button>
           )}
           {canShip && (
-            <>
-              <input
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder="Tracking number"
-                className="flex-1 min-w-40 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-              <button
-                onClick={() => trackingNumber && handleAction({ type: "ship", trackingNumber })}
-                disabled={loading || !trackingNumber}
-                className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-              >
-                <Truck className="h-4 w-4" /> Ship Order
-              </button>
-            </>
+            <button
+              onClick={() => setShowShipping(true)}
+              disabled={loading}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              <Truck className="h-4 w-4" /> Add Shipping Evidence
+            </button>
           )}
           {canDeliver && (
             <button
-              onClick={() => handleAction({ type: "deliver" })}
+              onClick={requestConfirmation}
               disabled={loading}
               className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-2 text-sm font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60"
             >
-              <Check className="h-4 w-4" /> Mark Delivered
+              <Check className="h-4 w-4" /> Request Order Confirmation
             </button>
           )}
           {canCancel && (
@@ -177,16 +181,17 @@ function VendorOrderDetailPage() {
               <XCircle className="h-4 w-4" /> Cancel
             </button>
           )}
-          {order.paymentStatus === "paid" && !isCancelled && (
-            <button
-              onClick={() => handleAction({ type: "refund" })}
-              disabled={loading}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-60"
-            >
-              <RotateCcw className="h-4 w-4" /> Refund
-            </button>
-          )}
         </div>
+      )}
+      {showShipping && (
+        <ShippingEvidenceForm
+          order={order}
+          onClose={() => setShowShipping(false)}
+          onSaved={(updated) => {
+            queryClient.setQueryData(["vendor-order", orderId], updated);
+            queryClient.invalidateQueries({ queryKey: ["vendor-orders"] });
+          }}
+        />
       )}
 
       {/* Cancel form */}

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncRoute, ApiError } from "../lib/errors.js";
 import { releaseEarnings, reverseEarnings } from "../lib/finance.js";
+import { config } from "../config.js";
+import { ORDER_STATUS, transitionOrder } from "../lib/order-protection.js";
 import { id, now, ok, publicUser } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
@@ -211,16 +213,21 @@ export const adminRoutes = (db: Database) => {
     "/disputes",
     asyncRoute(async (_req, res) => {
       const orders = await db.list<Entity>("orders");
+      for (const order of orders.filter((item) => item.status === ORDER_STATUS.AWAITING_CONFIRMATION && Date.parse(String(item.confirmationDeadline || "")) <= Date.now())) {
+        await transitionOrder(db, order, ORDER_STATUS.REVIEW_REQUIRED, { id: "system", role: "system" }, "Customer confirmation deadline expired; manual review required", { payoutStatus: "manual_review" });
+      }
+      const disputes = await db.list<Entity>("disputes");
       ok(
         res,
         orders
           .filter(
             (order) =>
-              (order.escrow as Entity | undefined)?.status === "disputed",
+              (order.escrow as Entity | undefined)?.status === "disputed" || order.status === ORDER_STATUS.REVIEW_REQUIRED,
           )
+          .map((order) => ({ ...order, dispute: disputes.find((item) => item.orderId === order.id && item.kind === "order_dispute") }))
           .sort((a, b) =>
-            String((b.escrow as Entity).disputeOpenedAt).localeCompare(
-              String((a.escrow as Entity).disputeOpenedAt),
+            String(((b as Entity).escrow as Entity | undefined)?.disputeOpenedAt ?? (b as Entity).confirmationDeadline).localeCompare(
+              String(((a as Entity).escrow as Entity | undefined)?.disputeOpenedAt ?? (a as Entity).confirmationDeadline),
             ),
           ),
       );
@@ -270,25 +277,28 @@ export const adminRoutes = (db: Database) => {
         .parse(req.body);
       const order = await db.get<Entity>("orders", String(req.params.orderId));
       if (!order) throw new ApiError(404, "Order not found");
-      if ((order.escrow as Entity | undefined)?.status !== "disputed")
+      if ((order.escrow as Entity | undefined)?.status !== "disputed" && order.status !== ORDER_STATUS.REVIEW_REQUIRED)
         throw new ApiError(409, "This dispute is no longer open");
-      if (resolution === "release_to_vendor")
+      let updated: Entity | null;
+      if (resolution === "release_to_vendor") {
+        if (order.paymentStatus !== "paid") throw new ApiError(409, "Only a verified paid order can be released");
         await releaseEarnings(db, order.id);
-      else await reverseEarnings(db, order);
-      const status =
-        resolution === "release_to_vendor" ? "released" : "refunded";
-      const updated = await db.update<Entity>("orders", order.id, {
-        paymentStatus:
-          resolution === "refund_customer" ? "refunded" : order.paymentStatus,
-        escrow: {
-          ...(order.escrow as object),
-          status,
-          resolvedAt: now(),
-          resolution,
-          resolutionNote: note,
-          resolvedBy: req.user!.id,
-        },
-      });
+        updated = await transitionOrder(db, order, ORDER_STATUS.COMPLETED, req.user!, note, { customerConfirmedAt: order.customerConfirmedAt ?? now(), payoutStatus: "eligible", escrow: { ...(order.escrow as object), status: "released", releasedAt: now(), resolution, resolutionNote: note, resolvedBy: req.user!.id } });
+      } else {
+        if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack must be configured before a real refund can be initiated");
+        if (!order.paymentReference) throw new ApiError(409, "This order does not have a Paystack transaction reference");
+        const existing = await db.findOne<Entity>("refunds", { kind: "refund", orderId: order.id });
+        if (existing && !["failed"].includes(String(existing.providerStatus))) throw new ApiError(409, "A refund already exists for this order");
+        const response = await fetch("https://api.paystack.co/refund", { method: "POST", headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ transaction: order.paymentReference, amount: Math.round(Number(order.total) * 100), currency: "NGN", customer_note: note, merchant_note: `Vendura dispute ${order.orderNumber}` }) });
+        const payload = await response.json() as { status: boolean; message: string; data?: Entity };
+        if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the refund");
+        const refund = await db.create("refunds", { id: id("refund"), kind: "refund", orderId: order.id, transactionReference: order.paymentReference, refundReference: payload.data.refund_reference ?? payload.data.id, amount: order.total, reason: note, initiatedBy: req.user!.id, initiatedAt: now(), providerStatus: payload.data.status ?? "pending", updatedAt: now() });
+        await reverseEarnings(db, order);
+        updated = await transitionOrder(db, order, ORDER_STATUS.REFUND_PROCESSING, req.user!, note, { refundId: refund.id, refundStatus: "processing", payoutStatus: "frozen", escrow: { ...(order.escrow as object), status: "disputed", resolution, resolutionNote: note, resolvedBy: req.user!.id } });
+      }
+      const dispute = await db.findOne<Entity>("disputes", { kind: "order_dispute", orderId: order.id });
+      if (dispute) await db.update("disputes", dispute.id, { status: "resolved", resolution, resolutionNote: note, resolvedAt: now(), resolvedBy: req.user!.id });
+      await db.create("adminActivity", { id: id("activity"), kind: "admin_activity", adminId: req.user!.id, action: resolution, orderId: order.id, note, createdAt: now() });
       const store = await db.get<Entity>("stores", String(order.storeId));
       for (const userId of [order.customerId, store?.ownerId].filter(Boolean)) {
         await db.create("notifications", {

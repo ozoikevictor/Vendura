@@ -3,6 +3,7 @@ import { CheckCircle2, Circle, Package, Truck, Home, XCircle, MapPin, Star } fro
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
 import { EscrowPanel } from "@/components/shared/EscrowPanel";
+import { DeliveryProtection } from "@/components/orders/DeliveryProtection";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getOrder, ORDER_STATUS_FLOW } from "@/services/orderService";
@@ -37,6 +38,14 @@ const statusIcons: Record<OrderStatus, React.ReactNode> = {
   out_for_delivery: <Truck className="h-4 w-4" />,
   delivered: <Home className="h-4 w-4" />,
   cancelled: <XCircle className="h-4 w-4" />,
+  awaiting_delivery_confirmation: <Truck className="h-4 w-4" />,
+  payout_pending: <CheckCircle2 className="h-4 w-4" />,
+  completed: <CheckCircle2 className="h-4 w-4" />,
+  disputed: <XCircle className="h-4 w-4" />,
+  awaiting_admin_review: <Circle className="h-4 w-4" />,
+  refund_approved: <Circle className="h-4 w-4" />,
+  refund_processing: <Circle className="h-4 w-4" />,
+  refunded: <XCircle className="h-4 w-4" />,
 };
 
 function OrderDetailPage() {
@@ -86,7 +95,10 @@ function OrderDetailPage() {
   const isCancelled = order.status === "cancelled";
   const completedSteps = isCancelled
     ? (["placed", "cancelled"] as OrderStatus[])
-    : ORDER_STATUS_FLOW.slice(0, ORDER_STATUS_FLOW.indexOf(order.status as (typeof ORDER_STATUS_FLOW)[number]) + 1);
+    : ORDER_STATUS_FLOW.slice(
+        0,
+        ORDER_STATUS_FLOW.indexOf(order.status as (typeof ORDER_STATUS_FLOW)[number]) + 1,
+      );
 
   const retryPayment = async () => {
     setPaymentLoading(true);
@@ -108,7 +120,11 @@ function OrderDetailPage() {
     }
     setReviewSubmitting(true);
     try {
-      await createProductReview(productId, { orderId: order.id, rating: reviewRating, comment: reviewComment.trim() });
+      await createProductReview(productId, {
+        orderId: order.id,
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+      });
       setReviewedProducts((items) => [...items, productId]);
       setReviewingProductId(null);
       setReviewComment("");
@@ -139,16 +155,25 @@ function OrderDetailPage() {
           Placed on {formatDateTime(order.placedAt)}
         </p>
 
-        {order.paymentMethod !== "pay_on_delivery" && order.paymentStatus === "pending" && !isCancelled && (
-          <div className="mt-4 rounded-lg border border-warning/30 bg-warning-soft p-4">
-            <p className="text-sm font-semibold text-foreground">Payment is still required</p>
-            <p className="mt-1 text-xs text-muted-foreground">Complete payment securely with Paystack so the seller can process this order.</p>
-            {paymentError && <p className="mt-2 text-xs text-destructive">{paymentError}</p>}
-            <button type="button" onClick={retryPayment} disabled={paymentLoading} className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
-              {paymentLoading ? "Opening Paystack..." : `Pay ${formatNaira(order.total)}`}
-            </button>
-          </div>
-        )}
+        {order.paymentMethod !== "pay_on_delivery" &&
+          order.paymentStatus === "pending" &&
+          !isCancelled && (
+            <div className="mt-4 rounded-lg border border-warning/30 bg-warning-soft p-4">
+              <p className="text-sm font-semibold text-foreground">Payment is still required</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Complete payment securely with Paystack so the seller can process this order.
+              </p>
+              {paymentError && <p className="mt-2 text-xs text-destructive">{paymentError}</p>}
+              <button
+                type="button"
+                onClick={retryPayment}
+                disabled={paymentLoading}
+                className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                {paymentLoading ? "Opening Paystack..." : `Pay ${formatNaira(order.total)}`}
+              </button>
+            </div>
+          )}
 
         <EscrowPanel
           order={order}
@@ -159,38 +184,89 @@ function OrderDetailPage() {
             }
           }}
         />
+        {order.shipment && (
+          <section className="mt-4 rounded-xl border border-border bg-card p-5">
+            <h2 className="font-semibold">Your order has been shipped</h2>
+            <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-muted-foreground">Delivery method</dt>
+                <dd className="font-medium">
+                  {order.shipment.deliveryMethod.replaceAll("_", " ")}
+                </dd>
+              </div>
+              {order.shipment.carrierName && (
+                <div>
+                  <dt className="text-muted-foreground">Courier / transport</dt>
+                  <dd className="font-medium">{order.shipment.carrierName}</dd>
+                </div>
+              )}
+              {order.shipment.trackingNumber && (
+                <div>
+                  <dt className="text-muted-foreground">Tracking / reference</dt>
+                  <dd className="font-medium">{order.shipment.trackingNumber}</dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-muted-foreground">Shipping date</dt>
+                <dd className="font-medium">{formatDateTime(order.shipment.shippingDate)}</dd>
+              </div>
+            </dl>
+          </section>
+        )}
+        <DeliveryProtection
+          order={order}
+          onUpdated={(updated) => queryClient.setQueryData(["order", orderId], updated)}
+        />
 
         {order.status === "delivered" ? (
-          <section className="mt-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-5" aria-labelledby="rate-products-heading">
+          <section
+            className="mt-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-5"
+            aria-labelledby="rate-products-heading"
+          >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Star className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <h2 id="rate-products-heading" className="text-base font-semibold text-foreground">Rate your products</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Tell other shoppers about the products you received.</p>
+                <h2 id="rate-products-heading" className="text-base font-semibold text-foreground">
+                  Rate your products
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Tell other shoppers about the products you received.
+                </p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              {order.items.map((item) => reviewedProducts.includes(item.productId) ? (
-                <span key={item.id} className="inline-flex items-center gap-1.5 rounded-lg border border-success/30 bg-card px-3 py-2 text-sm font-semibold text-success">
-                  <CheckCircle2 className="h-4 w-4" /> {item.productName} reviewed
-                </span>
-              ) : (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => { setReviewingProductId(item.productId); setReviewComment(""); setReviewRating(5); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-                >
-                  <Star className="h-4 w-4" /> Rate {item.productName}
-                </button>
-              ))}
+              {order.items.map((item) =>
+                reviewedProducts.includes(item.productId) ? (
+                  <span
+                    key={item.id}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-success/30 bg-card px-3 py-2 text-sm font-semibold text-success"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> {item.productName} reviewed
+                  </span>
+                ) : (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setReviewingProductId(item.productId);
+                      setReviewComment("");
+                      setReviewRating(5);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Star className="h-4 w-4" /> Rate {item.productName}
+                  </button>
+                ),
+              )}
             </div>
           </section>
         ) : !isCancelled ? (
           <div className="mt-4 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Product ratings unlock after delivery.</span>{" "}
+            <span className="font-semibold text-foreground">
+              Product ratings unlock after delivery.
+            </span>{" "}
             Once the order is marked delivered, the rating buttons will appear here.
           </div>
         ) : null}
@@ -255,7 +331,9 @@ function OrderDetailPage() {
         <div className="mt-4 rounded-xl border border-border bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-foreground">Items</h2>
-            {order.status === "delivered" && <span className="text-xs font-semibold text-primary">Ready to review</span>}
+            {order.status === "delivered" && (
+              <span className="text-xs font-semibold text-primary">Ready to review</span>
+            )}
           </div>
           <div className="mt-3 divide-y divide-border">
             {order.items.map((item) => (
@@ -281,23 +359,71 @@ function OrderDetailPage() {
                   {formatNaira(item.subtotal)}
                 </p>
                 {order.status === "delivered" && !reviewedProducts.includes(item.productId) && (
-                  <button type="button" onClick={() => { setReviewingProductId(reviewingProductId === item.productId ? null : item.productId); setReviewComment(""); setReviewRating(5); }} className="inline-flex self-center items-center gap-1 rounded-lg border border-primary px-3 py-2 text-xs font-semibold text-primary hover:bg-primary-soft">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewingProductId(
+                        reviewingProductId === item.productId ? null : item.productId,
+                      );
+                      setReviewComment("");
+                      setReviewRating(5);
+                    }}
+                    className="inline-flex self-center items-center gap-1 rounded-lg border border-primary px-3 py-2 text-xs font-semibold text-primary hover:bg-primary-soft"
+                  >
                     <Star className="h-3.5 w-3.5" /> Rate product
                   </button>
                 )}
-                {reviewedProducts.includes(item.productId) && <span className="self-center text-xs font-semibold text-success">Reviewed</span>}
+                {reviewedProducts.includes(item.productId) && (
+                  <span className="self-center text-xs font-semibold text-success">Reviewed</span>
+                )}
                 {reviewingProductId === item.productId && (
                   <div className="basis-full space-y-3 rounded-lg border border-border bg-background p-3">
                     <div>
                       <p className="text-xs font-medium text-foreground">Your rating</p>
                       <div className="mt-1 flex gap-1">
-                        {[1, 2, 3, 4, 5].map((value) => <button key={value} type="button" aria-label={`${value} star rating`} onClick={() => setReviewRating(value)}><Star className={cn("h-6 w-6", value <= reviewRating ? "fill-warning text-warning" : "text-muted-foreground")} /></button>)}
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-label={`${value} star rating`}
+                            onClick={() => setReviewRating(value)}
+                          >
+                            <Star
+                              className={cn(
+                                "h-6 w-6",
+                                value <= reviewRating
+                                  ? "fill-warning text-warning"
+                                  : "text-muted-foreground",
+                              )}
+                            />
+                          </button>
+                        ))}
                       </div>
                     </div>
-                    <textarea value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} rows={3} maxLength={1000} placeholder="How was the product?" className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
+                    <textarea
+                      value={reviewComment}
+                      onChange={(event) => setReviewComment(event.target.value)}
+                      rows={3}
+                      maxLength={1000}
+                      placeholder="How was the product?"
+                      className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                    />
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => submitReview(item.productId)} disabled={reviewSubmitting} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60">{reviewSubmitting ? "Publishing..." : "Publish Review"}</button>
-                      <button type="button" onClick={() => setReviewingProductId(null)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cancel</button>
+                      <button
+                        type="button"
+                        onClick={() => submitReview(item.productId)}
+                        disabled={reviewSubmitting}
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                      >
+                        {reviewSubmitting ? "Publishing..." : "Publish Review"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReviewingProductId(null)}
+                        className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 )}

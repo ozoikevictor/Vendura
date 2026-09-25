@@ -490,10 +490,24 @@ describe("Vendura API", () => {
         platformFees: 12250,
       });
 
+      expect((await request(app).patch(`/api/vendor/orders/${placed.body.data.id}/status`).set(auth(vendor)).send({ type: "start_processing" })).status).toBe(200);
+      const shipmentInput = {
+        deliveryMethod: "courier",
+        carrierName: "Test Logistics",
+        trackingNumber: "TRACK-100",
+        shippingDate: new Date().toISOString(),
+        evidenceFiles: [{ fileUrl: "data:image/png;base64,aGVsbG8=", fileName: "receipt.png", fileType: "image/png", fileSize: 5 }],
+      };
+      const shipped = await request(app).post(`/api/vendor/orders/${placed.body.data.id}/shipment`).set(auth(vendor)).send(shipmentInput);
+      expect(shipped.status).toBe(200);
+      expect(shipped.body.data).toMatchObject({ status: "shipped", trackingNumber: "TRACK-100" });
+      expect((await request(app).post(`/api/vendor/orders/${placed.body.data.id}/shipment`).set(auth(vendor)).send(shipmentInput)).status).toBe(409);
+
       const released = await request(app)
         .post(`/api/orders/${placed.body.data.id}/release`)
         .set(auth(customer));
       expect(released.status).toBe(200);
+      expect(released.body.data).toMatchObject({ status: "completed", payoutStatus: "eligible" });
       const availableBalance = (
         await request(app).get("/api/vendor/balance").set(auth(vendor))
       ).body.data;

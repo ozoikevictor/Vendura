@@ -22,7 +22,13 @@ export interface User {
   storeId?: ID;
   emailVerified: boolean;
   createdAt: ISODate;
-  notificationPreferences?: { newOrders: boolean; newMessages: boolean; lowStock: boolean; payouts: boolean; offers: boolean };
+  notificationPreferences?: {
+    newOrders: boolean;
+    newMessages: boolean;
+    lowStock: boolean;
+    payouts: boolean;
+    offers: boolean;
+  };
 }
 
 export interface Customer extends User {
@@ -195,6 +201,14 @@ export type OrderStatus =
   | "shipped"
   | "out_for_delivery"
   | "delivered"
+  | "awaiting_delivery_confirmation"
+  | "payout_pending"
+  | "completed"
+  | "disputed"
+  | "awaiting_admin_review"
+  | "refund_approved"
+  | "refund_processing"
+  | "refunded"
   | "cancelled";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
@@ -228,6 +242,32 @@ export interface OrderTimelineEvent {
   status: OrderStatus;
   at: ISODate;
   note?: string;
+}
+
+export interface EvidenceFile {
+  fileUrl: string;
+  fileName: string;
+  fileType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+  fileSize: number;
+  uploadedAt?: ISODate;
+}
+export interface Shipment {
+  id: ID;
+  deliveryMethod: "transport_park" | "courier" | "local_delivery" | "customer_pickup" | "other";
+  carrierName?: string;
+  trackingNumber?: string;
+  shippingDate: ISODate;
+  evidenceFiles: EvidenceFile[];
+  additionalNote?: string;
+  submittedAt: ISODate;
+}
+export interface OrderDispute {
+  id: ID;
+  reason: string;
+  description: string;
+  evidenceFiles: EvidenceFile[];
+  status: string;
+  openedAt: ISODate;
 }
 
 export type EscrowStatus = "not_funded" | "held" | "released" | "refunded" | "disputed";
@@ -270,6 +310,13 @@ export interface Order {
   escrow?: Escrow;
   placedAt: ISODate;
   estimatedDelivery?: ISODate;
+  shipment?: Shipment;
+  dispute?: OrderDispute;
+  confirmationDeadline?: ISODate;
+  confirmationRequestedAt?: ISODate;
+  customerConfirmedAt?: ISODate;
+  payoutStatus?: string;
+  refundStatus?: string;
 }
 
 /* --------------------------- Messaging --------------------------- */
@@ -338,6 +385,10 @@ export type NotificationType =
   | "order_shipped"
   | "order_delivered"
   | "order_refunded"
+  | "confirmation_requested"
+  | "dispute_opened"
+  | "dispute_resolved"
+  | "refund_update"
   | "payout_processed"
   | "system";
 

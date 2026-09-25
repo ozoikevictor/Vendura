@@ -39,6 +39,12 @@ const collectionTable: Record<string, string> = {
   aiHistory: "messages",
   buyerRequests: "messages",
   supportRequests: "messages",
+  shipments: "messages",
+  disputes: "messages",
+  orderHistory: "messages",
+  adminActivity: "messages",
+  refunds: "messages",
+  sellerReports: "messages",
 };
 
 type EntityRow = { id: string; data: Entity };

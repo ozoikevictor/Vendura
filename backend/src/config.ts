@@ -13,6 +13,8 @@ const schema = z.object({
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
   OPENAI_API_KEY: z.string().startsWith("sk-").optional(),
   TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+  DELIVERY_CONFIRMATION_WINDOW_HOURS: z.coerce.number().int().min(1).max(720).default(72),
+  HIGH_VALUE_REVIEW_THRESHOLD_NGN: z.coerce.number().positive().default(500000),
   EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>"),
   REQUIRE_EMAIL_VERIFICATION: z.string().default("false").transform((value) => value.toLowerCase() === "true")
 });

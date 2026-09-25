@@ -1,4 +1,4 @@
-import type { Order, ID, DeliveryAddress, PaymentMethod } from "@/types";
+import type { Order, ID, DeliveryAddress, PaymentMethod, EvidenceFile } from "@/types";
 import { api, json } from "./api";
 
 export interface PlaceOrderInput {
@@ -46,6 +46,35 @@ export const confirmDeliveryAndRelease = (orderId: ID) =>
 export const openEscrowDispute = (orderId: ID, reason: string) =>
   api<Order>(`/orders/${encodeURIComponent(orderId)}/disputes`, {
     method: "POST",
+    ...json({ reason: "other", description: reason, evidenceFiles: [] }),
+  });
+export const submitShippingEvidence = (
+  orderId: ID,
+  input: {
+    deliveryMethod: string;
+    carrierName?: string;
+    trackingNumber?: string;
+    shippingDate: string;
+    evidenceFiles: EvidenceFile[];
+    additionalNote?: string;
+  },
+) =>
+  api<Order>(`/vendor/orders/${encodeURIComponent(orderId)}/shipment`, {
+    method: "POST",
+    ...json(input),
+  });
+export const requestOrderConfirmation = (orderId: ID) =>
+  api<Order>(`/vendor/orders/${encodeURIComponent(orderId)}/request-confirmation`, {
+    method: "POST",
+  });
+export const reportOrderProblem = (
+  orderId: ID,
+  input: { reason: string; description: string; evidenceFiles: EvidenceFile[] },
+) =>
+  api<Order>(`/orders/${encodeURIComponent(orderId)}/disputes`, { method: "POST", ...json(input) });
+export const reportSeller = (orderId: ID, reason: string) =>
+  api(`/orders/${encodeURIComponent(orderId)}/report-seller`, {
+    method: "POST",
     ...json({ reason }),
   });
 export const ORDER_STATUS_FLOW = [
@@ -55,4 +84,5 @@ export const ORDER_STATUS_FLOW = [
   "shipped",
   "out_for_delivery",
   "delivered",
+  "completed",
 ] as const;

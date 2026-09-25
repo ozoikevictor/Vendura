@@ -71,11 +71,17 @@ export const vendorRoutes = (db: Database) => {
   router.get("/payouts", asyncRoute(async (req: AuthRequest, res) => ok(res, (await db.list<Entity>("payouts")).filter((p) => p.vendorId === req.user!.id))));
   router.post("/payouts", asyncRoute(async (req: AuthRequest, res) => {
     const amount = z.number().positive().parse(req.body.amount);
+    const vendor = await db.get<Entity>("users", req.user!.id);
+    const store = await db.get<Entity>("stores", req.user!.storeId!);
+    if (["restricted", "suspended"].includes(String(vendor?.sellerStatus ?? vendor?.status))) throw new ApiError(403, "Payouts are paused while this seller account is under review");
+    const pendingPayout = (await db.list<Entity>("payouts")).find((item) => item.vendorId === req.user!.id && ["pending", "processing"].includes(String(item.status)));
+    if (pendingPayout) throw new ApiError(409, "A payout is already being processed. Wait for its final status before requesting another.");
     const bank = await db.get<Entity>("bankAccounts", req.user!.id);
     if (!bank?.verified || !bank.recipientCode) throw new ApiError(400, "Verify your bank account with Paystack before requesting a payout");
     const transactions = (await db.list<Entity>("transactions")).filter((t) => t.vendorId === req.user!.id && t.status === "available");
     const available = transactions.reduce((sum, item) => sum + Number(item.amount), 0);
     if (amount > available) throw new ApiError(409, "Payout amount is higher than your available balance");
+    if (!store?.verified && amount >= config.HIGH_VALUE_REVIEW_THRESHOLD_NGN) throw new ApiError(409, "This high-value payout requires administrator review for a new seller");
 
     const reference = `vendura-${Date.now()}-${id("p").slice(-8).toLowerCase()}`;
     const requestedAt = now();
