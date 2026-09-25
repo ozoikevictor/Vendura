@@ -1172,6 +1172,9 @@ describe("Vendura API", () => {
       ).toBeGreaterThan(
         new Date(verified.body.data.currentPeriodStart).getTime(),
       );
+      expect(
+        await db.findOne("transactions", { reference, type: "subscription" }),
+      ).toMatchObject({ amount: 3000, status: "available", scope: "platform" });
     } finally {
       config.PAYSTACK_SECRET_KEY = originalKey;
       globalThis.fetch = originalFetch;
@@ -1393,6 +1396,14 @@ describe("Vendura API", () => {
       customers: 1,
       stores: 1,
     });
+    const finance = await request(app).get("/api/admin/finance").set(auth(admin));
+    expect(finance.status).toBe(200);
+    expect(finance.body.data.summary).toMatchObject({
+      commissions: expect.any(Number),
+      subscriptions: expect.any(Number),
+      withdrawable: expect.any(Number),
+      sellerAvailable: expect.any(Number),
+    });
 
     const suspended = await request(app)
       .patch("/api/admin/users/user-cust-1/status")
@@ -1412,6 +1423,48 @@ describe("Vendura API", () => {
       .set(auth(admin))
       .send({ verified: false });
     expect(verified.body.data.verified).toBe(false);
+  });
+  it("limits owner withdrawals to realized platform revenue", async () => {
+    const originalKey = config.PAYSTACK_SECRET_KEY;
+    const originalRecipient = config.PLATFORM_PAYSTACK_RECIPIENT_CODE;
+    const originalFetch = globalThis.fetch;
+    config.PAYSTACK_SECRET_KEY = "sk_test_abcdefghijklmnopqrstuvwxyz";
+    config.PLATFORM_PAYSTACK_RECIPIENT_CODE = "RCP_test_owner";
+    globalThis.fetch = (async () => new Response(JSON.stringify({
+      status: true,
+      message: "Transfer queued",
+      data: { status: "pending", transfer_code: "TRF_owner" },
+    }), { status: 200, headers: { "Content-Type": "application/json" } })) as typeof fetch;
+    try {
+      await db.create("transactions", {
+        id: "platform-subscription-test",
+        type: "subscription",
+        amount: 5000,
+        status: "available",
+        reference: "SUB-OWNER-TEST",
+        description: "Test subscription",
+        scope: "platform",
+        createdAt: new Date().toISOString(),
+      });
+      const admin = await login("admin@vendura.test");
+      expect((await request(app).post("/api/admin/platform-withdrawals").set(auth(admin)).send({ amount: 6000, note: "Too much revenue" })).status).toBe(409);
+      const withdrawal = await request(app)
+        .post("/api/admin/platform-withdrawals")
+        .set(auth(admin))
+        .send({ amount: 2000, note: "Company operating account" });
+      expect(withdrawal.status).toBe(200);
+      expect(withdrawal.body.data).toMatchObject({
+        type: "platform_withdrawal",
+        amount: -2000,
+        status: "processing",
+      });
+      const finance = await request(app).get("/api/admin/finance").set(auth(admin));
+      expect(finance.body.data.summary).toMatchObject({ withdrawn: 2000, withdrawable: 3000 });
+    } finally {
+      config.PAYSTACK_SECRET_KEY = originalKey;
+      config.PLATFORM_PAYSTACK_RECIPIENT_CODE = originalRecipient;
+      globalThis.fetch = originalFetch;
+    }
   });
   it("returns consistent 404 errors", async () => {
     const response = await request(app).get("/api/no-such-route");

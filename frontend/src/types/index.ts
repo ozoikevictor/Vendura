@@ -430,18 +430,18 @@ export interface Subscription {
   plan?: SubscriptionPlan;
 }
 
-export type TransactionType = "sale" | "delivery" | "refund" | "payout" | "subscription" | "fee";
+export type TransactionType = "sale" | "delivery" | "refund" | "payout" | "subscription" | "fee" | "payment_processing_fee" | "platform_refund" | "platform_withdrawal";
 
 export interface Transaction {
   id: ID;
-  vendorId: ID;
+  vendorId?: ID;
   type: TransactionType;
   amount: number; // positive = credit, negative = debit
   reference: string;
   description: string;
   orderId?: ID;
   createdAt: ISODate;
-  status?: "pending" | "available" | "reversed";
+  status?: "pending" | "available" | "processing" | "paid" | "failed" | "reversed";
 }
 
 export type PayoutStatus = "pending" | "processing" | "paid" | "failed";

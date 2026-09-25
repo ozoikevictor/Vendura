@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { asyncRoute, ApiError } from "../lib/errors.js";
-import { releaseEarnings, reverseEarnings } from "../lib/finance.js";
+import { platformFinanceSummary, releaseEarnings, reverseEarnings } from "../lib/finance.js";
 import { config } from "../config.js";
 import { ORDER_STATUS, transitionOrder } from "../lib/order-protection.js";
 import { id, now, ok, publicUser } from "../lib/helpers.js";
@@ -206,6 +206,65 @@ export const adminRoutes = (db: Database) => {
             ),
           ),
       );
+    }),
+  );
+
+  router.get(
+    "/finance",
+    asyncRoute(async (_req, res) => {
+      const [transactions, payouts, users, stores] = await Promise.all([
+        db.list<Entity>("transactions"),
+        db.list<Entity>("payouts"),
+        db.list<Entity>("users"),
+        db.list<Entity>("stores"),
+      ]);
+      const summary = platformFinanceSummary(transactions, payouts);
+      const ledger = transactions
+        .map<Entity>((transaction) => {
+          const vendor = users.find((user) => user.id === transaction.vendorId);
+          const store = stores.find((item) => item.ownerId === transaction.vendorId);
+          return { ...transaction, vendorName: vendor?.fullName, storeName: store?.name };
+        })
+        .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      ok(res, {
+        summary,
+        ledger,
+        withdrawals: ledger.filter((item) => item.type === "platform_withdrawal"),
+        recipientConfigured: Boolean(config.PLATFORM_PAYSTACK_RECIPIENT_CODE),
+      });
+    }),
+  );
+
+  router.post(
+    "/platform-withdrawals",
+    asyncRoute(async (req: AuthRequest, res) => {
+      if (!config.PAYSTACK_SECRET_KEY || !config.PLATFORM_PAYSTACK_RECIPIENT_CODE) {
+        throw new ApiError(503, "Configure the platform Paystack recipient in Render before withdrawing");
+      }
+      const { amount, note } = z.object({
+        amount: z.number().min(100),
+        note: z.string().trim().min(3).max(200),
+      }).parse(req.body);
+      const transactions = await db.list<Entity>("transactions");
+      const payouts = await db.list<Entity>("payouts");
+      const summary = platformFinanceSummary(transactions, payouts);
+      if (amount > summary.withdrawable) throw new ApiError(409, "This withdrawal exceeds Vendura's available platform revenue");
+      const reference = `VENDURA-OWNER-${Date.now()}-${id("withdrawal").slice(-8)}`;
+      const response = await fetch("https://api.paystack.co/transfer", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: config.PLATFORM_PAYSTACK_RECIPIENT_CODE, reference, reason: note, currency: "NGN" }),
+      });
+      const payload = await response.json() as { status: boolean; message: string; data?: Entity };
+      if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the owner withdrawal");
+      const entry = await db.create("transactions", {
+        id: id("transaction"), type: "platform_withdrawal", scope: "platform",
+        amount: -amount, status: "processing", reference, description: note,
+        adminId: req.user!.id, transferCode: payload.data.transfer_code,
+        providerStatus: payload.data.status, createdAt: now(),
+      });
+      await db.create("adminActivity", { id: id("activity"), kind: "admin_activity", adminId: req.user!.id, action: "platform_withdrawal", amount, reference, note, createdAt: now() });
+      ok(res, entry);
     }),
   );
 

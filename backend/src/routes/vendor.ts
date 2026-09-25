@@ -170,6 +170,14 @@ export const vendorRoutes = (db: Database) => {
       autoRenew: false, lastPaymentAt: paidAt.toISOString(), lastPaymentAmount: Number(plan.priceMonthly), lastPaymentReference: reference,
       pendingPlanId: undefined, pendingPaymentReference: undefined,
     });
+    if (!await db.findOne<Entity>("transactions", { reference, type: "subscription" })) {
+      await db.create("transactions", {
+        id: id("transaction"), vendorId: req.user!.id, type: "subscription",
+        amount: Number(plan.priceMonthly), status: "available", reference,
+        description: `${plan.name} monthly subscription`, subscriptionId: subscription.id,
+        scope: "platform", createdAt: paidAt.toISOString(),
+      });
+    }
     ok(res, { ...updated, plan, productCount: (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length, isActive: true });
   }));
   router.get("/delivery-settings", asyncRoute(async (req: AuthRequest, res) => ok(res, await db.get("deliverySettings", req.user!.storeId!))));

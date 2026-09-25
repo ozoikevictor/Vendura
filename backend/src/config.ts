@@ -10,6 +10,7 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default("7d"),
   FRONTEND_URL: z.string().default("http://localhost:8080"),
   PAYSTACK_SECRET_KEY: z.string().startsWith("sk_").optional(),
+  PLATFORM_PAYSTACK_RECIPIENT_CODE: z.string().startsWith("RCP_").optional(),
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
   OPENAI_API_KEY: z.string().startsWith("sk-").optional(),
   TURNSTILE_SECRET_KEY: z.string().min(1).optional(),

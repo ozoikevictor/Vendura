@@ -41,7 +41,18 @@ export const webhookRoutes = (db: Database) => {
       return;
     }
     const payout = await db.findOne<Entity>("payouts", { reference: event.data.reference });
-    if (!payout || event.data.currency !== "NGN" || event.data.amount !== Math.round(Number(payout.amount) * 100)) {
+    if (!payout) {
+      const withdrawal = await db.findOne<Entity>("transactions", { reference: event.data.reference, type: "platform_withdrawal" });
+      if (withdrawal && event.data.currency === "NGN" && event.data.amount === Math.round(Math.abs(Number(withdrawal.amount)) * 100)) {
+        const isSuccess = event.event === "transfer.success";
+        await db.update("transactions", withdrawal.id, isSuccess
+          ? { status: "paid", paidAt: event.data.transferred_at ?? now(), providerStatus: "success" }
+          : { status: "failed", failedAt: now(), providerStatus: event.event, failureReason: event.data.reason ?? "Transfer failed or was reversed" });
+      }
+      res.sendStatus(200);
+      return;
+    }
+    if (event.data.currency !== "NGN" || event.data.amount !== Math.round(Number(payout.amount) * 100)) {
       res.sendStatus(200);
       return;
     }
