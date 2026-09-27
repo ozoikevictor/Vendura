@@ -10,7 +10,11 @@ export const Route = createFileRoute("/categories/")({
   head: () => ({
     meta: [
       { title: "All Categories — Vendura" },
-      { name: "description", content: "Browse all product categories on Vendura — phones, fashion, building materials, and more." },
+      {
+        name: "description",
+        content:
+          "Browse all product categories on Vendura — phones, fashion, building materials, and more.",
+      },
       { property: "og:title", content: "All Categories — Vendura" },
       { property: "og:description", content: "Browse all product categories on Vendura." },
       { name: "twitter:card", content: "summary" },
@@ -48,7 +52,7 @@ function CategoriesPage() {
               <div className="min-w-0">
                 <h3 className="truncate text-sm font-semibold text-foreground">{c.name}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {c.subcategories.length} subcategories
+                  {c.productCount} {c.productCount === 1 ? "product" : "products"}
                 </p>
               </div>
             </Link>

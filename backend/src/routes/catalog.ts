@@ -29,7 +29,11 @@ export const catalogRoutes = (db: Database) => {
   router.get("/categories/:slug", asyncRoute(async (req, res) => {
     const item = await db.findOne("categories", { slug: req.params.slug });
     if (!item) throw new ApiError(404, "Category not found");
-    ok(res, item);
+    const productCount = (await db.list<Entity>("products")).filter(
+      (product) => product.categoryId === item.id && isLiveProduct(product),
+    ).length;
+    res.set("Cache-Control", "no-cache, must-revalidate");
+    ok(res, { ...item, productCount });
   }));
   router.get("/categories/:categorySlug/subcategories/:subcategorySlug", asyncRoute(async (req, res) => {
     const category = await db.findOne<Entity>("categories", { slug: req.params.categorySlug });
