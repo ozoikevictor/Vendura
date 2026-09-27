@@ -9,6 +9,7 @@ import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto
 import { config } from "../config.js";
 import { resetEmail, sendEmail, verificationEmail } from "../lib/email.js";
 import { verifyHuman } from "../lib/turnstile.js";
+import { verifySocialIdentity } from "../lib/social-auth.js";
 
 export const authRoutes = (db: Database) => {
   const router = Router();
@@ -54,6 +55,37 @@ export const authRoutes = (db: Database) => {
     if (!user || typeof user.passwordHash !== "string" || !(await bcrypt.compare(input.password, user.passwordHash))) throw new ApiError(401, "Invalid email or password");
     if (user.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendraza support.");
     ok(res, { user: publicUser(user), token: signToken({ id: user.id, role: user.role as "customer" | "vendor" | "admin", storeId: user.storeId as string | undefined }) });
+  }));
+  router.post("/social", asyncRoute(async (req, res) => {
+    const input = zSocialAuth.parse(req.body);
+    const identity = await verifySocialIdentity(input.provider, input.identityToken);
+    let user = await db.findOne<Entity>("users", { email: identity.email });
+    if (user?.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendraza support.");
+
+    if (!user) {
+      user = await db.create("users", {
+        id: id("user-customer"),
+        fullName: input.fullName?.trim() || identity.name || identity.email.split("@")[0],
+        email: identity.email,
+        role: "customer",
+        emailVerified: true,
+        avatarUrl: identity.avatarUrl,
+        authProviders: [{ provider: input.provider, subject: identity.subject }],
+        createdAt: now(),
+      } as Entity);
+    } else {
+      const providers = Array.isArray(user.authProviders) ? user.authProviders as Array<{ provider: string; subject: string }> : [];
+      const alreadyLinked = providers.some((entry) => entry.provider === input.provider && entry.subject === identity.subject);
+      const patch: Partial<Entity> = { emailVerified: true };
+      if (!alreadyLinked) patch.authProviders = [...providers, { provider: input.provider, subject: identity.subject }];
+      if (!user.avatarUrl && identity.avatarUrl) patch.avatarUrl = identity.avatarUrl;
+      user = await db.update<Entity>("users", user.id, patch) ?? user;
+    }
+
+    ok(res, {
+      user: publicUser(user),
+      token: signToken({ id: user.id, role: user.role as "customer" | "vendor" | "admin", storeId: user.storeId as string | undefined }),
+    });
   }));
   router.get("/me", authenticate, asyncRoute(async (req: AuthRequest, res) => {
     const user = await db.get("users", req.user!.id);
@@ -133,6 +165,11 @@ const zReset = z.object({ token: z.string().min(1), password });
 const zForgotPassword = z.object({ email, captchaToken });
 const zChangePassword = z.object({ currentPassword: z.string().min(1), newPassword: password });
 const zOtp = z.object({ otp: z.string().regex(/^\d{6}$/) });
+const zSocialAuth = z.object({
+  provider: z.enum(["google", "apple"]),
+  identityToken: z.string().min(20),
+  fullName: z.string().trim().min(2).max(120).optional(),
+});
 
 function createVerification() {
   const code = String(randomInt(100000, 1_000_000));

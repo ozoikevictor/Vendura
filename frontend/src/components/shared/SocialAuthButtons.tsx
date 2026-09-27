@@ -1,27 +1,170 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
+import * as authService from "@/services/authService";
+import { getErrorMessage } from "@/services/api";
+import { useAuthStore } from "@/store/auth";
+import { useCartStore } from "@/store/cart";
+
+const GOOGLE_SCRIPT = "google-identity-script";
+const APPLE_SCRIPT = "apple-auth-script";
+const googleClientId = import.meta.env["VITE_GOOGLE_CLIENT_ID"] || "";
+const appleClientId = import.meta.env["VITE_APPLE_CLIENT_ID"] || "";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (options: Record<string, unknown>) => void;
+          renderButton: (element: HTMLElement, options: Record<string, unknown>) => void;
+        };
+      };
+    };
+    AppleID?: {
+      auth: {
+        init: (options: Record<string, unknown>) => void;
+        signIn: () => Promise<{
+          authorization: { id_token: string };
+          user?: { name?: { firstName?: string; lastName?: string } };
+        }>;
+      };
+    };
+  }
+}
+
+function loadScript(id: string, src: string) {
+  return new Promise<void>((resolve, reject) => {
+    const current = document.getElementById(id) as HTMLScriptElement | null;
+    if (current) {
+      if (current.dataset.loaded === "true") resolve();
+      else current.addEventListener("load", () => resolve(), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve();
+    };
+    script.onerror = () => reject(new Error("Could not load the sign-in provider"));
+    document.head.appendChild(script);
+  });
+}
 
 export function SocialAuthButtons({ showDivider = true }: { showDivider?: boolean }) {
-  const notifyProviderSetup = (provider: string) => {
-    toast.info(`${provider} sign-in will be available after OAuth setup.`);
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((state) => state.set);
+  const hasCartItems = useCartStore((state) => state.items.some((item) => !item.savedForLater));
+  const googleButton = useRef<HTMLDivElement>(null);
+  const [appleLoading, setAppleLoading] = useState(false);
+
+  const finishLogin = useCallback(
+    (user: Awaited<ReturnType<typeof authService.socialLogin>>) => {
+      setAuth(user);
+      toast.success("Welcome to Vendraza!");
+      if (user.role === "admin") navigate({ to: "/admin" });
+      else if (user.role === "vendor") navigate({ to: "/vendor" });
+      else if (hasCartItems) navigate({ to: "/checkout" });
+      else navigate({ to: "/marketplace" });
+    },
+    [hasCartItems, navigate, setAuth],
+  );
+
+  useEffect(() => {
+    if (!googleClientId || !googleButton.current) return;
+    let active = true;
+    loadScript(GOOGLE_SCRIPT, "https://accounts.google.com/gsi/client")
+      .then(() => {
+        if (!active || !window.google || !googleButton.current) return;
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async ({ credential }: { credential: string }) => {
+            try {
+              finishLogin(
+                await authService.socialLogin({ provider: "google", identityToken: credential }),
+              );
+            } catch (error) {
+              toast.error(getErrorMessage(error, "Google sign-in failed"));
+            }
+          },
+        });
+        googleButton.current.replaceChildren();
+        window.google.accounts.id.renderButton(googleButton.current, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "rectangular",
+          width: googleButton.current.clientWidth,
+        });
+      })
+      .catch((error) => toast.error(getErrorMessage(error, "Google sign-in is unavailable")));
+    return () => {
+      active = false;
+    };
+  }, [finishLogin]);
+
+  const signInWithApple = async () => {
+    if (!appleClientId) return toast.error("Apple sign-in is not configured yet");
+    setAppleLoading(true);
+    try {
+      await loadScript(
+        APPLE_SCRIPT,
+        "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js",
+      );
+      if (!window.AppleID) throw new Error("Apple sign-in could not start");
+      window.AppleID.auth.init({
+        clientId: appleClientId,
+        scope: "name email",
+        redirectURI: `${window.location.origin}/login`,
+        usePopup: true,
+      });
+      const result = await window.AppleID.auth.signIn();
+      const name = [result.user?.name?.firstName, result.user?.name?.lastName]
+        .filter(Boolean)
+        .join(" ");
+      finishLogin(
+        await authService.socialLogin({
+          provider: "apple",
+          identityToken: result.authorization.id_token,
+          ...(name ? { fullName: name } : {}),
+        }),
+      );
+    } catch (error) {
+      if ((error as { error?: string })?.error !== "popup_closed_by_user")
+        toast.error(getErrorMessage(error, "Apple sign-in failed"));
+    } finally {
+      setAppleLoading(false);
+    }
   };
 
   return (
     <div className="space-y-3">
+      {googleClientId ? (
+        <div ref={googleButton} className="flex min-h-11 w-full justify-center overflow-hidden" />
+      ) : (
+        <button
+          type="button"
+          onClick={() => toast.error("Google sign-in is not configured yet")}
+          className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground"
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+      )}
       <button
         type="button"
-        onClick={() => notifyProviderSetup("Google")}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+        onClick={signInWithApple}
+        disabled={appleLoading}
+        className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90 disabled:opacity-60"
       >
-        <GoogleIcon />
-        Continue with Google
-      </button>
-      <button
-        type="button"
-        onClick={() => notifyProviderSetup("Apple")}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90"
-      >
-        <AppleIcon />
-        Continue with Apple
+        {appleLoading ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <AppleIcon />}
+        {appleLoading ? "Connecting..." : "Continue with Apple"}
       </button>
       {showDivider && (
         <div className="flex items-center gap-3 py-1" aria-hidden="true">
@@ -58,7 +201,6 @@ function GoogleIcon() {
     </svg>
   );
 }
-
 function AppleIcon() {
   return (
     <svg aria-hidden="true" className="h-5 w-5 fill-current" viewBox="0 0 24 24">

@@ -1,4 +1,4 @@
-# Vendura Deployment
+# Vendraza Deployment
 
 ## Render backend
 
@@ -13,8 +13,10 @@ Add these secret environment values in Render:
 - `PAYSTACK_SECRET_KEY`
 - `FRONTEND_URL` (use the Vercel URL after the frontend is deployed)
 - `RESEND_API_KEY`
-- `EMAIL_FROM` (for example `Vendura <no-reply@yourdomain.com>`)
+- `EMAIL_FROM` (for example `Vendraza <account@vendraza.com>`)
 - `TURNSTILE_SECRET_KEY` (the private key from your Cloudflare Turnstile widget)
+- `GOOGLE_CLIENT_ID` (the Google web OAuth client ID)
+- `APPLE_CLIENT_ID` (the Apple Services ID used for Sign in with Apple)
 
 Render generates `JWT_SECRET`. Do not copy any `.env` file into GitHub.
 
@@ -24,6 +26,8 @@ Import the same repository, set the Root Directory to `frontend`, and add:
 
 - `VITE_API_URL=https://your-render-service.onrender.com/api`
 - `VITE_TURNSTILE_SITE_KEY` (the public site key from the same Turnstile widget)
+- `VITE_GOOGLE_CLIENT_ID` (the same Google web OAuth client ID used by Render)
+- `VITE_APPLE_CLIENT_ID` (the same Apple Services ID used by Render)
 - `NITRO_PRESET=vercel`
 
 After Vercel deploys, update `FRONTEND_URL` in Render and redeploy the backend.

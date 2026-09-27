@@ -38,6 +38,16 @@ export async function login(input: LoginInput): Promise<User> {
   return result.user;
 }
 
+export async function socialLogin(input: {
+  provider: "google" | "apple";
+  identityToken: string;
+  fullName?: string;
+}): Promise<User> {
+  const result = await api<AuthResult<User>>("/auth/social", { method: "POST", ...json(input) });
+  setToken(result.token);
+  return result.user;
+}
+
 export async function registerCustomer(input: CustomerRegisterInput): Promise<Customer> {
   const result = await api<AuthResult<Customer>>("/auth/register/customer", {
     method: "POST",
@@ -57,8 +67,11 @@ export async function registerVendor(input: VendorRegisterInput): Promise<Vendor
 }
 
 export const getCurrentUser = () => api<User>("/auth/me");
-export const updateProfile = (input: Partial<Pick<User, "fullName" | "email" | "phone" | "avatarUrl" | "notificationPreferences">>) =>
-  api<User>("/users/me", { method: "PATCH", ...json(input) });
+export const updateProfile = (
+  input: Partial<
+    Pick<User, "fullName" | "email" | "phone" | "avatarUrl" | "notificationPreferences">
+  >,
+) => api<User>("/users/me", { method: "PATCH", ...json(input) });
 export async function logout() {
   try {
     await api<void>("/auth/logout", { method: "POST" });
@@ -67,9 +80,10 @@ export async function logout() {
   }
 }
 export const requestPasswordReset = (email: string, captchaToken: string) =>
-  api<{ message: string }>("/auth/forgot-password", { method: "POST", ...json({ email, captchaToken }) }).then(
-    () => undefined,
-  );
+  api<{ message: string }>("/auth/forgot-password", {
+    method: "POST",
+    ...json({ email, captchaToken }),
+  }).then(() => undefined);
 export const resetPassword = (token: string, newPassword: string) =>
   api<{ message: string }>("/auth/reset-password", {
     method: "POST",
@@ -80,6 +94,9 @@ export const verifyEmail = (otp: string) =>
 export const resendOtp = () =>
   api<{ message: string }>("/auth/resend-otp", { method: "POST" }).then(() => undefined);
 export const changePassword = (currentPassword: string, newPassword: string) =>
-  api<{ message: string }>("/auth/change-password", { method: "POST", ...json({ currentPassword, newPassword }) });
+  api<{ message: string }>("/auth/change-password", {
+    method: "POST",
+    ...json({ currentPassword, newPassword }),
+  });
 
 export { nigerianStates };
