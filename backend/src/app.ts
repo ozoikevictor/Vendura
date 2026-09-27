@@ -21,12 +21,14 @@ import type { AuthRequest } from "./types.js";
 
 export function createApp(db: Database) {
   const app = express();
-  const configuredOrigins = config.FRONTEND_URL.split(",").map((origin) =>
-    origin.trim(),
-  );
+  const configuredOrigins = new Set([
+    ...config.FRONTEND_URL.split(",").map((origin) => origin.trim()),
+    "https://vendraza.com",
+    "https://www.vendraza.com",
+  ]);
   const isAllowedOrigin = (origin?: string) =>
     !origin ||
-    configuredOrigins.includes(origin) ||
+    configuredOrigins.has(origin) ||
     (config.NODE_ENV === "development" &&
       /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin));
   app.disable("x-powered-by");
