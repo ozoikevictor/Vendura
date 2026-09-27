@@ -13,13 +13,13 @@ import { HumanCheck } from "@/components/shared/HumanCheck";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
-      { title: "Create Account — Vendura" },
+      { title: "Create Account — Vendraza" },
       {
         name: "description",
-        content: "Create a Vendura customer account to shop from verified vendors.",
+        content: "Create a Vendraza customer account to shop from verified vendors.",
       },
-      { property: "og:title", content: "Create Account — Vendura" },
-      { property: "og:description", content: "Create a Vendura customer account." },
+      { property: "og:title", content: "Create Account — Vendraza" },
+      { property: "og:description", content: "Create a Vendraza customer account." },
       { name: "twitter:card", content: "summary" },
     ],
   }),
@@ -88,7 +88,7 @@ function RegisterPage() {
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Join Vendura to shop from verified vendors.
+            Join Vendraza to shop from verified vendors.
           </p>
         </div>
 

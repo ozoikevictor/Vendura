@@ -11,10 +11,10 @@ import { changePassword, logout, updateProfile } from "@/services/authService";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Vendura" },
-      { name: "description", content: "Manage your Vendura customer account." },
-      { property: "og:title", content: "Profile — Vendura" },
-      { property: "og:description", content: "Manage your Vendura customer account." },
+      { title: "Profile — Vendraza" },
+      { name: "description", content: "Manage your Vendraza customer account." },
+      { property: "og:title", content: "Profile — Vendraza" },
+      { property: "og:description", content: "Manage your Vendraza customer account." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

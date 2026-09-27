@@ -11,7 +11,7 @@ export async function seedDatabase(db: Database) {
     users: [
       { id: "user-cust-1", fullName: "Demo Customer", email: "customer@vendura.test", phone: "+2348000000001", passwordHash, role: "customer", emailVerified: true, createdAt: new Date().toISOString() },
       { id: "user-vendor-1", fullName: "Demo Vendor", email: "vendor@vendura.test", phone: "+2348000000002", passwordHash, role: "vendor", storeId: "store-technaija", emailVerified: true, createdAt: new Date().toISOString() },
-      { id: "user-admin-1", fullName: "Vendura Admin", email: "admin@vendura.test", passwordHash, role: "admin", emailVerified: true, createdAt: new Date().toISOString() }
+      { id: "user-admin-1", fullName: "Vendraza Admin", email: "admin@vendura.test", passwordHash, role: "admin", emailVerified: true, createdAt: new Date().toISOString() }
     ],
     categories: [
       { id: "cat-electronics", slug: "phones-electronics", name: "Phones & Electronics", icon: "Smartphone", productCount: 1, subcategories: sub("phones-electronics", ["Phones", "Laptops", "Audio"]) },

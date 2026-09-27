@@ -14,10 +14,10 @@ import type { ProductQuery } from "@/types";
 export const Route = createFileRoute("/search")({
   head: () => ({
     meta: [
-      { title: "Search — Vendura" },
+      { title: "Search — Vendraza" },
       { name: "description", content: "Search products from verified vendors across Nigeria." },
-      { property: "og:title", content: "Search — Vendura" },
-      { property: "og:description", content: "Search products on Vendura." },
+      { property: "og:title", content: "Search — Vendraza" },
+      { property: "og:description", content: "Search products on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

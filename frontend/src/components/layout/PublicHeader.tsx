@@ -27,7 +27,7 @@ export function PublicHeader() {
             <Store className="h-5 w-5" />
           </div>
           <span className="font-display text-xl font-bold tracking-tight text-foreground">
-            Vendura
+            Vendraza
           </span>
         </Link>
 

@@ -167,7 +167,7 @@ export const orderRoutes = (db: Database) => {
     const dispute = await db.create("disputes", { id: id("dispute"), kind: "order_dispute", orderId: order.id, customerId: order.customerId, vendorId: (await db.get<Entity>("stores", String(order.storeId)))?.ownerId, ...input, status: "open", openedAt, updatedAt: openedAt });
     const updated = await transitionOrder(db, order, ORDER_STATUS.DISPUTED, req.user!, input.reason, { disputeId: dispute.id, payoutStatus: "frozen", escrow: { ...(order.escrow as object), status: "disputed", disputeReason: input.reason, disputeOpenedAt: openedAt } });
     const store = await db.get<Entity>("stores", String(order.storeId));
-    if (store?.ownerId) await notifyOnce(db, { dedupeKey: `dispute-vendor:${dispute.id}`, userId: store.ownerId, type: "dispute_opened", title: `Problem reported for ${order.orderNumber}`, body: "The payout is frozen while Vendura reviews the order.", href: `/vendor/orders/${order.id}` });
+    if (store?.ownerId) await notifyOnce(db, { dedupeKey: `dispute-vendor:${dispute.id}`, userId: store.ownerId, type: "dispute_opened", title: `Problem reported for ${order.orderNumber}`, body: "The payout is frozen while Vendraza reviews the order.", href: `/vendor/orders/${order.id}` });
     const admins = (await db.list<Entity>("users")).filter((user) => user.role === "admin");
     for (const admin of admins) await notifyOnce(db, { dedupeKey: `dispute-admin:${dispute.id}:${admin.id}`, userId: admin.id, type: "dispute_opened", title: `New dispute: ${order.orderNumber}`, body: input.reason, href: "/admin/disputes" });
     ok(res, updated);

@@ -50,7 +50,7 @@ function ContactPage() {
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-10 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[20rem_1fr] lg:px-8">
         <aside>
           <p className="text-xs font-semibold uppercase text-primary">Support</p>
-          <h1 className="mt-2 font-display text-3xl font-bold">Contact Vendura</h1>
+          <h1 className="mt-2 font-display text-3xl font-bold">Contact Vendraza</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Tell us what happened and include an order, payment, store, or conversation reference
             when available.

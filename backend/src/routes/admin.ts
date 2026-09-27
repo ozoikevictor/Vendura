@@ -263,7 +263,7 @@ export const adminRoutes = (db: Database) => {
       if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
       const platformBank = await db.get<Entity>("bankAccounts", "platform-owner-bank");
       const recipientCode = String(platformBank?.recipientCode ?? config.PLATFORM_PAYSTACK_RECIPIENT_CODE ?? "");
-      if (!recipientCode) throw new ApiError(503, "Connect the Vendura company bank account before withdrawing");
+      if (!recipientCode) throw new ApiError(503, "Connect the Vendraza company bank account before withdrawing");
       const { amount, note } = z.object({
         amount: z.number().min(100),
         note: z.string().trim().min(3).max(200),
@@ -271,7 +271,7 @@ export const adminRoutes = (db: Database) => {
       const transactions = await db.list<Entity>("transactions");
       const payouts = await db.list<Entity>("payouts");
       const summary = platformFinanceSummary(transactions, payouts);
-      if (amount > summary.withdrawable) throw new ApiError(409, "This withdrawal exceeds Vendura's available platform revenue");
+      if (amount > summary.withdrawable) throw new ApiError(409, "This withdrawal exceeds Vendraza's available platform revenue");
       const reference = `VENDURA-OWNER-${Date.now()}-${id("withdrawal").slice(-8)}`;
       const response = await fetch("https://api.paystack.co/transfer", {
         method: "POST",
@@ -371,7 +371,7 @@ export const adminRoutes = (db: Database) => {
         if (!order.paymentReference) throw new ApiError(409, "This order does not have a Paystack transaction reference");
         const existing = await db.findOne<Entity>("refunds", { kind: "refund", orderId: order.id });
         if (existing && !["failed"].includes(String(existing.providerStatus))) throw new ApiError(409, "A refund already exists for this order");
-        const response = await fetch("https://api.paystack.co/refund", { method: "POST", headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ transaction: order.paymentReference, amount: Math.round(Number(order.total) * 100), currency: "NGN", customer_note: note, merchant_note: `Vendura dispute ${order.orderNumber}` }) });
+        const response = await fetch("https://api.paystack.co/refund", { method: "POST", headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ transaction: order.paymentReference, amount: Math.round(Number(order.total) * 100), currency: "NGN", customer_note: note, merchant_note: `Vendraza dispute ${order.orderNumber}` }) });
         const payload = await response.json() as { status: boolean; message: string; data?: Entity };
         if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the refund");
         const refund = await db.create("refunds", { id: id("refund"), kind: "refund", orderId: order.id, transactionReference: order.paymentReference, refundReference: payload.data.refund_reference ?? payload.data.id, amount: order.total, reason: note, initiatedBy: req.user!.id, initiatedAt: now(), providerStatus: payload.data.status ?? "pending", updatedAt: now() });

@@ -90,7 +90,7 @@ export const vendorRoutes = (db: Database) => {
     try {
       const transfer = await paystackRequest<PaystackTransfer>("/transfer", {
         method: "POST",
-        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: bank.recipientCode, reference, reason: "Vendura seller payout", currency: "NGN" })
+        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: bank.recipientCode, reference, reason: "Vendraza seller payout", currency: "NGN" })
       });
       const updated = await db.update<Entity>("payouts", payout.id, { status: "processing", transferCode: transfer.transfer_code, providerStatus: transfer.status });
       created(res, updated);

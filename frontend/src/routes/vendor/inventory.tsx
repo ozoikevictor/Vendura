@@ -12,9 +12,9 @@ import { useState } from "react";
 export const Route = createFileRoute("/vendor/inventory")({
   head: () => ({
     meta: [
-      { title: "Inventory — Vendor — Vendura" },
+      { title: "Inventory — Vendor — Vendraza" },
       { name: "description", content: "Track stock levels." },
-      { property: "og:title", content: "Inventory — Vendura" },
+      { property: "og:title", content: "Inventory — Vendraza" },
       { property: "og:description", content: "Track stock levels." },
       { name: "twitter:card", content: "summary" },
     ],

@@ -12,7 +12,7 @@ function ReturnsPage() {
           title: "Return eligibility",
           content: (
             <p>
-              Contact Vendura within 7 days of delivery when an item is damaged, defective,
+              Contact Vendraza within 7 days of delivery when an item is damaged, defective,
               materially different from its listing, counterfeit, incomplete, or incorrect. The item
               should remain unused and include its original packaging where reasonably possible.
             </p>
@@ -33,7 +33,7 @@ function ReturnsPage() {
           content: (
             <p>
               Open the relevant order, describe the problem, and provide clear photos or video where
-              appropriate. Keep the product and packaging until Vendura or the seller provides
+              appropriate. Keep the product and packaging until Vendraza or the seller provides
               return instructions.
             </p>
           ),

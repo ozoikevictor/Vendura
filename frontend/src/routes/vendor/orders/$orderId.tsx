@@ -21,9 +21,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/vendor/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order Details — Vendor — Vendura" },
+      { title: "Order Details — Vendor — Vendraza" },
       { name: "description", content: "Manage this order." },
-      { property: "og:title", content: "Order Details — Vendura" },
+      { property: "og:title", content: "Order Details — Vendraza" },
       { property: "og:description", content: "Manage this order." },
       { name: "twitter:card", content: "summary" },
     ],
@@ -234,7 +234,7 @@ function VendorOrderDetailPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {order.escrow.status === "held" && (
               <>
-                {formatNaira(order.escrow.amount)} is held by Vendura. It moves to your balance once
+                {formatNaira(order.escrow.amount)} is held by Vendraza. It moves to your balance once
                 the customer confirms delivery
                 {order.escrow.autoReleaseAt
                   ? `, or automatically on ${formatDate(order.escrow.autoReleaseAt)}`

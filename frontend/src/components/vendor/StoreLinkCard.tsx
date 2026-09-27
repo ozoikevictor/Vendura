@@ -37,7 +37,7 @@ export function StoreLinkCard({ storeSlug, storeName, productCount, className }:
     }
   };
 
-  const shareMessage = `Shop from ${storeName} on Vendura — browse everything I sell and order directly: ${url}`;
+  const shareMessage = `Shop from ${storeName} on Vendraza — browse everything I sell and order directly: ${url}`;
 
   return (
     <section

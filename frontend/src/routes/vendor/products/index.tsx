@@ -19,10 +19,10 @@ import type { ProductStatus } from "@/types";
 export const Route = createFileRoute("/vendor/products/")({
   head: () => ({
     meta: [
-      { title: "Products — Vendor — Vendura" },
-      { name: "description", content: "Manage your products on Vendura." },
-      { property: "og:title", content: "Products — Vendura" },
-      { property: "og:description", content: "Manage your products on Vendura." },
+      { title: "Products — Vendor — Vendraza" },
+      { name: "description", content: "Manage your products on Vendraza." },
+      { property: "og:title", content: "Products — Vendraza" },
+      { property: "og:description", content: "Manage your products on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

@@ -26,7 +26,7 @@ function FinancePage() {
     staleTime: 86_400_000,
   });
   const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("Transfer Vendura platform revenue to company bank account");
+  const [note, setNote] = useState("Transfer Vendraza platform revenue to company bank account");
   const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
   const saveBank = useMutation({
     mutationFn: () => updatePlatformBank(bankForm),
@@ -54,7 +54,7 @@ function FinancePage() {
     <>
       <AdminHeading
         title="Platform Finance"
-        description="Track Vendura revenue separately from money owed to sellers."
+        description="Track Vendraza revenue separately from money owed to sellers."
       />
       <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Metric
@@ -96,7 +96,7 @@ function FinancePage() {
           </dl>
         </div>
         <div className="rounded-lg border border-border bg-card p-5">
-          <h2 className="font-display text-lg font-bold">Withdraw Vendura revenue</h2>
+          <h2 className="font-display text-lg font-bold">Withdraw Vendraza revenue</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Only platform revenue can be transferred. Seller balances are protected.
           </p>
@@ -119,7 +119,7 @@ function FinancePage() {
                 saveBank.mutate();
               }}
             >
-              <p className="text-sm font-semibold">Connect Vendura company bank account</p>
+              <p className="text-sm font-semibold">Connect Vendraza company bank account</p>
               <select
                 value={bankForm.bankCode}
                 onChange={(event) =>
@@ -223,7 +223,7 @@ function FinancePage() {
                   </p>
                 </td>
                 <td>
-                  {entry.storeName ?? (entry.type === "platform_withdrawal" ? "Vendura" : "-")}
+                  {entry.storeName ?? (entry.type === "platform_withdrawal" ? "Vendraza" : "-")}
                 </td>
                 <td
                   className={

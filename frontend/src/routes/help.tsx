@@ -42,7 +42,7 @@ const faqs = [
   ],
   [
     "Can I shop before creating an account?",
-    "Yes. You can browse and add products to your cart as a guest. Vendura asks you to sign in or create an account when you continue to checkout.",
+    "Yes. You can browse and add products to your cart as a guest. Vendraza asks you to sign in or create an account when you continue to checkout.",
   ],
   [
     "What happens when a product is out of stock?",
@@ -50,7 +50,7 @@ const faqs = [
   ],
   [
     "How do I contact a seller?",
-    "Open a product and select the message option. Keep the conversation in Vendura so the order context and safety record remain available.",
+    "Open a product and select the message option. Keep the conversation in Vendraza so the order context and safety record remain available.",
   ],
   [
     "How do refunds work?",
@@ -117,13 +117,13 @@ function HelpPage() {
         <div className="mt-10 border-l-4 border-primary bg-primary-soft p-5">
           <h2 className="font-semibold">Still need help?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Send the Vendura team the details and keep the reference number we provide.
+            Send the Vendraza team the details and keep the reference number we provide.
           </p>
           <Link
             to="/contact"
             className="mt-3 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
-            Contact Vendura
+            Contact Vendraza
           </Link>
         </div>
       </main>

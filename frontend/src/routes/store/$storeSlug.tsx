@@ -20,10 +20,10 @@ import { useStorefrontStore } from "@/store/storefront";
 export const Route = createFileRoute("/store/$storeSlug")({
   head: ({ params }) => ({
     meta: [
-      { title: "Store — Vendura" },
-      { name: "description", content: "View this store on Vendura." },
-      { property: "og:title", content: "Store — Vendura" },
-      { property: "og:description", content: "View this store on Vendura." },
+      { title: "Store — Vendraza" },
+      { name: "description", content: "View this store on Vendraza." },
+      { property: "og:title", content: "Store — Vendraza" },
+      { property: "og:description", content: "View this store on Vendraza." },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
@@ -53,7 +53,7 @@ function StorePage() {
 
   useEffect(() => {
     if (!store) return;
-    document.title = `${store.name} - Vendura`;
+    document.title = `${store.name} - Vendraza`;
     setBannerFailed(false);
     setLogoFailed(false);
   }, [store]);

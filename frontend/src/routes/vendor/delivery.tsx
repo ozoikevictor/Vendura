@@ -11,9 +11,9 @@ import { DataLoader } from "@/components/shared/DataLoader";
 export const Route = createFileRoute("/vendor/delivery")({
   head: () => ({
     meta: [
-      { title: "Delivery — Vendor — Vendura" },
+      { title: "Delivery — Vendor — Vendraza" },
       { name: "description", content: "Configure delivery zones and fees." },
-      { property: "og:title", content: "Delivery — Vendura" },
+      { property: "og:title", content: "Delivery — Vendraza" },
       { property: "og:description", content: "Configure delivery zones and fees." },
       { name: "twitter:card", content: "summary" },
     ],

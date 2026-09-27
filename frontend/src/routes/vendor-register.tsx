@@ -26,13 +26,13 @@ import { HumanCheck } from "@/components/shared/HumanCheck";
 export const Route = createFileRoute("/vendor-register")({
   head: () => ({
     meta: [
-      { title: "Start Selling — Vendura" },
+      { title: "Start Selling — Vendraza" },
       {
         name: "description",
-        content: "Open your store on Vendura and start selling to customers across Nigeria.",
+        content: "Open your store on Vendraza and start selling to customers across Nigeria.",
       },
-      { property: "og:title", content: "Start Selling — Vendura" },
-      { property: "og:description", content: "Open your store on Vendura." },
+      { property: "og:title", content: "Start Selling — Vendraza" },
+      { property: "og:description", content: "Open your store on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),
@@ -136,7 +136,7 @@ function VendorRegisterPage() {
     <AuthLayout>
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Start Selling on Vendura</h1>
+          <h1 className="text-2xl font-bold text-foreground">Start Selling on Vendraza</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Open your store and reach customers across Nigeria.
           </p>

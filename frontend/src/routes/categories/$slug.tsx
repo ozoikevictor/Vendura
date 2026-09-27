@@ -18,10 +18,10 @@ export const Route = createFileRoute("/categories/$slug")({
     const cat = categories.find((c) => c.slug === params.slug);
     return {
       meta: [
-        { title: `${cat?.name ?? "Category"} — Vendura` },
-        { name: "description", content: `Browse ${cat?.name ?? "products"} from verified vendors on Vendura.` },
-        { property: "og:title", content: `${cat?.name ?? "Category"} — Vendura` },
-        { property: "og:description", content: `Browse ${cat?.name ?? "products"} on Vendura.` },
+        { title: `${cat?.name ?? "Category"} — Vendraza` },
+        { name: "description", content: `Browse ${cat?.name ?? "products"} from verified vendors on Vendraza.` },
+        { property: "og:title", content: `${cat?.name ?? "Category"} — Vendraza` },
+        { property: "og:description", content: `Browse ${cat?.name ?? "products"} on Vendraza.` },
         { name: "twitter:card", content: "summary" },
       ],
     };

@@ -14,9 +14,9 @@ import type { Offer } from "@/types";
 export const Route = createFileRoute("/vendor/messages/$conversationId")({
   head: () => ({
     meta: [
-      { title: "Conversation — Vendor — Vendura" },
+      { title: "Conversation — Vendor — Vendraza" },
       { name: "description", content: "Chat with customer." },
-      { property: "og:title", content: "Conversation — Vendura" },
+      { property: "og:title", content: "Conversation — Vendraza" },
       { property: "og:description", content: "Chat with customer." },
       { name: "twitter:card", content: "summary" },
     ],

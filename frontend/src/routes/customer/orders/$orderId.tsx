@@ -20,10 +20,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/customer/orders/$orderId")({
   head: () => ({
     meta: [
-      { title: "Order Details — Vendura" },
-      { name: "description", content: "Track your Vendura order." },
-      { property: "og:title", content: "Order Details — Vendura" },
-      { property: "og:description", content: "Track your Vendura order." },
+      { title: "Order Details — Vendraza" },
+      { name: "description", content: "Track your Vendraza order." },
+      { property: "og:title", content: "Order Details — Vendraza" },
+      { property: "og:description", content: "Track your Vendraza order." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

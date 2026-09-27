@@ -18,10 +18,10 @@ import type { Offer } from "@/types";
 export const Route = createFileRoute("/messages/$conversationId")({
   head: () => ({
     meta: [
-      { title: "Conversation — Vendura" },
-      { name: "description", content: "Chat with a seller on Vendura." },
-      { property: "og:title", content: "Conversation — Vendura" },
-      { property: "og:description", content: "Chat with a seller on Vendura." },
+      { title: "Conversation — Vendraza" },
+      { name: "description", content: "Chat with a seller on Vendraza." },
+      { property: "og:title", content: "Conversation — Vendraza" },
+      { property: "og:description", content: "Chat with a seller on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

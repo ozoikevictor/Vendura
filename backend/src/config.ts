@@ -16,7 +16,7 @@ const schema = z.object({
   TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
   DELIVERY_CONFIRMATION_WINDOW_HOURS: z.coerce.number().int().min(1).max(720).default(72),
   HIGH_VALUE_REVIEW_THRESHOLD_NGN: z.coerce.number().positive().default(500000),
-  EMAIL_FROM: z.string().default("Vendura <onboarding@resend.dev>"),
+  EMAIL_FROM: z.string().default("Vendraza <onboarding@resend.dev>"),
   REQUIRE_EMAIL_VERIFICATION: z.string().default("false").transform((value) => value.toLowerCase() === "true")
 });
 

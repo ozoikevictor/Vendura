@@ -78,13 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content",
       },
-      { title: "Vendura — Multi-vendor Marketplace" },
+      { title: "Vendraza — Multi-vendor Marketplace" },
       {
         name: "description",
         content:
-          "Vendura is Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere.",
+          "Vendraza is Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere.",
       },
-      { name: "author", content: "Vendura" },
+      { name: "author", content: "Vendraza" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

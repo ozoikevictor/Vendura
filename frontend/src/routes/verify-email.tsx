@@ -10,12 +10,12 @@ import { getErrorMessage } from "@/services/api";
 export const Route = createFileRoute("/verify-email")({
   head: () => ({
     meta: [
-      { title: "Verify Email — Vendura" },
+      { title: "Verify Email — Vendraza" },
       {
         name: "description",
-        content: "Verify your email address to activate your Vendura account.",
+        content: "Verify your email address to activate your Vendraza account.",
       },
-      { property: "og:title", content: "Verify Email — Vendura" },
+      { property: "og:title", content: "Verify Email — Vendraza" },
       { property: "og:description", content: "Verify your email address." },
       { name: "twitter:card", content: "summary" },
     ],
@@ -111,7 +111,7 @@ function VerifyEmailPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Link to="/" className="font-display text-2xl font-bold text-primary">
-            Vendura
+            Vendraza
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-foreground">Verify your email</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

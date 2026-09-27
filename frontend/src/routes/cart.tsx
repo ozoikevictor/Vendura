@@ -13,10 +13,10 @@ import { useStorefrontStore } from "@/store/storefront";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Cart — Vendura" },
-      { name: "description", content: "Review items in your Vendura cart." },
-      { property: "og:title", content: "Cart — Vendura" },
-      { property: "og:description", content: "Review items in your Vendura cart." },
+      { title: "Cart — Vendraza" },
+      { name: "description", content: "Review items in your Vendraza cart." },
+      { property: "og:title", content: "Cart — Vendraza" },
+      { property: "og:description", content: "Review items in your Vendraza cart." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

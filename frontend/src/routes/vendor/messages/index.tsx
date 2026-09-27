@@ -11,9 +11,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/vendor/messages/")({
   head: () => ({
     meta: [
-      { title: "Messages — Vendor — Vendura" },
+      { title: "Messages — Vendor — Vendraza" },
       { name: "description", content: "Chat with customers." },
-      { property: "og:title", content: "Messages — Vendura" },
+      { property: "og:title", content: "Messages — Vendraza" },
       { property: "og:description", content: "Chat with customers." },
       { name: "twitter:card", content: "summary" },
     ],

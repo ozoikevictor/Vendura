@@ -55,7 +55,7 @@ export async function recordPendingEarnings(db: Database, order: Entity) {
     await db.create("transactions", {
       id: id("transaction"), vendorId: store.ownerId, type: "fee", amount: -fee,
       status, reference: String(order.orderNumber),
-      description: `Vendura commission (5%)`, orderId: order.id, createdAt
+      description: `Vendraza commission (5%)`, orderId: order.id, createdAt
     });
   }
 }

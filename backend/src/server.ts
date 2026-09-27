@@ -9,7 +9,7 @@ if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
 const db = new SupabaseDatabase(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY);
 await db.connect();
 await seedDatabase(db);
-const server = createApp(db).listen(config.PORT, () => console.log(`Vendura API listening on http://localhost:${config.PORT}`));
+const server = createApp(db).listen(config.PORT, () => console.log(`Vendraza API listening on http://localhost:${config.PORT}`));
 
 const shutdown = async () => { server.close(); await db.close(); process.exit(0); };
 process.on("SIGINT", shutdown);

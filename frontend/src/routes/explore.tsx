@@ -12,8 +12,8 @@ import { useStorefrontStore } from "@/store/storefront";
 export const Route = createFileRoute("/explore")({
   head: () => ({
     meta: [
-      { title: "Open a Store - Vendura" },
-      { name: "description", content: "Open a Vendura storefront, start selling, or explore the demo store." },
+      { title: "Open a Store - Vendraza" },
+      { name: "description", content: "Open a Vendraza storefront, start selling, or explore the demo store." },
     ],
   }),
   component: StoreGatewayPage,
@@ -44,7 +44,7 @@ function StoreGatewayPage() {
     event.preventDefault();
     const slug = getStoreSlug(storeLink);
     if (!slug || slug.includes(" ")) {
-      setError("Paste a valid Vendura store link or enter the store name from the link.");
+      setError("Paste a valid Vendraza store link or enter the store name from the link.");
       return;
     }
     setLoading(true);
@@ -72,7 +72,7 @@ function StoreGatewayPage() {
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             {isCustomer
               ? "Paste a vendor storefront link below to start shopping."
-              : "Vendura stores are reached through each seller's unique link. Paste one below, shop the marketplace, or create a store for your business."}
+              : "Vendraza stores are reached through each seller's unique link. Paste one below, shop the marketplace, or create a store for your business."}
           </p>
         </section>
 
@@ -109,7 +109,7 @@ function StoreGatewayPage() {
           {!isCustomer && <section className="rounded-xl border border-border bg-card p-6 shadow-card">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary"><Store className="h-6 w-6" /></div>
             <h2 className="mt-5 text-xl font-semibold text-foreground">Shop the marketplace</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Browse products, categories, and trusted stores across Vendura.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Browse products, categories, and trusted stores across Vendraza.</p>
             <Link to="/marketplace" className="mt-6 inline-flex items-center gap-2 font-semibold text-primary hover:underline">Shop the marketplace <ArrowRight className="h-4 w-4" /></Link>
           </section>}
         </div>

@@ -31,14 +31,14 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Vendura — Sell Smarter. Shop Anywhere." },
+      { title: "Vendraza — Sell Smarter. Shop Anywhere." },
       {
         name: "description",
         content:
           "Nigeria's multi-vendor marketplace. Buy and sell phones, fashion, building materials, and more from verified vendors nationwide.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "Vendura — Sell Smarter. Shop Anywhere." },
+      { property: "og:title", content: "Vendraza — Sell Smarter. Shop Anywhere." },
       {
         property: "og:description",
         content:
@@ -97,7 +97,7 @@ function Index() {
       <section className="relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
         <img
           src={heroImg}
-          alt="Customers and sellers using the Vendura marketplace"
+          alt="Customers and sellers using the Vendraza marketplace"
           className="absolute inset-0 -z-20 h-full w-full object-cover"
         />
         <div className="absolute inset-0 -z-10 bg-foreground/50" />
@@ -254,7 +254,7 @@ function Index() {
         </section>
       </ScrollReveal>
 
-      {/* How Vendura Works */}
+      {/* How Vendraza Works */}
       <ScrollReveal>
         <section className="bg-card border-y border-border">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -303,7 +303,7 @@ function Index() {
         </section>
       </ScrollReveal>
 
-      {/* Why Sell With Vendura */}
+      {/* Why Sell With Vendraza */}
       <ScrollReveal>
         <section className="bg-primary text-primary-foreground">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -313,7 +313,7 @@ function Index() {
                   For Sellers
                 </p>
                 <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                  Why Sell With Vendura
+                  Why Sell With Vendraza
                 </h2>
                 <p className="mt-3 max-w-md text-primary-foreground/80">
                   Launch your store, manage products, negotiate prices, and get paid — all from one
@@ -377,7 +377,7 @@ function Index() {
                 {
                   icon: ShieldCheck,
                   title: "Verified sellers",
-                  desc: "Store verification helps customers recognize approved Vendura businesses.",
+                  desc: "Store verification helps customers recognize approved Vendraza businesses.",
                 },
                 {
                   icon: Wallet,

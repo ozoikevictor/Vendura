@@ -12,10 +12,10 @@ import { useMemo } from "react";
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
     meta: [
-      { title: "Wishlist — Vendura" },
-      { name: "description", content: "Your saved items on Vendura." },
-      { property: "og:title", content: "Wishlist — Vendura" },
-      { property: "og:description", content: "Your saved items on Vendura." },
+      { title: "Wishlist — Vendraza" },
+      { name: "description", content: "Your saved items on Vendraza." },
+      { property: "og:title", content: "Wishlist — Vendraza" },
+      { property: "og:description", content: "Your saved items on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

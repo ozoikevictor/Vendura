@@ -16,12 +16,12 @@ import { queryProducts } from "@/services/productService";
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
     meta: [
-      { title: "Marketplace — Vendura" },
+      { title: "Marketplace — Vendraza" },
       {
         name: "description",
         content: "Browse thousands of products from verified vendors across Nigeria.",
       },
-      { property: "og:title", content: "Marketplace — Vendura" },
+      { property: "og:title", content: "Marketplace — Vendraza" },
       {
         property: "og:description",
         content: "Browse products from verified vendors across Nigeria.",
@@ -99,7 +99,7 @@ function MarketplacePage() {
         className="mx-auto w-full max-w-7xl flex-1 scroll-mt-4 px-4 py-6 sm:px-6 lg:px-8"
       >
         <SectionHeader
-          eyebrow="Shop across Vendura"
+          eyebrow="Shop across Vendraza"
           title="Marketplace"
           description={`${total} products from ${storeList.length} independent ${storeList.length === 1 ? "vendor" : "vendors"}`}
         />

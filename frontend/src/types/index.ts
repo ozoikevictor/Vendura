@@ -1,5 +1,5 @@
 /**
- * Vendura domain models.
+ * Vendraza domain models.
  *
  * These mirror the shapes a future Node/Express/MongoDB backend will return.
  * Keep them serialisable (no class instances, no Dates — use ISO strings).

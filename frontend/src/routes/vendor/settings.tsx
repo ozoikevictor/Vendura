@@ -15,7 +15,7 @@ import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/vendor/settings")({
-  head: () => ({ meta: [{ title: "Settings — Vendor — Vendura" }] }),
+  head: () => ({ meta: [{ title: "Settings — Vendor — Vendraza" }] }),
   component: VendorSettingsPage,
 });
 

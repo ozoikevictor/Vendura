@@ -25,9 +25,9 @@ type FieldErrors = Partial<Record<keyof ProductForm | "image", string | undefine
 export const Route = createFileRoute("/vendor/products/new")({
   head: () => ({
     meta: [
-      { title: "Add Product — Vendor — Vendura" },
+      { title: "Add Product — Vendor — Vendraza" },
       { name: "description", content: "Create a new product." },
-      { property: "og:title", content: "Add Product — Vendura" },
+      { property: "og:title", content: "Add Product — Vendraza" },
       { property: "og:description", content: "Create a new product." },
       { name: "twitter:card", content: "summary" },
     ],

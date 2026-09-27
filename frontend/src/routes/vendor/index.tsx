@@ -23,10 +23,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/vendor/")({
   head: () => ({
     meta: [
-      { title: "Vendor Dashboard — Vendura" },
-      { name: "description", content: "Overview of your Vendura store." },
-      { property: "og:title", content: "Vendor Dashboard — Vendura" },
-      { property: "og:description", content: "Overview of your Vendura store." },
+      { title: "Vendor Dashboard — Vendraza" },
+      { name: "description", content: "Overview of your Vendraza store." },
+      { property: "og:title", content: "Vendor Dashboard — Vendraza" },
+      { property: "og:description", content: "Overview of your Vendraza store." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

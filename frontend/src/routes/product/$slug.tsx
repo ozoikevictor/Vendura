@@ -25,10 +25,10 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/product/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: "Product — Vendura" },
-      { name: "description", content: "View product details on Vendura." },
-      { property: "og:title", content: "Product — Vendura" },
-      { property: "og:description", content: "View product details on Vendura." },
+      { title: "Product — Vendraza" },
+      { name: "description", content: "View product details on Vendraza." },
+      { property: "og:title", content: "Product — Vendraza" },
+      { property: "og:description", content: "View product details on Vendraza." },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
@@ -362,7 +362,7 @@ function ProductDetailPage() {
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="font-display text-lg font-bold text-foreground">Customer Reviews</h2>
-              <p className="text-sm text-muted-foreground">Reviews can only be posted from delivered Vendura orders.</p>
+              <p className="text-sm text-muted-foreground">Reviews can only be posted from delivered Vendraza orders.</p>
             </div>
             <div className="flex items-center gap-2"><RatingStars rating={product.rating} size={16} showValue /><span className="text-sm text-muted-foreground">({reviews.length})</span></div>
           </div>

@@ -29,10 +29,10 @@ import * as authService from "@/services/authService";
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
-      { title: "Checkout — Vendura" },
-      { name: "description", content: "Complete your Vendura purchase." },
-      { property: "og:title", content: "Checkout — Vendura" },
-      { property: "og:description", content: "Complete your Vendura purchase." },
+      { title: "Checkout — Vendraza" },
+      { name: "description", content: "Complete your Vendraza purchase." },
+      { property: "og:title", content: "Checkout — Vendraza" },
+      { property: "og:description", content: "Complete your Vendraza purchase." },
       { name: "twitter:card", content: "summary" },
     ],
   }),
@@ -367,7 +367,7 @@ function CheckoutPage() {
                 {guestLoginLoading ? "Signing in..." : "Sign in and continue"}
               </button>
               <p className="text-center text-sm text-muted-foreground">
-                New to Vendura?{" "}
+                New to Vendraza?{" "}
                 <Link to="/register" className="font-semibold text-primary hover:underline">
                   Create an account
                 </Link>
@@ -595,7 +595,7 @@ function CheckoutPage() {
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/25 bg-primary-soft/40 p-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">Buyer Protection:</span> Vendura
+                  <span className="font-semibold text-foreground">Buyer Protection:</span> Vendraza
                   holds your payment and only pays the seller after you confirm your order arrived
                   as described.
                 </p>

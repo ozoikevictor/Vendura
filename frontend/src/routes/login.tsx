@@ -13,10 +13,10 @@ import { HumanCheck } from "@/components/shared/HumanCheck";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Log In — Vendura" },
-      { name: "description", content: "Log in to your Vendura account to shop and manage orders." },
-      { property: "og:title", content: "Log In — Vendura" },
-      { property: "og:description", content: "Log in to your Vendura account." },
+      { title: "Log In — Vendraza" },
+      { name: "description", content: "Log in to your Vendraza account to shop and manage orders." },
+      { property: "og:title", content: "Log In — Vendraza" },
+      { property: "og:description", content: "Log in to your Vendraza account." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

@@ -15,9 +15,9 @@ import { DataLoader } from "@/components/shared/DataLoader";
 export const Route = createFileRoute("/vendor/payouts")({
   head: () => ({
     meta: [
-      { title: "Payouts — Vendor — Vendura" },
+      { title: "Payouts — Vendor — Vendraza" },
       { name: "description", content: "Balance, transactions, and payouts." },
-      { property: "og:title", content: "Payouts — Vendura" },
+      { property: "og:title", content: "Payouts — Vendraza" },
       { property: "og:description", content: "Balance, transactions, and payouts." },
       { name: "twitter:card", content: "summary" },
     ],
@@ -99,7 +99,7 @@ function VendorPayoutsPage() {
           <p className="mt-1 break-words text-lg font-bold text-foreground sm:text-xl">{formatNaira(balance.deliveryFees)}</p>
         </div>
         <div className="min-w-0 rounded-xl border border-border bg-card p-4">
-          <div className="text-xs text-muted-foreground">Vendura Fee (5%)</div>
+          <div className="text-xs text-muted-foreground">Vendraza Fee (5%)</div>
           <p className="mt-1 break-words text-lg font-bold text-foreground sm:text-xl">{formatNaira(balance.platformFees)}</p>
         </div>
       </div>

@@ -9,14 +9,14 @@ import { getCategories } from "@/services/categoryService";
 export const Route = createFileRoute("/categories/")({
   head: () => ({
     meta: [
-      { title: "All Categories — Vendura" },
+      { title: "All Categories — Vendraza" },
       {
         name: "description",
         content:
-          "Browse all product categories on Vendura — phones, fashion, building materials, and more.",
+          "Browse all product categories on Vendraza — phones, fashion, building materials, and more.",
       },
-      { property: "og:title", content: "All Categories — Vendura" },
-      { property: "og:description", content: "Browse all product categories on Vendura." },
+      { property: "og:title", content: "All Categories — Vendraza" },
+      { property: "og:description", content: "Browse all product categories on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

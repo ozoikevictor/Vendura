@@ -309,10 +309,10 @@ function collectAttributeValues(value: unknown, attribute: string, output: Set<s
 
 function answerMarketplaceQuestion(message: string, products: Entity[], stores: Entity[]) {
   if (/^(hi|hello|hey|good (morning|afternoon|evening)|how are you)[!.?\s]*$/i.test(message.trim())) {
-    return "Hello! I’m your Vendura shopping assistant. I can find products, check a seller’s stock, count store products, and compare prices. What can I help you with?";
+    return "Hello! I’m your Vendraza shopping assistant. I can find products, check a seller’s stock, count store products, and compare prices. What can I help you with?";
   }
   if (/\b(thank you|thanks|thank u)\b/i.test(message)) {
-    return "You’re welcome. Ask me anything else about products or stores on Vendura.";
+    return "You’re welcome. Ask me anything else about products or stores on Vendraza.";
   }
 
   const normalizedMessage = normalizeForMatch(message);
@@ -324,7 +324,7 @@ function answerMarketplaceQuestion(message: string, products: Entity[], stores: 
     const storeProducts = activeProducts.filter((product) => product.storeId === store.id);
     const inStock = storeProducts.filter((product) => Number(product.stock) > 0);
     if (/\b(how many|number of|count)\b/i.test(message)) {
-      return `${store.name} has ${storeProducts.length} active ${storeProducts.length === 1 ? "product" : "products"} on Vendura, and ${inStock.length} ${inStock.length === 1 ? "is" : "are"} currently in stock.`;
+      return `${store.name} has ${storeProducts.length} active ${storeProducts.length === 1 ? "product" : "products"} on Vendraza, and ${inStock.length} ${inStock.length === 1 ? "is" : "are"} currently in stock.`;
     }
     const storeWords = new Set(tokenize(String(store.name)));
     const queryTerms = tokenize(message).filter((term) => !storeWords.has(term));
@@ -338,15 +338,15 @@ function answerMarketplaceQuestion(message: string, products: Entity[], stores: 
         : `I could not find that product in ${store.name}’s current in-stock listings.`;
     }
     if (/\b(tell me about|about|store|shop)\b/i.test(message)) {
-      return `${store.name} has ${storeProducts.length} active products, a ${Number(store.rating ?? 0).toFixed(1)} rating, and is ${store.verified ? "verified" : "not yet verified"} on Vendura.`;
+      return `${store.name} has ${storeProducts.length} active products, a ${Number(store.rating ?? 0).toFixed(1)} rating, and is ${store.verified ? "verified" : "not yet verified"} on Vendraza.`;
     }
   }
   if (/\b(how many|number of|count)\b.*\bproducts?\b/i.test(message)) {
     const inStock = activeProducts.filter((product) => Number(product.stock) > 0).length;
-    return `Vendura currently has ${activeProducts.length} active products from ${stores.length} stores, with ${inStock} products in stock.`;
+    return `Vendraza currently has ${activeProducts.length} active products from ${stores.length} stores, with ${inStock} products in stock.`;
   }
   if (/\b(how many|number of|count)\b.*\bstores?\b/i.test(message)) {
-    return `Vendura currently has ${stores.length} ${stores.length === 1 ? "store" : "stores"}, including ${stores.filter((item) => item.verified).length} verified sellers.`;
+    return `Vendraza currently has ${stores.length} ${stores.length === 1 ? "store" : "stores"}, including ${stores.filter((item) => item.verified).length} verified sellers.`;
   }
   return "";
 }
@@ -384,7 +384,7 @@ async function generateMarketplaceReply({ customerId, sessionId, message, produc
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        instructions: "You are Vendura's friendly customer shopping assistant. Answer conversationally and use only the supplied live catalog for factual product, price, stock, and store claims. Never invent products. Select product IDs only when cards would help answer the user. Keep answers concise and helpful.",
+        instructions: "You are Vendraza's friendly customer shopping assistant. Answer conversationally and use only the supplied live catalog for factual product, price, stock, and store claims. Never invent products. Select product IDs only when cards would help answer the user. Keep answers concise and helpful.",
         input: JSON.stringify({ conversation: history, customerMessage: message, liveCatalog: catalog }),
         text: {
           format: {

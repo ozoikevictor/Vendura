@@ -52,7 +52,7 @@ export const authRoutes = (db: Database) => {
     await verifyHuman(input.captchaToken, req.ip);
     const user = await db.findOne<Entity>("users", { email: input.email });
     if (!user || typeof user.passwordHash !== "string" || !(await bcrypt.compare(input.password, user.passwordHash))) throw new ApiError(401, "Invalid email or password");
-    if (user.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendura support.");
+    if (user.status === "suspended") throw new ApiError(403, "This account has been suspended. Contact Vendraza support.");
     ok(res, { user: publicUser(user), token: signToken({ id: user.id, role: user.role as "customer" | "vendor" | "admin", storeId: user.storeId as string | undefined }) });
   }));
   router.get("/me", authenticate, asyncRoute(async (req: AuthRequest, res) => {
@@ -82,7 +82,7 @@ export const authRoutes = (db: Database) => {
         const token = randomBytes(32).toString("hex");
         await db.update("users", user.id, { resetTokenHash: hashSecret(token), resetTokenExpiresAt: new Date(Date.now() + 30 * 60_000).toISOString(), resetEmailSentAt: now() });
         const baseUrl = config.FRONTEND_URL.split(",")[0].replace(/\/$/, "");
-        try { await sendEmail({ to: String(user.email), subject: "Reset your Vendura password", html: resetEmail(String(user.fullName ?? "there"), `${baseUrl}/reset-password?token=${token}`), tag: "password_reset" }); } catch { await db.update("users", user.id, { resetTokenHash: undefined, resetTokenExpiresAt: undefined }); }
+        try { await sendEmail({ to: String(user.email), subject: "Reset your Vendraza password", html: resetEmail(String(user.fullName ?? "there"), `${baseUrl}/reset-password?token=${token}`), tag: "password_reset" }); } catch { await db.update("users", user.id, { resetTokenHash: undefined, resetTokenExpiresAt: undefined }); }
       }
     }
     ok(res, { message: "If the account exists, reset instructions have been sent" });
@@ -141,4 +141,4 @@ function createVerification() {
 
 const hashSecret = (value: string) => createHash("sha256").update(`${value}:${config.JWT_SECRET}`).digest("hex");
 function safeEqual(left: string, right: string) { const a = Buffer.from(left); const b = Buffer.from(right); return a.length === b.length && timingSafeEqual(a, b); }
-const sendVerification = (user: Entity, code: string) => sendEmail({ to: String(user.email), subject: "Verify your Vendura email", html: verificationEmail(String(user.fullName ?? "there"), code), tag: "email_verification" });
+const sendVerification = (user: Entity, code: string) => sendEmail({ to: String(user.email), subject: "Verify your Vendraza email", html: verificationEmail(String(user.fullName ?? "there"), code), tag: "email_verification" });

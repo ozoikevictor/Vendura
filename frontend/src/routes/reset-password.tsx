@@ -10,10 +10,10 @@ export const Route = createFileRoute("/reset-password")({
   validateSearch: (search: Record<string, unknown>) => ({ token: typeof search["token"] === "string" ? search["token"] : "" }),
   head: () => ({
     meta: [
-      { title: "Reset Password — Vendura" },
-      { name: "description", content: "Set a new password for your Vendura account." },
-      { property: "og:title", content: "Reset Password — Vendura" },
-      { property: "og:description", content: "Set a new password for your Vendura account." },
+      { title: "Reset Password — Vendraza" },
+      { name: "description", content: "Set a new password for your Vendraza account." },
+      { property: "og:title", content: "Reset Password — Vendraza" },
+      { property: "og:description", content: "Set a new password for your Vendraza account." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

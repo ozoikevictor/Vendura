@@ -11,7 +11,7 @@ function AdminOverviewPage() {
   const { data, isLoading } = useQuery({ queryKey: ["admin-overview"], queryFn: getAdminOverview });
   if (isLoading || !data) return <LoadingRows />;
   return <>
-    <AdminHeading title="Platform overview" description="A live view of Vendura's marketplace activity." />
+    <AdminHeading title="Platform overview" description="A live view of Vendraza's marketplace activity." />
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Metric label="Gross sales" value={formatNaira(data.grossSales)} detail={`${data.paidOrders} paid orders`} icon={<BadgeDollarSign className="h-5 w-5" />} />
       <Metric label="Platform fees" value={formatNaira(data.platformFees)} detail="5% marketplace commission" icon={<ReceiptText className="h-5 w-5" />} />

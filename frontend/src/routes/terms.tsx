@@ -8,13 +8,13 @@ function TermsPage() {
     <PolicyPage
       eyebrow="Legal"
       title="Terms of Service"
-      summary="These terms govern access to Vendura by customers, sellers, and visitors. By using the platform, you agree to follow them."
+      summary="These terms govern access to Vendraza by customers, sellers, and visitors. By using the platform, you agree to follow them."
       sections={[
         {
           title: "Accounts",
           content: (
             <p>
-              You must provide accurate information, protect your login details, and use Vendura
+              You must provide accurate information, protect your login details, and use Vendraza
               only for lawful purposes. You are responsible for activity performed through your
               account unless you promptly report unauthorized access.
             </p>
@@ -24,8 +24,8 @@ function TermsPage() {
           title: "Marketplace role",
           content: (
             <p>
-              Vendura provides technology that connects independent sellers with customers. Unless a
-              product is explicitly sold by Vendura, the seller is responsible for product accuracy,
+              Vendraza provides technology that connects independent sellers with customers. Unless a
+              product is explicitly sold by Vendraza, the seller is responsible for product accuracy,
               quality, legality, availability, and fulfilment.
             </p>
           ),
@@ -66,7 +66,7 @@ function TermsPage() {
             <p>
               Users may not list illegal, counterfeit, unsafe, stolen, or restricted products;
               manipulate reviews; impersonate others; evade fees; scrape the service; distribute
-              malware; or use Vendura to threaten, deceive, or exploit anyone.
+              malware; or use Vendraza to threaten, deceive, or exploit anyone.
             </p>
           ),
         },
@@ -74,7 +74,7 @@ function TermsPage() {
           title: "Suspension and termination",
           content: (
             <p>
-              Vendura may restrict or suspend accounts, listings, payments, or access when
+              Vendraza may restrict or suspend accounts, listings, payments, or access when
               reasonably necessary to investigate abuse, comply with law, protect users, or enforce
               these terms.
             </p>
@@ -84,7 +84,7 @@ function TermsPage() {
           title: "Disputes and liability",
           content: (
             <p>
-              Users should first use Vendura support and dispute tools. Vendura is not responsible
+              Users should first use Vendraza support and dispute tools. Vendraza is not responsible
               for indirect losses or matters outside reasonable control. Nothing in these terms
               removes rights that cannot legally be excluded.
             </p>

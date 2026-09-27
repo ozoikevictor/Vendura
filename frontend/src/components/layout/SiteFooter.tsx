@@ -18,7 +18,7 @@ export function SiteFooter() {
                 <Store className="h-5 w-5" />
               </div>
               <span className="font-display text-xl font-bold tracking-tight text-white">
-                Vendura
+                Vendraza
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/65">
@@ -148,7 +148,7 @@ export function SiteFooter() {
                   to="/contact"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Contact Vendura
+                  Contact Vendraza
                 </Link>
               </li>
               <li>
@@ -196,7 +196,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-          <p className="text-xs text-white/50">© 2026 Vendura. Made in Lagos, Nigeria.</p>
+          <p className="text-xs text-white/50">© 2026 Vendraza. Made in Lagos, Nigeria.</p>
           <div className="flex items-center gap-4 text-xs text-white/50">
             <span>Paystack</span>
             <span>·</span>

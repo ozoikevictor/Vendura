@@ -13,10 +13,10 @@ import { getStores } from "@/services/storeService";
 export const Route = createFileRoute("/stores")({
   head: () => ({
     meta: [
-      { title: "Stores — Vendura" },
-      { name: "description", content: "Browse real vendor stores on Vendura." },
-      { property: "og:title", content: "Stores — Vendura" },
-      { property: "og:description", content: "Browse vendor stores on Vendura." },
+      { title: "Stores — Vendraza" },
+      { name: "description", content: "Browse real vendor stores on Vendraza." },
+      { property: "og:title", content: "Stores — Vendraza" },
+      { property: "og:description", content: "Browse vendor stores on Vendraza." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

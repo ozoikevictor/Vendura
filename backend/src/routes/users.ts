@@ -21,7 +21,7 @@ export const userRoutes = (db: Database) => {
       const existing = await db.findOne<Entity>("users", { email: input.email });
       if (existing && existing.id !== current.id) throw new ApiError(409, "An account with that email already exists");
       const code = String(randomInt(100000, 1_000_000));
-      await sendEmail({ to: input.email, subject: "Verify your new Vendura email", html: verificationEmail(String(input.fullName ?? current.fullName ?? "there"), code), tag: "email_change" });
+      await sendEmail({ to: input.email, subject: "Verify your new Vendraza email", html: verificationEmail(String(input.fullName ?? current.fullName ?? "there"), code), tag: "email_change" });
       Object.assign(patch, { emailVerified: false, verificationOtpHash: hashSecret(code), verificationOtpExpiresAt: new Date(Date.now() + 10 * 60_000).toISOString(), verificationAttempts: 0, verificationSentAt: now() });
     }
     const user = await db.update("users", req.user!.id, patch);

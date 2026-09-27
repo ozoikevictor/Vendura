@@ -9,10 +9,10 @@ import { HumanCheck } from "@/components/shared/HumanCheck";
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Forgot Password — Vendura" },
-      { name: "description", content: "Reset your Vendura account password." },
-      { property: "og:title", content: "Forgot Password — Vendura" },
-      { property: "og:description", content: "Reset your Vendura account password." },
+      { title: "Forgot Password — Vendraza" },
+      { name: "description", content: "Reset your Vendraza account password." },
+      { property: "og:title", content: "Forgot Password — Vendraza" },
+      { property: "og:description", content: "Reset your Vendraza account password." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

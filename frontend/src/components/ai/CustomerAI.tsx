@@ -39,7 +39,7 @@ import { getErrorMessage } from "@/services/api";
 
 const prompts = [
   "Hi, what can you help me with?",
-  "How many products are on Vendura?",
+  "How many products are on Vendraza?",
   "How many products does Victor Fashion have?",
   "I need an iPhone 15 Pro under ₦900,000",
   "Compare prices for phones",

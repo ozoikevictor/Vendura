@@ -91,7 +91,7 @@ export function DeliveryProtection({
     setBusy(true);
     try {
       await reportSeller(order.id, description.trim());
-      toast.success("Seller report sent to Vendura");
+      toast.success("Seller report sent to Vendraza");
       setMode(null);
     } catch (error) {
       toast.error(getErrorMessage(error, "Could not report the seller"));

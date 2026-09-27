@@ -210,7 +210,7 @@ export function VendorLayout() {
 
           <Link to="/vendor" className="flex min-w-0 items-center gap-2 lg:hidden">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Store className="h-4 w-4" /></span>
-            <span className="font-display text-base font-bold">Vendura</span>
+            <span className="font-display text-base font-bold">Vendraza</span>
           </Link>
 
           <button
@@ -282,7 +282,7 @@ export function VendorLayout() {
             <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-xl">
               <CreditCard className="mx-auto h-8 w-8 text-primary" />
               <h2 className="mt-3 text-xl font-bold">Monthly subscription due</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Renew your Vendura plan to access the vendor dashboard and continue managing products.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Renew your Vendraza plan to access the vendor dashboard and continue managing products.</p>
               <Link to="/vendor/subscription" className="mt-5 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Choose a plan and pay</Link>
             </div>
           </div>
@@ -306,13 +306,13 @@ function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigat
     <div className="flex h-full flex-col">
       {/* Header */}
       <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "justify-between px-4")}>
-        <Link to="/vendor" onClick={onNavigate} className={cn("flex items-center", collapsed ? "flex-col gap-0.5" : "gap-2")} title={collapsed ? "Vendura dashboard" : undefined}>
+        <Link to="/vendor" onClick={onNavigate} className={cn("flex items-center", collapsed ? "flex-col gap-0.5" : "gap-2")} title={collapsed ? "Vendraza dashboard" : undefined}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Store className="h-4 w-4" />
           </div>
           <div className={cn(collapsed && "text-center")}>
             <span className={cn("font-display font-bold tracking-tight text-sidebar-foreground", collapsed ? "text-[10px]" : "text-base")}>
-              Vendura
+              Vendraza
             </span>
             {!collapsed && <p className="text-xs text-muted-foreground">Vendor Panel</p>}
           </div>

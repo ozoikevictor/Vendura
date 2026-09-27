@@ -14,10 +14,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/customer/orders/")({
   head: () => ({
     meta: [
-      { title: "Your Orders — Vendura" },
-      { name: "description", content: "Track and manage your Vendura orders." },
-      { property: "og:title", content: "Your Orders — Vendura" },
-      { property: "og:description", content: "Track and manage your Vendura orders." },
+      { title: "Your Orders — Vendraza" },
+      { name: "description", content: "Track and manage your Vendraza orders." },
+      { property: "og:title", content: "Your Orders — Vendraza" },
+      { property: "og:description", content: "Track and manage your Vendraza orders." },
       { name: "twitter:card", content: "summary" },
     ],
   }),

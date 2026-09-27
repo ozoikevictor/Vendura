@@ -9,7 +9,7 @@ import { useCartStore } from "@/store/cart";
 
 export const Route = createFileRoute("/payment/callback")({
   validateSearch: z.object({ reference: z.string().optional(), trxref: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Confirming Payment - Vendura" }] }),
+  head: () => ({ meta: [{ title: "Confirming Payment - Vendraza" }] }),
   component: PaymentCallbackPage,
 });
 

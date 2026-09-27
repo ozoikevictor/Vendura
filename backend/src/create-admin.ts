@@ -18,7 +18,7 @@ const existing = await db.findOne<Entity>("users", { email });
 const passwordHash = await bcrypt.hash(adminPassword, 12);
 const admin = existing
   ? await db.update<Entity>("users", existing.id, { role: "admin", status: "active", passwordHash, emailVerified: true, updatedAt: now(), storeId: undefined })
-  : await db.create<Entity>("users", { id: id("user-admin"), fullName: "Vendura Administrator", email, role: "admin", status: "active", passwordHash, emailVerified: true, createdAt: now() });
+  : await db.create<Entity>("users", { id: id("user-admin"), fullName: "Vendraza Administrator", email, role: "admin", status: "active", passwordHash, emailVerified: true, createdAt: now() });
 
 const temporaryAdmin = await db.findOne<Entity>("users", { email: "admin@vendura.test" });
 if (temporaryAdmin && temporaryAdmin.id !== admin?.id) await db.remove("users", temporaryAdmin.id);

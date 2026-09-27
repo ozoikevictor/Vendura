@@ -9,9 +9,9 @@ import { formatNaira } from "@/utils/format";
 export const Route = createFileRoute("/vendor/customers")({
   head: () => ({
     meta: [
-      { title: "Customers — Vendor — Vendura" },
+      { title: "Customers — Vendor — Vendraza" },
       { name: "description", content: "Your customer base." },
-      { property: "og:title", content: "Customers — Vendura" },
+      { property: "og:title", content: "Customers — Vendraza" },
       { property: "og:description", content: "Your customer base." },
       { name: "twitter:card", content: "summary" },
     ],

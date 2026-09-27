@@ -138,7 +138,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
               <Store className="h-4 w-4" />
             </div>
             <span className="font-display text-lg font-bold tracking-tight">
-              Vendura
+              Vendraza
             </span>
           </Link>
           <button

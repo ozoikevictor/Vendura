@@ -8,7 +8,7 @@ import { getNotifications, markAllNotificationsRead, markNotificationRead } from
 import { useAuthStore } from "@/store/auth";
 import type { Notification } from "@/types";
 
-export const Route = createFileRoute("/vendor/notifications")({ head: () => ({ meta: [{ title: "Notifications - Vendor - Vendura" }] }), component: VendorNotificationsPage });
+export const Route = createFileRoute("/vendor/notifications")({ head: () => ({ meta: [{ title: "Notifications - Vendor - Vendraza" }] }), component: VendorNotificationsPage });
 
 function VendorNotificationsPage() {
   const user = useAuthStore((state) => state.user);

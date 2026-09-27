@@ -60,7 +60,7 @@ export function EscrowPanel({ order, onUpdated }: { order: Order; onUpdated?: (o
     <section className="mt-4 rounded-xl border border-primary/25 bg-primary-soft/40 p-5" aria-label="Buyer protection">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-          <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" /> Vendura Buyer Protection
+          <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" /> Vendraza Buyer Protection
         </h2>
         <EscrowBadge status={escrow.status} />
       </div>
