@@ -8,6 +8,11 @@ import { id, now, ok, publicUser } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
 
+type PaystackResponse<T> = { status: boolean; message: string; data: T };
+type PaystackBank = { id: number; name: string; code: string; active: boolean };
+type ResolvedAccount = { account_number: string; account_name: string };
+type TransferRecipient = { recipient_code: string };
+
 export const adminRoutes = (db: Database) => {
   const router = Router();
   router.use(authenticate, authorize("admin"));
@@ -212,11 +217,13 @@ export const adminRoutes = (db: Database) => {
   router.get(
     "/finance",
     asyncRoute(async (_req, res) => {
-      const [transactions, payouts, users, stores] = await Promise.all([
+      await backfillSubscriptionRevenue(db);
+      const [transactions, payouts, users, stores, bankAccount] = await Promise.all([
         db.list<Entity>("transactions"),
         db.list<Entity>("payouts"),
         db.list<Entity>("users"),
         db.list<Entity>("stores"),
+        db.get<Entity>("bankAccounts", "platform-owner-bank"),
       ]);
       const summary = platformFinanceSummary(transactions, payouts);
       const ledger = transactions
@@ -230,17 +237,33 @@ export const adminRoutes = (db: Database) => {
         summary,
         ledger,
         withdrawals: ledger.filter((item) => item.type === "platform_withdrawal"),
-        recipientConfigured: Boolean(config.PLATFORM_PAYSTACK_RECIPIENT_CODE),
+        bankAccount,
+        recipientConfigured: Boolean(bankAccount?.recipientCode || config.PLATFORM_PAYSTACK_RECIPIENT_CODE),
       });
     }),
   );
 
+  router.get("/platform-bank", asyncRoute(async (_req, res) => ok(res, await db.get("bankAccounts", "platform-owner-bank"))));
+  router.put("/platform-bank", asyncRoute(async (req, res) => {
+    if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
+    const input = z.object({ bankCode: z.string().min(2), accountNumber: z.string().regex(/^\d{10}$/) }).parse(req.body);
+    const banks = await paystackRequest<PaystackBank[]>("/bank?country=nigeria&currency=NGN&perPage=100");
+    const bank = banks.find((item) => item.active && item.code === input.bankCode);
+    if (!bank) throw new ApiError(400, "Select a valid Nigerian bank");
+    const resolved = await paystackRequest<ResolvedAccount>(`/bank/resolve?account_number=${encodeURIComponent(input.accountNumber)}&bank_code=${encodeURIComponent(input.bankCode)}`);
+    const recipient = await paystackRequest<TransferRecipient>("/transferrecipient", { method: "POST", body: JSON.stringify({ type: "nuban", name: resolved.account_name, account_number: resolved.account_number, bank_code: input.bankCode, currency: "NGN" }) });
+    const account = { bankName: bank.name, bankCode: input.bankCode, accountNumber: resolved.account_number, accountName: resolved.account_name, recipientCode: recipient.recipient_code, verified: true, verifiedAt: now(), kind: "platform_bank" };
+    const existing = await db.get("bankAccounts", "platform-owner-bank");
+    ok(res, existing ? await db.update("bankAccounts", "platform-owner-bank", account) : await db.create("bankAccounts", { id: "platform-owner-bank", ...account }));
+  }));
+
   router.post(
     "/platform-withdrawals",
     asyncRoute(async (req: AuthRequest, res) => {
-      if (!config.PAYSTACK_SECRET_KEY || !config.PLATFORM_PAYSTACK_RECIPIENT_CODE) {
-        throw new ApiError(503, "Configure the platform Paystack recipient in Render before withdrawing");
-      }
+      if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
+      const platformBank = await db.get<Entity>("bankAccounts", "platform-owner-bank");
+      const recipientCode = String(platformBank?.recipientCode ?? config.PLATFORM_PAYSTACK_RECIPIENT_CODE ?? "");
+      if (!recipientCode) throw new ApiError(503, "Connect the Vendura company bank account before withdrawing");
       const { amount, note } = z.object({
         amount: z.number().min(100),
         note: z.string().trim().min(3).max(200),
@@ -253,7 +276,7 @@ export const adminRoutes = (db: Database) => {
       const response = await fetch("https://api.paystack.co/transfer", {
         method: "POST",
         headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: config.PLATFORM_PAYSTACK_RECIPIENT_CODE, reference, reason: note, currency: "NGN" }),
+        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: recipientCode, reference, reason: note, currency: "NGN" }),
       });
       const payload = await response.json() as { status: boolean; message: string; data?: Entity };
       if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the owner withdrawal");
@@ -380,3 +403,28 @@ export const adminRoutes = (db: Database) => {
 
   return router;
 };
+
+async function backfillSubscriptionRevenue(db: Database) {
+  const subscriptions = await db.list<Entity>("subscriptions");
+  for (const subscription of subscriptions) {
+    const reference = String(subscription.lastPaymentReference ?? "");
+    const amount = Number(subscription.lastPaymentAmount ?? 0);
+    if (!reference || amount <= 0 || await db.findOne<Entity>("transactions", { reference, type: "subscription" })) continue;
+    await db.create("transactions", {
+      id: id("transaction"), vendorId: subscription.vendorId, type: "subscription",
+      amount, status: "available", reference, scope: "platform",
+      subscriptionId: subscription.id, description: "Verified vendor subscription",
+      createdAt: subscription.lastPaymentAt ?? now(),
+    });
+  }
+}
+
+async function paystackRequest<T>(path: string, init: RequestInit = {}) {
+  const response = await fetch(`https://api.paystack.co${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json", ...init.headers },
+  });
+  const payload = await response.json() as PaystackResponse<T>;
+  if (!response.ok || !payload.status) throw new ApiError(502, payload.message || "Paystack could not verify this bank account");
+  return payload.data;
+}

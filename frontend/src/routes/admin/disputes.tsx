@@ -38,17 +38,13 @@ function DisputesPage() {
       toast.error("Add a decision note first");
       return;
     }
-    const message =
-      resolution === "refund_customer"
-        ? "Initiate a real Paystack refund? Completion will wait for Paystack's webhook."
-        : "Approve this order and make the seller earnings available?";
-    if (window.confirm(message)) mutation.mutate({ id, resolution });
+    mutation.mutate({ id, resolution });
   }
   return (
     <>
       <AdminHeading
         title="Dispute Center"
-        description="Review both sides and shipping evidence before releasing or refunding funds."
+        description="Confirm timed-out deliveries, review disputes, and release or refund protected funds."
       />
       {isLoading ? (
         <LoadingRows />
@@ -144,7 +140,7 @@ function DisputesPage() {
                   onClick={() => decide(order.id, "release_to_vendor")}
                   className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  Approve Vendor Payout
+                  Confirm Delivery & Release Seller Funds
                 </button>
                 <button
                   disabled={mutation.isPending}

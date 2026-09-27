@@ -8,8 +8,10 @@ import {
   createPlatformWithdrawal,
   getAdminFinance,
   getAdminPayouts,
+  updatePlatformBank,
 } from "@/services/adminService";
 import { getErrorMessage } from "@/services/api";
+import { getNigerianBanks } from "@/services/vendorService";
 import { formatDateTime, formatNaira } from "@/utils/format";
 
 export const Route = createFileRoute("/admin/finance")({ component: FinancePage });
@@ -18,8 +20,23 @@ function FinancePage() {
   const queryClient = useQueryClient();
   const finance = useQuery({ queryKey: ["admin-finance"], queryFn: getAdminFinance });
   const payouts = useQuery({ queryKey: ["admin-payouts"], queryFn: getAdminPayouts });
+  const banks = useQuery({
+    queryKey: ["nigerian-banks"],
+    queryFn: getNigerianBanks,
+    staleTime: 86_400_000,
+  });
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("Transfer Vendura platform revenue to company bank account");
+  const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
+  const saveBank = useMutation({
+    mutationFn: () => updatePlatformBank(bankForm),
+    onSuccess: async () => {
+      toast.success("Company bank account verified and saved");
+      await queryClient.invalidateQueries({ queryKey: ["admin-finance"] });
+    },
+    onError: (error) =>
+      toast.error(getErrorMessage(error, "Paystack could not verify this account")),
+  });
   const withdrawal = useMutation({
     mutationFn: () => createPlatformWithdrawal(Number(amount), note),
     onSuccess: async () => {
@@ -31,7 +48,7 @@ function FinancePage() {
   });
 
   if (finance.isLoading || payouts.isLoading || !finance.data) return <LoadingRows />;
-  const { summary, ledger, recipientConfigured } = finance.data;
+  const { summary, ledger, bankAccount, recipientConfigured } = finance.data;
 
   return (
     <>
@@ -78,56 +95,108 @@ function FinancePage() {
             <FinanceRow label="Pending seller payouts" value={-summary.pendingPayoutAmount} muted />
           </dl>
         </div>
-        <form
-          className="rounded-lg border border-border bg-card p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            withdrawal.mutate();
-          }}
-        >
+        <div className="rounded-lg border border-border bg-card p-5">
           <h2 className="font-display text-lg font-bold">Withdraw Vendura revenue</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Only platform revenue can be transferred. Seller balances are protected.
           </p>
-          {!recipientConfigured && (
-            <p className="mt-3 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
-              Add PLATFORM_PAYSTACK_RECIPIENT_CODE in Render before making a withdrawal.
-            </p>
+          {bankAccount ? (
+            <div className="mt-4 rounded-md border border-success/30 bg-success/5 p-3 text-sm">
+              <p className="font-semibold">{bankAccount.bankName}</p>
+              <p className="text-muted-foreground">
+                {bankAccount.accountName} · ****{bankAccount.accountNumber.slice(-4)} · Verified
+              </p>
+            </div>
+          ) : (
+            <form
+              className="mt-4 space-y-3 rounded-md border border-border bg-background p-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!bankForm.bankCode || !/^\d{10}$/.test(bankForm.accountNumber)) {
+                  toast.error("Select a bank and enter a valid 10-digit account number");
+                  return;
+                }
+                saveBank.mutate();
+              }}
+            >
+              <p className="text-sm font-semibold">Connect Vendura company bank account</p>
+              <select
+                value={bankForm.bankCode}
+                onChange={(event) =>
+                  setBankForm((current) => ({ ...current, bankCode: event.target.value }))
+                }
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+              >
+                <option value="">Select bank</option>
+                {(banks.data ?? []).map((bank) => (
+                  <option key={bank.code} value={bank.code}>
+                    {bank.name}
+                  </option>
+                ))}
+              </select>
+              <input
+                inputMode="numeric"
+                maxLength={10}
+                value={bankForm.accountNumber}
+                onChange={(event) =>
+                  setBankForm((current) => ({
+                    ...current,
+                    accountNumber: event.target.value.replace(/\D/g, ""),
+                  }))
+                }
+                placeholder="10-digit account number"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+              />
+              <button
+                type="submit"
+                disabled={saveBank.isPending || banks.isLoading}
+                className="w-full rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary disabled:opacity-50"
+              >
+                {saveBank.isPending ? "Verifying with Paystack..." : "Verify and save account"}
+              </button>
+            </form>
           )}
-          <label className="mt-4 block text-sm font-medium">
-            Amount
-            <input
-              type="number"
-              min="100"
-              max={summary.withdrawable}
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              placeholder="0"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
-            />
-          </label>
-          <label className="mt-3 block text-sm font-medium">
-            Transfer note
-            <input
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              maxLength={200}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={
-              !recipientConfigured ||
-              !amount ||
-              Number(amount) > summary.withdrawable ||
-              withdrawal.isPending
-            }
-            className="mt-4 w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              withdrawal.mutate();
+            }}
           >
-            {withdrawal.isPending ? "Sending to Paystack..." : "Withdraw platform revenue"}
-          </button>
-        </form>
+            <label className="mt-4 block text-sm font-medium">
+              Amount
+              <input
+                type="number"
+                min="100"
+                max={summary.withdrawable}
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                placeholder="0"
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+            <label className="mt-3 block text-sm font-medium">
+              Transfer note
+              <input
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                maxLength={200}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={
+                !recipientConfigured ||
+                !amount ||
+                Number(amount) > summary.withdrawable ||
+                withdrawal.isPending
+              }
+              className="mt-4 w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {withdrawal.isPending ? "Sending to Paystack..." : "Withdraw platform revenue"}
+            </button>
+          </form>
+        </div>
       </section>
 
       <h2 className="mb-3 font-display text-lg font-bold">Platform ledger</h2>
