@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Store } from "lucide-react";
+import { BadgeCheck, LockKeyhole, Mail, MapPin, ShieldCheck, Store } from "lucide-react";
 import { categories } from "@/data/categories";
 import { useAuthStore } from "@/store/auth";
 
@@ -8,11 +8,36 @@ export function SiteFooter() {
   const isCustomer = useAuthStore((state) => state.user?.role === "customer");
 
   return (
-    <footer className="mt-20 border-t-4 border-primary/30 bg-[#17211b] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
+    <footer className="mt-20 border-t border-white/10 bg-[#142019] text-white shadow-[0_-16px_40px_-32px_rgba(18,33,24,0.9)]">
+      <div className="border-b border-white/10 bg-primary/15">
+        <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:grid-cols-3 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-6 w-6 shrink-0 text-[#75d39b]" />
+            <div>
+              <p className="text-sm font-semibold">Protected checkout</p>
+              <p className="text-xs text-white/60">Secure payment and order records</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <BadgeCheck className="h-6 w-6 shrink-0 text-[#75d39b]" />
+            <div>
+              <p className="text-sm font-semibold">Seller transparency</p>
+              <p className="text-xs text-white/60">Store profiles, ratings, and policies</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <LockKeyhole className="h-6 w-6 shrink-0 text-[#75d39b]" />
+            <div>
+              <p className="text-sm font-semibold">Account security</p>
+              <p className="text-xs text-white/60">Protected access for buyers and sellers</p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4 lg:grid-cols-6">
           {/* Brand */}
-          <div className="col-span-2 lg:col-span-2">
+          <div className="col-span-2 md:col-span-4 lg:col-span-2">
             <Link to="/" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Store className="h-5 w-5" />
@@ -22,31 +47,19 @@ export function SiteFooter() {
               </span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-6 text-white/65">
-              Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere — from phones to
-              fashion, building materials to baby products.
+              A Nigerian marketplace where customers discover independent stores and sellers manage
+              products, orders, messages, and payouts.
             </p>
-            <div className="mt-4 flex gap-3">
-              <a
-                href="#"
-                aria-label="Twitter"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
+            <div className="mt-5 space-y-2 text-sm text-white/65">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-[#75d39b]" /> Lagos, Nigeria
+              </p>
+              <Link
+                to="/contact"
+                className="flex items-center gap-2 transition-colors hover:text-white"
               >
-                𝕏
-              </a>
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
-              >
-                ◎
-              </a>
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 text-white/65 transition-colors hover:border-primary/60 hover:text-primary"
-              >
-                f
-              </a>
+                <Mail className="h-4 w-4 text-[#75d39b]" /> Contact support
+              </Link>
             </div>
           </div>
 
@@ -68,11 +81,60 @@ export function SiteFooter() {
             </ul>
           </div>
 
+          {/* Shopping */}
+          <div>
+            <h3 className="text-sm font-semibold text-white">Shop</h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link
+                  to="/marketplace"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Marketplace
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/stores"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Stores
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/categories"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Categories
+                </Link>
+              </li>
+              {isCustomer && (
+                <li>
+                  <Link
+                    to="/customer/orders"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
+                  >
+                    My orders
+                  </Link>
+                </li>
+              )}
+              {isCustomer && (
+                <li>
+                  <Link
+                    to="/wishlist"
+                    className="text-sm text-white/65 transition-colors hover:text-primary"
+                  >
+                    Wishlist
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+
           {/* Seller resources */}
           <div>
-            <h3 className="text-sm font-semibold text-white">
-              {isCustomer ? "Store access" : "For Sellers"}
-            </h3>
+            <h3 className="text-sm font-semibold text-white">Sell</h3>
             <ul className="mt-3 space-y-2">
               {!isCustomer && (
                 <li>
@@ -80,7 +142,7 @@ export function SiteFooter() {
                     to="/vendor-register"
                     className="text-sm text-white/65 transition-colors hover:text-primary"
                   >
-                    Start selling
+                    Become a seller
                   </Link>
                 </li>
               )}
@@ -96,51 +158,32 @@ export function SiteFooter() {
               )}
               <li>
                 <Link
-                  to="/explore"
+                  to="/help"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Open a store
+                  Seller help
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/vendor/subscription"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Seller plans
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Links */}
           <div>
-            <h3 className="text-sm font-semibold text-white">Company</h3>
+            <h3 className="text-sm font-semibold text-white">Support</h3>
             <ul className="mt-3 space-y-2">
-              {!isCustomer && (
-                <li>
-                  <Link
-                    to="/vendor-register"
-                    className="text-sm text-white/65 transition-colors hover:text-primary"
-                  >
-                    Become a Seller
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link
-                  to="/marketplace"
-                  className="text-sm text-white/65 transition-colors hover:text-primary"
-                >
-                  Marketplace
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/categories"
-                  className="text-sm text-white/65 transition-colors hover:text-primary"
-                >
-                  All Categories
-                </Link>
-              </li>
               <li>
                 <Link
                   to="/help"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Help Center
+                  Help center
                 </Link>
               </li>
               <li>
@@ -148,23 +191,7 @@ export function SiteFooter() {
                   to="/contact"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Contact Vendraza
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/privacy"
-                  className="text-sm text-white/65 transition-colors hover:text-primary"
-                >
-                  Privacy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/terms"
-                  className="text-sm text-white/65 transition-colors hover:text-primary"
-                >
-                  Terms
+                  Contact us
                 </Link>
               </li>
               <li>
@@ -172,7 +199,7 @@ export function SiteFooter() {
                   to="/returns"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Returns
+                  Returns and refunds
                 </Link>
               </li>
               <li>
@@ -180,7 +207,7 @@ export function SiteFooter() {
                   to="/delivery-policy"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Delivery
+                  Delivery information
                 </Link>
               </li>
               <li>
@@ -188,7 +215,37 @@ export function SiteFooter() {
                   to="/safety"
                   className="text-sm text-white/65 transition-colors hover:text-primary"
                 >
-                  Safety Center
+                  Safety center
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-white">Legal</h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link
+                  to="/terms"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Terms of use
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacy"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Privacy policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/safety"
+                  className="text-sm text-white/65 transition-colors hover:text-primary"
+                >
+                  Marketplace rules
                 </Link>
               </li>
             </ul>
@@ -196,13 +253,11 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-          <p className="text-xs text-white/50">© 2026 Vendraza. Made in Lagos, Nigeria.</p>
-          <div className="flex items-center gap-4 text-xs text-white/50">
-            <span>Paystack</span>
-            <span>·</span>
-            <span>Flutterwave</span>
-            <span>·</span>
-            <span>Bank Transfer</span>
+          <p className="text-xs text-white/50">© 2026 Vendraza. All rights reserved.</p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-white/50 sm:justify-end">
+            <span>Payments processed securely</span>
+            <span aria-hidden="true">•</span>
+            <span>Built for commerce in Nigeria</span>
           </div>
         </div>
       </div>

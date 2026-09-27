@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Store,
@@ -26,6 +27,11 @@ import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
 import { useStorefrontStore } from "@/store/storefront";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
+import { ProductCard } from "@/components/shared/ProductCard";
+import { StoreCard } from "@/components/shared/StoreCard";
+import { DataLoader } from "@/components/shared/DataLoader";
+import { getFeaturedProducts } from "@/services/productService";
+import { getFeaturedStores } from "@/services/storeService";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -51,43 +57,21 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
-  const [typedHeadline, setTypedHeadline] = useState("");
+  const { data: featuredProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["landing", "featured-products"],
+    queryFn: () => getFeaturedProducts(8),
+    staleTime: 60_000,
+  });
+  const { data: featuredStores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ["landing", "featured-stores"],
+    queryFn: () => getFeaturedStores(3),
+    staleTime: 120_000,
+  });
+  const storeById = new Map(featuredStores.map((store) => [store.id, store]));
 
   useEffect(() => {
     clearActiveStore();
   }, [clearActiveStore]);
-
-  useEffect(() => {
-    const firstLine = "Sell Smarter.";
-    const secondLine = " Shop Anywhere.";
-    const fullHeadline = firstLine + secondLine;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setTypedHeadline(fullHeadline);
-      return;
-    }
-    let position = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      if (!deleting && position < fullHeadline.length) position += 1;
-      else if (deleting && position > 0) position -= 1;
-      else if (!deleting) {
-        deleting = true;
-        timeout = setTimeout(tick, 1800);
-        return;
-      } else {
-        deleting = false;
-        timeout = setTimeout(tick, 500);
-        return;
-      }
-      setTypedHeadline(fullHeadline.slice(0, position));
-      timeout = setTimeout(tick, deleting ? 48 : 82);
-    };
-
-    timeout = setTimeout(tick, 450);
-    return () => clearTimeout(timeout);
-  }, []);
 
   return (
     <div className="min-h-screen lagoon-wash">
@@ -100,19 +84,14 @@ function Index() {
           alt="Customers and sellers using the Vendraza marketplace"
           className="absolute inset-0 -z-20 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 -z-10 bg-foreground/50" />
+        <div className="absolute inset-0 -z-10 bg-foreground/60" />
         <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
           <div className="w-full max-w-xl animate-rise text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
             </p>
-            <h1 className="min-h-[6.5rem] font-display text-4xl font-bold tracking-tight sm:min-h-[7rem] sm:text-5xl lg:min-h-[8rem] lg:text-6xl">
-              <span>{typedHeadline.slice(0, "Sell Smarter.".length)}</span>
-              <span className="text-[#b7e3c4]">{typedHeadline.slice("Sell Smarter.".length)}</span>
-              <span
-                className="ml-1 inline-block h-[0.9em] w-px animate-pulse bg-[#b7e3c4] align-[-0.08em]"
-                aria-hidden="true"
-              />
+            <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Sell Smarter. <span className="text-[#b7e3c4]">Shop Anywhere.</span>
             </h1>
             <p className="copy-float mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
               From phones to fashion, building materials to home essentials, buy from trusted
@@ -155,6 +134,92 @@ function Index() {
           </div>
         </div>
       </section>
+
+      {/* Live marketplace preview */}
+      <ScrollReveal>
+        <section className="border-b border-border bg-background">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <SectionHeader
+              eyebrow="Live marketplace"
+              title="Products Available Now"
+              description="Browse current listings from independent sellers. Prices, stock, and store details come directly from the marketplace."
+              action={
+                <Link
+                  to="/marketplace"
+                  className="hidden items-center gap-1 text-sm font-semibold text-primary hover:underline sm:inline-flex"
+                >
+                  View marketplace <ArrowRight className="h-4 w-4" />
+                </Link>
+              }
+            />
+            {productsLoading ? (
+              <DataLoader label="Loading marketplace products" className="min-h-64" />
+            ) : featuredProducts.length > 0 ? (
+              <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {featuredProducts.map((product) => {
+                  const store = storeById.get(product.storeId);
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="mt-7 border-y border-border py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  New products are being prepared for the marketplace.
+                </p>
+                <Link
+                  to="/marketplace"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                >
+                  Open marketplace <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
+            <div className="mt-6 sm:hidden">
+              <Link
+                to="/marketplace"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+              >
+                View all products <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <section className="bg-card">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <SectionHeader
+              eyebrow="Shop by seller"
+              title="Featured Stores"
+              description="Visit real storefronts, review seller information, and shop their available products in one place."
+              action={
+                <Link
+                  to="/stores"
+                  className="hidden items-center gap-1 text-sm font-semibold text-primary hover:underline sm:inline-flex"
+                >
+                  Browse stores <ArrowRight className="h-4 w-4" />
+                </Link>
+              }
+            />
+            {storesLoading ? (
+              <DataLoader label="Loading stores" className="min-h-48" />
+            ) : featuredStores.length > 0 ? (
+              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {featuredStores.map((store) => (
+                  <StoreCard key={store.id} store={store} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      </ScrollReveal>
 
       {/* Popular Categories */}
       <ScrollReveal>
