@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AdminHeading, LoadingRows, Status, TableShell } from "@/components/admin/AdminUI";
@@ -17,7 +17,7 @@ import {
 import {
   deleteAdminUser,
   getAdminUsers,
-  promoteAdminUser,
+  updateAdminUserRole,
   updateAdminUserStatus,
   type AdminUser,
 } from "@/services/adminService";
@@ -46,13 +46,18 @@ function UsersPage() {
     onError: (error) => toast.error(getErrorMessage(error, "Could not update account")),
   });
 
-  const promoteMutation = useMutation({
-    mutationFn: promoteAdminUser,
-    onSuccess: () => {
+  const roleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: "customer" | "vendor" | "admin" }) =>
+      updateAdminUserRole(id, role),
+    onSuccess: (user) => {
       client.invalidateQueries({ queryKey: ["admin-users"] });
-      toast.success("Administrator access granted. The user must sign in again.");
+      toast.success(
+        user.role === "admin"
+          ? "Administrator access granted. The user must sign in again."
+          : "Administrator access removed. The user must sign in again.",
+      );
     },
-    onError: (error) => toast.error(getErrorMessage(error, "Could not grant admin access")),
+    onError: (error) => toast.error(getErrorMessage(error, "Could not update admin access")),
   });
 
   const deleteMutation = useMutation({
@@ -66,7 +71,7 @@ function UsersPage() {
     onError: (error) => toast.error(getErrorMessage(error, "Could not delete account")),
   });
 
-  const busy = statusMutation.isPending || promoteMutation.isPending || deleteMutation.isPending;
+  const busy = statusMutation.isPending || roleMutation.isPending || deleteMutation.isPending;
 
   return (
     <>
@@ -122,13 +127,28 @@ function UsersPage() {
                             </button>
                             <button
                               disabled={busy}
-                              onClick={() => promoteMutation.mutate(user.id)}
+                              onClick={() => roleMutation.mutate({ id: user.id, role: "admin" })}
                               className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-50"
                             >
                               <ShieldCheck className="h-3.5 w-3.5" />
                               Make admin
                             </button>
                           </>
+                        )}
+                        {!isCurrentUser && user.role === "admin" && (
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              roleMutation.mutate({
+                                id: user.id,
+                                role: user.previousRole ?? (user.storeId ? "vendor" : "customer"),
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-50"
+                          >
+                            <ShieldOff className="h-3.5 w-3.5" />
+                            Remove admin
+                          </button>
                         )}
                         {!isCurrentUser && (
                           <button

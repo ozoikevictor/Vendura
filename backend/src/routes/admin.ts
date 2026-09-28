@@ -119,16 +119,24 @@ export const adminRoutes = (db: Database) => {
     asyncRoute(async (req: AuthRequest, res) => {
       if (req.params.id === req.user!.id)
         throw new ApiError(400, "You cannot change your own admin role");
-      const { role } = z.object({ role: z.literal("admin") }).parse(req.body);
+      const { role } = z
+        .object({ role: z.enum(["customer", "vendor", "admin"]) })
+        .parse(req.body);
       const user = await db.get<Entity>("users", String(req.params.id));
       if (!user) throw new ApiError(404, "User not found");
-      if (user.role === "admin")
-        throw new ApiError(409, "This user is already an administrator");
+      if (role === user.role)
+        throw new ApiError(409, `This user is already ${role === "admin" ? "an administrator" : `a ${role}`}`);
+      if (role !== "admin" && user.role !== "admin")
+        throw new ApiError(400, "Only administrator access can be removed here");
+      const previousRole = role === "admin"
+        ? user.role
+        : undefined;
       ok(
         res,
         publicUser(
           (await db.update<Entity>("users", user.id, {
             role,
+            previousRole,
             status: "active",
             updatedAt: now(),
           }))!,

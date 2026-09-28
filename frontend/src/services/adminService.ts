@@ -21,6 +21,7 @@ export interface AdminOverview {
 
 export interface AdminUser extends User {
   status?: "active" | "suspended";
+  previousRole?: "customer" | "vendor";
 }
 export interface AdminStore extends Store {
   owner: AdminUser;
@@ -57,10 +58,10 @@ export const updateAdminUserStatus = (userId: string, status: "active" | "suspen
     method: "PATCH",
     ...json({ status }),
   });
-export const promoteAdminUser = (userId: string) =>
+export const updateAdminUserRole = (userId: string, role: "customer" | "vendor" | "admin") =>
   api<AdminUser>(`/admin/users/${encodeURIComponent(userId)}/role`, {
     method: "PATCH",
-    ...json({ role: "admin" }),
+    ...json({ role }),
   });
 export const deleteAdminUser = (userId: string) =>
   api<void>(`/admin/users/${encodeURIComponent(userId)}`, { method: "DELETE" });

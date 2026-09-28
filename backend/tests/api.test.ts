@@ -1425,6 +1425,15 @@ describe("Vendura API", () => {
     expect(promoted.status).toBe(200);
     expect(promoted.body.data.role).toBe("admin");
     expect(promoted.body.data.status).toBe("active");
+    expect(promoted.body.data.previousRole).toBe("customer");
+
+    const demoted = await request(app)
+      .patch("/api/admin/users/user-cust-1/role")
+      .set(auth(admin))
+      .send({ role: "customer" });
+    expect(demoted.status).toBe(200);
+    expect(demoted.body.data.role).toBe("customer");
+    expect(demoted.body.data.previousRole).toBeUndefined();
 
     expect(
       (await request(app).delete("/api/admin/users/user-admin-1").set(auth(admin))).status,
