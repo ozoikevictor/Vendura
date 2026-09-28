@@ -23,6 +23,20 @@ beforeEach(async () => {
 });
 
 describe("Vendura API", () => {
+  it("does not create password reset data for a deleted account", async () => {
+    await db.remove("users", "user-cust-1");
+
+    const response = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "customer@vendura.test" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.message).toBe(
+      "If the account exists, reset instructions have been sent",
+    );
+    expect(await db.findOne("users", { email: "customer@vendura.test" })).toBeNull();
+  });
+
   it("repairs a store owner from its matching contact email", async () => {
     await db.create("users", {
       id: "user-owner-repair",

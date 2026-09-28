@@ -36,7 +36,7 @@ function ForgotPasswordPage() {
     try {
       await authService.requestPasswordReset(email, captchaToken);
       setSent(true);
-      toast.success("Reset link sent");
+      toast.success("Password reset request received");
     } catch {
       toast.error("Could not send reset link");
       setCaptchaRefresh((value) => value + 1);
@@ -61,26 +61,47 @@ function ForgotPasswordPage() {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-soft">
                 <CheckCircle2 className="h-6 w-6 text-success" />
               </div>
-              <h2 className="mt-4 text-lg font-semibold text-foreground">Check your email</h2>
+              <h2 className="mt-4 text-lg font-semibold text-foreground">Request received</h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                We've sent a reset link to <span className="font-medium text-foreground">{email}</span>.
-                If an account exists for that address, the link will arrive shortly and expires in 30 minutes.
+                If an account exists for{" "}
+                <span className="font-medium text-foreground">{email}</span>, a reset link will
+                arrive shortly and expire in 30 minutes. If no email arrives, the account may not
+                exist or may have been deleted.
               </p>
-              <Link to="/login" className="mt-6 inline-flex w-full justify-center rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">Back to login</Link>
+              <Link
+                to="/login"
+                className="mt-6 inline-flex w-full justify-center rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Back to login
+              </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
+                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Email
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input id="email" type="email" inputMode="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"
-                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary" />
+                  <input
+                    id="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
                 </div>
               </div>
               <HumanCheck onToken={setCaptchaToken} refreshKey={captchaRefresh} />
-              <button type="submit" disabled={loading || !captchaToken}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={loading || !captchaToken}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
                 {loading ? "Sending..." : "Send Reset Link"}
                 {!loading && <ArrowRight className="h-4 w-4" />}
               </button>
@@ -90,7 +111,9 @@ function ForgotPasswordPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Remembered your password?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">Log in</Link>
+          <Link to="/login" className="font-semibold text-primary hover:underline">
+            Log in
+          </Link>
         </p>
       </div>
     </AuthLayout>
