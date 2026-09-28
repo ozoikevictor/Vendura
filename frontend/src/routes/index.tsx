@@ -139,8 +139,8 @@ function Index() {
       <PublicHeader />
 
       {/* Hero cover and introduction */}
-      <section className="relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
-        <div className="absolute inset-0 -z-20" aria-live="off">
+      <section className="hero-stage relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
+        <div className="hero-media absolute inset-0 -z-20" aria-live="off">
           {heroSlides.map((slide, index) => (
             <img
               key={slide.src}
@@ -154,7 +154,7 @@ function Index() {
           ))}
         </div>
         <div className="hero-image-overlay absolute inset-0 -z-10" />
-        <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
+        <div className="hero-content-shell mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
           <div className="hero-sequence w-full max-w-xl text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
@@ -214,7 +214,7 @@ function Index() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-3 py-2 backdrop-blur-sm">
+        <div className="hero-controls absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-3 py-2 backdrop-blur-sm">
           {heroSlides.map((slide, index) => (
             <button
               key={slide.src}

@@ -352,6 +352,10 @@
   transition: opacity 1.1s ease;
 }
 
+.hero-stage {
+  background: #08120e;
+}
+
 .hero-slide.is-active {
   opacity: 1;
   animation: hero-image-drift 7s ease-in-out both;
@@ -433,8 +437,28 @@
 }
 
 @media (max-width: 639px) {
+  .hero-media,
   .hero-image-overlay {
-    background: rgb(8 18 14 / 54%);
+    bottom: auto;
+    height: 18rem;
+  }
+
+  .hero-slide {
+    object-position: 30% center;
+  }
+
+  .hero-image-overlay {
+    background: linear-gradient(180deg, rgb(8 18 14 / 4%) 55%, rgb(8 18 14 / 90%) 100%);
+  }
+
+  .hero-content-shell {
+    padding-top: 19rem;
+    padding-bottom: 5rem;
+  }
+
+  .hero-controls {
+    top: 15rem;
+    bottom: auto;
   }
 }
 
