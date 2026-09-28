@@ -4,6 +4,7 @@ import { createApp } from "../src/app.js";
 import { MemoryDatabase } from "../src/db/memory.js";
 import { seedDatabase } from "../src/db/seed.js";
 import { config } from "../src/config.js";
+import { repairStoreOwnerByContactEmail } from "../src/lib/store-owner.js";
 import { createHmac } from "node:crypto";
 
 const db = new MemoryDatabase();
@@ -22,6 +23,40 @@ beforeEach(async () => {
 });
 
 describe("Vendura API", () => {
+  it("repairs a store owner from its matching contact email", async () => {
+    await db.create("users", {
+      id: "user-owner-repair",
+      fullName: "Victor Owner",
+      email: "victor-owner@example.com",
+      role: "customer",
+      createdAt: new Date().toISOString(),
+    });
+    await db.create("stores", {
+      id: "store-owner-repair",
+      ownerId: "missing-vendor",
+      name: "Victor Fashion Test",
+      contact: { email: "victor-owner@example.com" },
+    });
+    await db.create("notifications", {
+      id: "notification-owner-repair",
+      userId: "missing-vendor",
+      title: "Existing vendor notification",
+    });
+
+    await repairStoreOwnerByContactEmail(db, "store-owner-repair");
+
+    expect(await db.get("users", "user-owner-repair")).toMatchObject({
+      role: "vendor",
+      storeId: "store-owner-repair",
+    });
+    expect(await db.get("stores", "store-owner-repair")).toMatchObject({
+      ownerId: "user-owner-repair",
+    });
+    expect(await db.get("notifications", "notification-owner-repair")).toMatchObject({
+      userId: "user-owner-repair",
+    });
+  });
+
   it("creates a protected support request with a reference", async () => {
     const response = await request(app).post("/api/support/requests").send({
       name: "Demo Customer",

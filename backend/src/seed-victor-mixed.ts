@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { config } from "./config.js";
 import { SupabaseDatabase } from "./db/supabase.js";
 import { now, slugify } from "./lib/helpers.js";
+import { repairStoreOwnerByContactEmail } from "./lib/store-owner.js";
 import type { Entity } from "./types.js";
 
 if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase is not configured");
@@ -73,6 +74,7 @@ const catalog: Seed[] = [
 
 const db = new SupabaseDatabase(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY);
 await db.connect();
+await repairStoreOwnerByContactEmail(db, storeId);
 const currentCategories = await db.list<Entity>("categories");
 for (const category of categories) {
   if (!currentCategories.some((item) => item.id === category.id)) {

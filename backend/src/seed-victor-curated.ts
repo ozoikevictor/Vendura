@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { config } from "./config.js";
 import { SupabaseDatabase } from "./db/supabase.js";
 import { now, slugify } from "./lib/helpers.js";
+import { repairStoreOwnerByContactEmail } from "./lib/store-owner.js";
 import type { Entity } from "./types.js";
 
 if (!config.SUPABASE_URL || !config.SUPABASE_SERVICE_ROLE_KEY) {
@@ -51,6 +52,7 @@ if (catalog.length !== 20 || new Set(catalog.map(([name]) => name.toLowerCase())
 
 const db = new SupabaseDatabase(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY);
 await db.connect();
+await repairStoreOwnerByContactEmail(db, storeId);
 
 const existing = (await db.list<Entity>("products")).filter(
   (product) => product.storeId === storeId,

@@ -12,6 +12,7 @@
     "seed:victor-mixed": "tsx src/seed-victor-mixed.ts",
     "seed:victor-curated": "tsx src/seed-victor-curated.ts",
     "seed:edera-collection": "tsx src/seed-edera-collection.ts",
+    "repair:victor-owner": "tsx src/repair-victor-owner.ts",
     "backfill:delivery-earnings": "tsx src/backfill-delivery-earnings.ts",
     "create:admin": "tsx src/create-admin.ts",
     "test": "vitest run --configLoader runner",
