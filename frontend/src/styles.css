@@ -3,8 +3,12 @@
 @import "tw-animate-css";
 
 @keyframes vendura-loading {
-  0% { transform: translateX(-110%); }
-  100% { transform: translateX(410%); }
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(410%);
+  }
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -306,6 +310,9 @@
 .stagger-grid > * {
   opacity: 0;
   transform: translateY(16px);
+}
+
+.scroll-reveal.is-visible .stagger-grid > * {
   animation: card-rise 520ms var(--ease-lagoon) forwards;
 }
 
@@ -338,18 +345,114 @@
   }
 }
 
+.hero-image-drift {
+  animation: hero-image-drift 16s ease-in-out infinite alternate;
+  transform: scale(1.025);
+  transform-origin: 50% 45%;
+}
+
+.hero-sequence > p:first-child,
+.hero-sequence > h1,
+.hero-sequence > .copy-float,
+.hero-actions,
+.hero-trust {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: hero-item-rise 700ms var(--ease-lagoon) forwards;
+}
+
+.hero-sequence > h1 {
+  animation-delay: 100ms;
+}
+
+.hero-sequence > .copy-float {
+  animation-delay: 220ms;
+}
+
+.hero-actions {
+  animation-delay: 340ms;
+}
+
+.hero-trust {
+  animation-delay: 480ms;
+}
+
+.hero-actions > *,
+.landing-card-lift {
+  transition:
+    translate 260ms var(--ease-lagoon),
+    box-shadow 260ms var(--ease-lagoon),
+    border-color 260ms ease;
+}
+
+.hero-actions > *:hover,
+.landing-card-lift:hover {
+  translate: 0 -4px;
+}
+
+.hero-trust > span {
+  transition:
+    color 220ms ease,
+    transform 220ms var(--ease-lagoon);
+}
+
+.hero-trust > span:hover {
+  color: white;
+  transform: translateY(-2px);
+}
+
+@keyframes hero-item-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-image-drift {
+  from {
+    transform: scale(1.025) translate3d(-0.35%, -0.2%, 0);
+  }
+  to {
+    transform: scale(1.075) translate3d(0.45%, 0.25%, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .scroll-reveal,
-  .stagger-grid > * {
+  .stagger-grid > *,
+  .hero-sequence > p:first-child,
+  .hero-sequence > h1,
+  .hero-sequence > .copy-float,
+  .hero-actions,
+  .hero-trust {
     opacity: 1;
     transform: none;
     transition: none;
     animation: none;
   }
-  .copy-float {
+
+  .copy-float,
+  .hero-image-drift {
     animation: none;
+  }
+
+  .hero-image-drift {
+    transform: none;
+  }
+
+  .hero-actions > *,
+  .landing-card-lift,
+  .hero-trust > span {
+    transition: none;
+  }
+
+  .hero-actions > *:hover,
+  .landing-card-lift:hover,
+  .hero-trust > span:hover {
+    translate: none;
+    transform: none;
   }
 }

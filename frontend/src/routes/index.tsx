@@ -115,11 +115,11 @@ function Index() {
         <img
           src={heroImg}
           alt="Customers and sellers using the Vendraza marketplace"
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
+          className="hero-image-drift absolute inset-0 -z-20 h-full w-full object-cover"
         />
         <div className="absolute inset-0 -z-10 bg-foreground/60" />
         <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
-          <div className="w-full max-w-xl animate-rise text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
+          <div className="hero-sequence w-full max-w-xl text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
             </p>
@@ -142,7 +142,7 @@ function Index() {
               From phones to fashion, building materials to home essentials, buy from trusted
               vendors across Nigeria or start your own store in minutes.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="hero-actions mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 to="/marketplace"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost sm:w-auto"
@@ -165,7 +165,7 @@ function Index() {
                 Start selling
               </Link>
             </div>
-            <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85">
+            <div className="hero-trust mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-[#b7e3c4]" /> Verified vendors
               </span>
@@ -200,13 +200,14 @@ function Index() {
             {productsLoading ? (
               <DataLoader label="Loading marketplace products" className="min-h-64" />
             ) : featuredProducts.length > 0 ? (
-              <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              <div className="stagger-grid mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {featuredProducts.map((product) => {
                   const store = storeById.get(product.storeId);
                   return (
                     <ProductCard
                       key={product.id}
                       product={product}
+                      className="landing-card-lift"
                       {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
                     />
                   );
@@ -256,9 +257,9 @@ function Index() {
             {storesLoading ? (
               <DataLoader label="Loading stores" className="min-h-48" />
             ) : featuredStores.length > 0 ? (
-              <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="stagger-grid mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {featuredStores.map((store) => (
-                  <StoreCard key={store.id} store={store} />
+                  <StoreCard key={store.id} store={store} className="landing-card-lift" />
                 ))}
               </div>
             ) : null}
@@ -289,7 +290,7 @@ function Index() {
                 <Link
                   key={c.id}
                   to="/explore"
-                  className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-card transition-all hover:shadow-frost hover:border-primary/30"
+                  className="landing-card-lift group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-card transition-all hover:border-primary/30 hover:shadow-frost"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                     <CategoryIcon name={c.icon} className="h-6 w-6" />
