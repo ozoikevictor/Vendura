@@ -1443,15 +1443,41 @@ describe("Vendura API", () => {
       id: "user-delete-test",
       fullName: "Delete Test",
       email: "delete@example.com",
-      role: "customer",
+      role: "vendor",
+      storeId: "store-delete-test",
       emailVerified: true,
       createdAt: new Date().toISOString(),
+    });
+    await db.create("stores", {
+      id: "store-delete-test",
+      ownerId: deletable.id,
+      name: "Delete Store",
+      slug: "delete-store",
+    });
+    await db.create("products", {
+      id: "product-delete-test",
+      storeId: "store-delete-test",
+      name: "Delete Product",
+    });
+    await db.create("subscriptions", {
+      id: "subscription-delete-test",
+      vendorId: deletable.id,
+      status: "active",
+    });
+    await db.create("notifications", {
+      id: "notification-delete-test",
+      userId: deletable.id,
+      title: "Delete notification",
     });
     const deleted = await request(app)
       .delete(`/api/admin/users/${deletable.id}`)
       .set(auth(admin));
     expect(deleted.status).toBe(204);
     expect(await db.get("users", deletable.id)).toBeNull();
+    expect(await db.get("stores", "store-delete-test")).toBeNull();
+    expect(await db.get("products", "product-delete-test")).toBeNull();
+    expect(await db.get("subscriptions", "subscription-delete-test")).toBeNull();
+    expect(await db.get("notifications", "notification-delete-test")).toBeNull();
 
     const verified = await request(app)
       .patch("/api/admin/stores/store-technaija/verification")

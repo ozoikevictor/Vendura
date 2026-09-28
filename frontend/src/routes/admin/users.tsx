@@ -184,8 +184,13 @@ function UsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this account?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.fullName} will no longer be able to sign in. Historical orders and
-              financial records will be kept for reporting. This action cannot be undone.
+              {deleteTarget?.fullName} will no longer be able to sign in.
+              {deleteTarget &&
+                (deleteTarget.role === "vendor" ||
+                  deleteTarget.previousRole === "vendor" ||
+                  deleteTarget.storeId) &&
+                " Their storefront, products, orders, conversations, subscription, payouts, and related records will also be removed throughout the app."}{" "}
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

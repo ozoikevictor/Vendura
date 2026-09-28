@@ -152,7 +152,7 @@ export const adminRoutes = (db: Database) => {
         throw new ApiError(400, "You cannot delete your own admin account");
       const user = await db.get<Entity>("users", String(req.params.id));
       if (!user) throw new ApiError(404, "User not found");
-      await db.remove("users", user.id);
+      await deleteUserAccount(db, user);
       res.status(204).end();
     }),
   );
@@ -460,6 +460,81 @@ async function backfillSubscriptionRevenue(db: Database) {
       createdAt: subscription.lastPaymentAt ?? now(),
     });
   }
+}
+
+async function deleteUserAccount(db: Database, user: Entity) {
+  const stores = (await db.list<Entity>("stores")).filter(
+    (store) => store.ownerId === user.id || store.id === user.storeId,
+  );
+  const storeIds = new Set(stores.map((store) => store.id));
+  const products = (await db.list<Entity>("products")).filter((product) =>
+    storeIds.has(String(product.storeId)),
+  );
+  const productIds = new Set(products.map((product) => product.id));
+  const conversations = (await db.list<Entity>("conversations")).filter(
+    (conversation) =>
+      conversation.customerId === user.id ||
+      conversation.vendorId === user.id ||
+      storeIds.has(String(conversation.storeId)),
+  );
+  const conversationIds = new Set(conversations.map((conversation) => conversation.id));
+  const orders = (await db.list<Entity>("orders")).filter(
+    (order) =>
+      order.customerId === user.id ||
+      order.vendorId === user.id ||
+      storeIds.has(String(order.storeId)),
+  );
+  const orderIds = new Set(orders.map((order) => order.id));
+
+  await removeMatching(db, "messages", (item) =>
+    item.userId === user.id ||
+    item.senderId === user.id ||
+    item.customerId === user.id ||
+    item.vendorId === user.id ||
+    item.adminId === user.id ||
+    conversationIds.has(String(item.conversationId)) ||
+    orderIds.has(String(item.orderId)) ||
+    storeIds.has(String(item.storeId)),
+  );
+  await removeMatching(db, "offers", (item) =>
+    conversationIds.has(String(item.conversationId)) ||
+    productIds.has(String(item.productId)),
+  );
+  await removeMatching(db, "addresses", (item) => item.userId === user.id);
+  await removeMatching(db, "notifications", (item) => item.userId === user.id);
+  await removeMatching(db, "subscriptions", (item) => item.vendorId === user.id);
+  await removeMatching(db, "bankAccounts", (item) =>
+    item.id === user.id || item.userId === user.id || item.vendorId === user.id,
+  );
+  await removeMatching(db, "deliverySettings", (item) =>
+    item.vendorId === user.id || storeIds.has(String(item.storeId)),
+  );
+  await removeMatching(db, "transactions", (item) =>
+    item.userId === user.id ||
+    item.vendorId === user.id ||
+    storeIds.has(String(item.storeId)) ||
+    orderIds.has(String(item.orderId)),
+  );
+  await removeMatching(db, "payouts", (item) =>
+    item.vendorId === user.id || storeIds.has(String(item.storeId)),
+  );
+
+  await Promise.all([
+    ...products.map((product) => db.remove("products", product.id)),
+    ...conversations.map((conversation) => db.remove("conversations", conversation.id)),
+    ...orders.map((order) => db.remove("orders", order.id)),
+  ]);
+  await Promise.all(stores.map((store) => db.remove("stores", store.id)));
+  await db.remove("users", user.id);
+}
+
+async function removeMatching(
+  db: Database,
+  collection: string,
+  predicate: (item: Entity) => boolean,
+) {
+  const matches = (await db.list<Entity>(collection)).filter(predicate);
+  await Promise.all(matches.map((item) => db.remove(collection, item.id)));
 }
 
 async function paystackRequest<T>(path: string, init: RequestInit = {}) {
