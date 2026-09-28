@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -57,6 +57,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
+  const [typedHeadline, setTypedHeadline] = useState("");
   const { data: featuredProducts = [], isLoading: productsLoading } = useQuery({
     queryKey: ["landing", "featured-products"],
     queryFn: () => getFeaturedProducts(8),
@@ -72,6 +73,38 @@ function Index() {
   useEffect(() => {
     clearActiveStore();
   }, [clearActiveStore]);
+
+  useEffect(() => {
+    const fullHeadline = "Sell Smarter. Shop Anywhere.";
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTypedHeadline(fullHeadline);
+      return;
+    }
+
+    let position = 0;
+    let deleting = false;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      if (!deleting && position < fullHeadline.length) position += 1;
+      else if (deleting && position > 0) position -= 1;
+      else if (!deleting) {
+        deleting = true;
+        timeout = setTimeout(tick, 1800);
+        return;
+      } else {
+        deleting = false;
+        timeout = setTimeout(tick, 500);
+        return;
+      }
+
+      setTypedHeadline(fullHeadline.slice(0, position));
+      timeout = setTimeout(tick, deleting ? 48 : 82);
+    };
+
+    timeout = setTimeout(tick, 450);
+    return () => clearTimeout(timeout);
+  }, []);
 
   return (
     <div className="min-h-screen lagoon-wash">
@@ -90,8 +123,20 @@ function Index() {
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
             </p>
-            <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Sell Smarter. <span className="text-[#b7e3c4]">Shop Anywhere.</span>
+            <h1
+              aria-label="Sell Smarter. Shop Anywhere."
+              className="min-h-[6.5rem] font-display text-4xl font-bold tracking-tight sm:min-h-[7rem] sm:text-5xl lg:min-h-[8rem] lg:text-6xl"
+            >
+              <span aria-hidden="true">
+                <span>{typedHeadline.slice(0, "Sell Smarter.".length)}</span>
+                <span className="text-[#b7e3c4]">
+                  {typedHeadline.slice("Sell Smarter.".length)}
+                </span>
+                <span
+                  className="ml-1 inline-block h-[0.9em] w-px animate-pulse bg-[#b7e3c4] align-[-0.08em]"
+                  aria-hidden="true"
+                />
+              </span>
             </h1>
             <p className="copy-float mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
               From phones to fashion, building materials to home essentials, buy from trusted
