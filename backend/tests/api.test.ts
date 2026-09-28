@@ -1418,6 +1418,32 @@ describe("Vendura API", () => {
       ).status,
     ).toBe(403);
 
+    const promoted = await request(app)
+      .patch("/api/admin/users/user-cust-1/role")
+      .set(auth(admin))
+      .send({ role: "admin" });
+    expect(promoted.status).toBe(200);
+    expect(promoted.body.data.role).toBe("admin");
+    expect(promoted.body.data.status).toBe("active");
+
+    expect(
+      (await request(app).delete("/api/admin/users/user-admin-1").set(auth(admin))).status,
+    ).toBe(400);
+
+    const deletable = await db.create("users", {
+      id: "user-delete-test",
+      fullName: "Delete Test",
+      email: "delete@example.com",
+      role: "customer",
+      emailVerified: true,
+      createdAt: new Date().toISOString(),
+    });
+    const deleted = await request(app)
+      .delete(`/api/admin/users/${deletable.id}`)
+      .set(auth(admin));
+    expect(deleted.status).toBe(204);
+    expect(await db.get("users", deletable.id)).toBeNull();
+
     const verified = await request(app)
       .patch("/api/admin/stores/store-technaija/verification")
       .set(auth(admin))

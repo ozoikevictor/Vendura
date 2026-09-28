@@ -114,6 +114,41 @@ export const adminRoutes = (db: Database) => {
     }),
   );
 
+  router.patch(
+    "/users/:id/role",
+    asyncRoute(async (req: AuthRequest, res) => {
+      if (req.params.id === req.user!.id)
+        throw new ApiError(400, "You cannot change your own admin role");
+      const { role } = z.object({ role: z.literal("admin") }).parse(req.body);
+      const user = await db.get<Entity>("users", String(req.params.id));
+      if (!user) throw new ApiError(404, "User not found");
+      if (user.role === "admin")
+        throw new ApiError(409, "This user is already an administrator");
+      ok(
+        res,
+        publicUser(
+          (await db.update<Entity>("users", user.id, {
+            role,
+            status: "active",
+            updatedAt: now(),
+          }))!,
+        ),
+      );
+    }),
+  );
+
+  router.delete(
+    "/users/:id",
+    asyncRoute(async (req: AuthRequest, res) => {
+      if (req.params.id === req.user!.id)
+        throw new ApiError(400, "You cannot delete your own admin account");
+      const user = await db.get<Entity>("users", String(req.params.id));
+      if (!user) throw new ApiError(404, "User not found");
+      await db.remove("users", user.id);
+      res.status(204).end();
+    }),
+  );
+
   router.get(
     "/stores",
     asyncRoute(async (_req, res) => {

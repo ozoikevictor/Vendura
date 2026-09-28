@@ -57,6 +57,13 @@ export const updateAdminUserStatus = (userId: string, status: "active" | "suspen
     method: "PATCH",
     ...json({ status }),
   });
+export const promoteAdminUser = (userId: string) =>
+  api<AdminUser>(`/admin/users/${encodeURIComponent(userId)}/role`, {
+    method: "PATCH",
+    ...json({ role: "admin" }),
+  });
+export const deleteAdminUser = (userId: string) =>
+  api<void>(`/admin/users/${encodeURIComponent(userId)}`, { method: "DELETE" });
 export const getAdminStores = () => api<AdminStore[]>("/admin/stores");
 export const updateStoreVerification = (storeId: string, verified: boolean) =>
   api<AdminStore>(`/admin/stores/${encodeURIComponent(storeId)}/verification`, {
