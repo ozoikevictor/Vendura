@@ -345,10 +345,16 @@
   }
 }
 
-.hero-image-drift {
-  animation: hero-image-drift 16s ease-in-out infinite alternate;
+.hero-slide {
+  opacity: 0;
   transform: scale(1.025);
   transform-origin: 50% 45%;
+  transition: opacity 1.1s ease;
+}
+
+.hero-slide.is-active {
+  opacity: 1;
+  animation: hero-image-drift 7s ease-in-out both;
 }
 
 .hero-sequence > p:first-child,
@@ -435,12 +441,13 @@
   }
 
   .copy-float,
-  .hero-image-drift {
+  .hero-slide.is-active {
     animation: none;
   }
 
-  .hero-image-drift {
+  .hero-slide {
     transform: none;
+    transition: none;
   }
 
   .hero-actions > *,

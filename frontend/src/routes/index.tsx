@@ -16,6 +16,8 @@ import {
   Share2,
   Link as LinkIcon,
   LogIn,
+  Pause,
+  Play,
 } from "lucide-react";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -25,6 +27,10 @@ import { categories, popularCategorySlugs } from "@/data/categories";
 import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
 import heroImg from "@/assets/hero-marketplace.jpg";
+import heroFashion from "@/assets/hero-fashion.jpg";
+import heroElectronics from "@/assets/hero-electronics.jpg";
+import heroHome from "@/assets/hero-home.jpg";
+import heroDelivery from "@/assets/hero-delivery.jpg";
 import { useStorefrontStore } from "@/store/storefront";
 import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -55,9 +61,19 @@ export const Route = createFileRoute("/")({
   }),
 });
 
+const heroSlides = [
+  { src: heroImg, alt: "Customers and sellers using the Vendraza marketplace" },
+  { src: heroFashion, alt: "A Nigerian fashion vendor arranging clothes in her store" },
+  { src: heroElectronics, alt: "A customer shopping for electronics with a Nigerian vendor" },
+  { src: heroHome, alt: "A Nigerian vendor presenting cookware and home essentials" },
+  { src: heroDelivery, alt: "A marketplace order being delivered to a customer" },
+];
+
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
   const [typedHeadline, setTypedHeadline] = useState("");
+  const [activeHero, setActiveHero] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
   const { data: featuredProducts = [], isLoading: productsLoading } = useQuery({
     queryKey: ["landing", "featured-products"],
     queryFn: () => getFeaturedProducts(8),
@@ -106,17 +122,35 @@ function Index() {
     return () => clearTimeout(timeout);
   }, []);
 
+  useEffect(() => {
+    if (heroPaused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      setActiveHero((current) => (current + 1) % heroSlides.length);
+    }, 5500);
+
+    return () => window.clearInterval(interval);
+  }, [heroPaused]);
+
   return (
     <div className="min-h-screen lagoon-wash">
       <PublicHeader />
 
       {/* Hero cover and introduction */}
       <section className="relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
-        <img
-          src={heroImg}
-          alt="Customers and sellers using the Vendraza marketplace"
-          className="hero-image-drift absolute inset-0 -z-20 h-full w-full object-cover"
-        />
+        <div className="absolute inset-0 -z-20" aria-live="off">
+          {heroSlides.map((slide, index) => (
+            <img
+              key={slide.src}
+              src={slide.src}
+              alt={index === activeHero ? slide.alt : ""}
+              aria-hidden={index !== activeHero}
+              className={`hero-slide absolute inset-0 h-full w-full object-cover ${
+                index === activeHero ? "is-active" : ""
+              }`}
+            />
+          ))}
+        </div>
         <div className="absolute inset-0 -z-10 bg-foreground/60" />
         <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
           <div className="hero-sequence w-full max-w-xl text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
@@ -177,6 +211,29 @@ function Index() {
               </span>
             </div>
           </div>
+        </div>
+        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-3 py-2 backdrop-blur-sm">
+          {heroSlides.map((slide, index) => (
+            <button
+              key={slide.src}
+              type="button"
+              onClick={() => setActiveHero(index)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                index === activeHero ? "w-7 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"
+              }`}
+              aria-label={`Show hero image ${index + 1} of ${heroSlides.length}`}
+              aria-current={index === activeHero ? "true" : undefined}
+            />
+          ))}
+          <button
+            type="button"
+            onClick={() => setHeroPaused((paused) => !paused)}
+            className="ml-1 flex h-7 w-7 items-center justify-center rounded-full text-white transition-colors hover:bg-white/20"
+            aria-label={heroPaused ? "Play hero slideshow" : "Pause hero slideshow"}
+            title={heroPaused ? "Play slideshow" : "Pause slideshow"}
+          >
+            {heroPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+          </button>
         </div>
       </section>
 
