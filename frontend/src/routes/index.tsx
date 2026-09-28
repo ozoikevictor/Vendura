@@ -29,6 +29,7 @@ import { formatNaira } from "@/utils/format";
 import heroGroceries from "@/assets/hero-groceries.jpg";
 import heroFashion from "@/assets/hero-fashion.jpg";
 import heroElectronics from "@/assets/hero-electronics.jpg";
+import heroShoes from "@/assets/hero-shoes.jpg";
 import heroHome from "@/assets/hero-home.jpg";
 import heroDelivery from "@/assets/hero-delivery.jpg";
 import { useStorefrontStore } from "@/store/storefront";
@@ -65,6 +66,7 @@ const heroSlides = [
   { src: heroGroceries, alt: "A customer shopping for groceries from a Nigerian vendor" },
   { src: heroFashion, alt: "A Nigerian fashion vendor arranging clothes in her store" },
   { src: heroElectronics, alt: "A customer shopping for electronics with a Nigerian vendor" },
+  { src: heroShoes, alt: "A customer choosing shoes from a Nigerian footwear vendor" },
   { src: heroHome, alt: "A Nigerian vendor presenting cookware and home essentials" },
   { src: heroDelivery, alt: "A marketplace order being delivered to a customer" },
 ];
