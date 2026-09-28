@@ -26,7 +26,7 @@ import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { categories, popularCategorySlugs } from "@/data/categories";
 import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
-import heroImg from "@/assets/hero-marketplace.jpg";
+import heroGroceries from "@/assets/hero-groceries.jpg";
 import heroFashion from "@/assets/hero-fashion.jpg";
 import heroElectronics from "@/assets/hero-electronics.jpg";
 import heroHome from "@/assets/hero-home.jpg";
@@ -62,7 +62,7 @@ export const Route = createFileRoute("/")({
 });
 
 const heroSlides = [
-  { src: heroImg, alt: "Customers and sellers using the Vendraza marketplace" },
+  { src: heroGroceries, alt: "A customer shopping for groceries from a Nigerian vendor" },
   { src: heroFashion, alt: "A Nigerian fashion vendor arranging clothes in her store" },
   { src: heroElectronics, alt: "A customer shopping for electronics with a Nigerian vendor" },
   { src: heroHome, alt: "A Nigerian vendor presenting cookware and home essentials" },
@@ -151,7 +151,7 @@ function Index() {
             />
           ))}
         </div>
-        <div className="absolute inset-0 -z-10 bg-foreground/60" />
+        <div className="hero-image-overlay absolute inset-0 -z-10" />
         <div className="mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
           <div className="hero-sequence w-full max-w-xl text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
