@@ -48,7 +48,13 @@ export const catalogRoutes = (db: Database) => {
     ]);
     const activeCounts = countActiveProductsByStore(products);
     let items: Entity[] = stores.map((store) => ({ ...store, productCount: activeCounts.get(store.id) ?? 0 }));
-    if (req.query.featured === "true") items = items.filter((item) => item.verified).slice(0, Number(req.query.limit ?? 6));
+    if (req.query.featured === "true") {
+      const limit = Number(req.query.limit ?? 6);
+      items = items
+        .filter((item) => Number(item.productCount) > 0)
+        .sort((a, b) => Number(Boolean(b.verified)) - Number(Boolean(a.verified)) || Number(b.productCount) - Number(a.productCount))
+        .slice(0, limit);
+    }
     res.set("Cache-Control", "no-cache, must-revalidate");
     ok(res, items);
   }));
@@ -93,7 +99,14 @@ export const catalogRoutes = (db: Database) => {
     res.set("Cache-Control", "no-cache, must-revalidate");
     ok(res, { items, total, page: query.page, pageSize: query.pageSize });
   }));
-  router.get("/products/featured", asyncRoute(async (req, res) => ok(res, (await db.list<Entity>("products")).filter((product) => product.featured && isLiveProduct(product)).slice(0, Number(req.query.limit ?? 8)))));
+  router.get("/products/featured", asyncRoute(async (req, res) => {
+    const limit = Number(req.query.limit ?? 8);
+    const products = (await db.list<Entity>("products"))
+      .filter(isLiveProduct)
+      .sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || +new Date(String(b.createdAt)) - +new Date(String(a.createdAt)));
+    res.set("Cache-Control", "no-cache, must-revalidate");
+    ok(res, products.slice(0, limit));
+  }));
   router.get("/products/slug/:slug", asyncRoute(async (req, res) => { const item = await db.findOne("products", { slug: req.params.slug }); if (!item) throw new ApiError(404, "Product not found"); ok(res, item); }));
   router.get("/products/:id", asyncRoute(async (req, res) => { const item = await db.get("products", String(req.params.id)); if (!item) throw new ApiError(404, "Product not found"); ok(res, item); }));
   router.get("/products/:id/related", asyncRoute(async (req, res) => { const item = await db.get<Entity>("products", String(req.params.id)); if (!item) throw new ApiError(404, "Product not found"); const all = await db.list<Entity>("products"); ok(res, all.filter((product) => product.id !== item.id && product.categoryId === item.categoryId && isLiveProduct(product)).slice(0, Number(req.query.limit ?? 4))); }));

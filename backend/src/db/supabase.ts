@@ -64,9 +64,12 @@ export class SupabaseDatabase implements Database {
     this.url = url.replace(/\/$/, "");
     this.headers = {
       apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
       "Content-Type": "application/json",
     };
+    // New sb_secret keys are not JWTs and Supabase rejects them as Bearer tokens.
+    if (!serviceRoleKey.startsWith("sb_secret_")) {
+      this.headers.Authorization = `Bearer ${serviceRoleKey}`;
+    }
   }
 
   private table(collection: string) {

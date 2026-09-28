@@ -936,6 +936,24 @@ describe("Vendura API", () => {
       ).productCount,
     ).toBe(1);
   });
+  it("fills landing sections from live products and active stores", async () => {
+    await db.update("products", "product-phone-1", { featured: false });
+    await db.update("stores", "store-technaija", { verified: false });
+
+    const products = await request(app).get("/api/products/featured?limit=8");
+    expect(products.status).toBe(200);
+    expect(products.body.data.map((product: { id: string }) => product.id)).toContain(
+      "product-phone-1",
+    );
+
+    const stores = await request(app).get("/api/stores?featured=true&limit=3");
+    expect(stores.status).toBe(200);
+    expect(stores.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "store-technaija", productCount: 1 }),
+      ]),
+    );
+  });
   it("searches live products through the authenticated shopping assistant", async () => {
     expect(
       (
