@@ -100,6 +100,7 @@ export function SocialAuthButtons({ showDivider = true }: { showDivider?: boolea
           size: "large",
           text: "continue_with",
           shape: "rectangular",
+          logo_alignment: "center",
           width: googleButton.current.clientWidth,
         });
       })
@@ -146,7 +147,10 @@ export function SocialAuthButtons({ showDivider = true }: { showDivider?: boolea
   return (
     <div className="space-y-3">
       {googleClientId ? (
-        <div ref={googleButton} className="flex min-h-11 w-full justify-center overflow-hidden" />
+        <div
+          ref={googleButton}
+          className="flex min-h-11 w-full items-center justify-center overflow-hidden [&>div]:w-full"
+        />
       ) : (
         <button
           type="button"
