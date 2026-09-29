@@ -375,6 +375,12 @@
   animation-delay: 100ms;
 }
 
+.hero-headline {
+  animation:
+    hero-item-rise 700ms var(--ease-lagoon) 100ms forwards,
+    hero-headline-return 6s ease-in-out 2.2s infinite;
+}
+
 .hero-sequence > .copy-float {
   animation-delay: 220ms;
 }
@@ -424,6 +430,21 @@
   }
   to {
     transform: scale(1.025) translate3d(0.15%, 0.1%, 0);
+  }
+}
+
+@keyframes hero-headline-return {
+  0%,
+  44%,
+  100% {
+    opacity: 1;
+  }
+  50%,
+  58% {
+    opacity: 0;
+  }
+  64% {
+    opacity: 1;
   }
 }
 
@@ -480,6 +501,7 @@
   }
 
   .copy-float,
+  .hero-headline,
   .hero-slide.is-active {
     animation: none;
   }

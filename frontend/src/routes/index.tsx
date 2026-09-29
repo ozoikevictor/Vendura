@@ -73,7 +73,6 @@ const heroSlides = [
 
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
-  const [typedHeadline, setTypedHeadline] = useState("");
   const [activeHero, setActiveHero] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
   const { data: featuredProducts = [], isLoading: productsLoading } = useQuery({
@@ -91,38 +90,6 @@ function Index() {
   useEffect(() => {
     clearActiveStore();
   }, [clearActiveStore]);
-
-  useEffect(() => {
-    const fullHeadline = "Sell Smarter. Shop Anywhere.";
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setTypedHeadline(fullHeadline);
-      return;
-    }
-
-    let position = 0;
-    let deleting = false;
-    let timeout: ReturnType<typeof setTimeout>;
-
-    const tick = () => {
-      if (!deleting && position < fullHeadline.length) position += 1;
-      else if (deleting && position > 0) position -= 1;
-      else if (!deleting) {
-        deleting = true;
-        timeout = setTimeout(tick, 1800);
-        return;
-      } else {
-        deleting = false;
-        timeout = setTimeout(tick, 500);
-        return;
-      }
-
-      setTypedHeadline(fullHeadline.slice(0, position));
-      timeout = setTimeout(tick, deleting ? 48 : 82);
-    };
-
-    timeout = setTimeout(tick, 450);
-    return () => clearTimeout(timeout);
-  }, []);
 
   useEffect(() => {
     if (heroPaused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -159,26 +126,14 @@ function Index() {
             <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
             </p>
-            <h1
-              aria-label="Sell Smarter. Shop Anywhere."
-              className="min-h-[6.5rem] font-display text-4xl font-bold tracking-tight sm:min-h-[7rem] sm:text-5xl lg:min-h-[8rem] lg:text-6xl"
-            >
-              <span aria-hidden="true">
-                <span>{typedHeadline.slice(0, "Sell Smarter.".length)}</span>
-                <span className="text-[#b7e3c4]">
-                  {typedHeadline.slice("Sell Smarter.".length)}
-                </span>
-                <span
-                  className="ml-1 inline-block h-[0.9em] w-px animate-pulse bg-[#b7e3c4] align-[-0.08em]"
-                  aria-hidden="true"
-                />
-              </span>
+            <h1 className="hero-headline font-display text-4xl font-bold tracking-tight sm:min-h-[7rem] sm:text-5xl lg:min-h-[8rem] lg:text-6xl">
+              Sell Smarter. <span className="text-[#b7e3c4]">Shop Anywhere.</span>
             </h1>
-            <p className="copy-float mt-5 max-w-lg text-base leading-7 text-white/90 sm:text-lg">
+            <p className="copy-float mt-3 max-w-lg text-base leading-7 text-white/90 sm:mt-5 sm:text-lg">
               From phones to fashion, building materials to home essentials, buy from trusted
               vendors across Nigeria or start your own store in minutes.
             </p>
-            <div className="hero-actions mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="hero-actions mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
               <Link
                 to="/marketplace"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost sm:w-auto"
@@ -201,7 +156,7 @@ function Index() {
                 Start selling
               </Link>
             </div>
-            <div className="hero-trust mt-9 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85">
+            <div className="hero-trust mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85 sm:mt-9">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-[#b7e3c4]" /> Verified vendors
               </span>
