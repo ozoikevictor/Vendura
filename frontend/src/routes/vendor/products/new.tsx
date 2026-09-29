@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Save, Eye, ImagePlus, X, AlertCircle, Link as LinkIcon } from "lucide-react";
-import { createVendorProduct } from "@/services/productService";
+import { createVendorProduct, uploadProductImage } from "@/services/productService";
 import { getCategories } from "@/services/categoryService";
 import { getErrorMessage } from "@/services/api";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { resizeProductImage } from "@/utils/imageUpload";
 
 type ProductForm = {
   name: string;
@@ -43,6 +44,7 @@ function NewProductPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [image, setImage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
@@ -88,24 +90,25 @@ function NewProductPage() {
     return Object.keys(next).length === 0;
   }
 
-  function handleImage(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setErrors((current) => ({ ...current, image: "Choose an image file." }));
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors((current) => ({ ...current, image: "Image must be smaller than 2 MB." }));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImage(String(reader.result));
+    setUploadingImage(true);
+    try {
+      const compressed = await resizeProductImage(file);
+      const { url } = await uploadProductImage(compressed);
+      setImage(url);
       setImageUrl("");
       setErrors((current) => ({ ...current, image: undefined }));
-    };
-    reader.readAsDataURL(file);
+    } catch (caught) {
+      setErrors((current) => ({
+        ...current,
+        image: getErrorMessage(caught, "Could not upload this image."),
+      }));
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
   }
 
   function applyImageUrl() {
@@ -206,8 +209,8 @@ function NewProductPage() {
               )}
             >
               <ImagePlus className="h-6 w-6" />
-              <span>Choose product image</span>
-              <span className="text-xs">JPG, PNG or WebP, up to 2 MB</span>
+              <span>{uploadingImage ? "Preparing image..." : "Choose product image"}</span>
+              <span className="text-xs">JPG, PNG or WebP; phone photos are compressed automatically</span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -420,14 +423,14 @@ function NewProductPage() {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => handleSubmit("draft")}
-          disabled={loading}
+          disabled={loading || uploadingImage}
           className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-60"
         >
           <Save className="h-4 w-4" /> Save as Draft
         </button>
         <button
           onClick={() => handleSubmit("active")}
-          disabled={loading}
+          disabled={loading || uploadingImage}
           className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
         >
           <Eye className="h-4 w-4" /> Publish Product

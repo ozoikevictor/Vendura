@@ -37,3 +37,8 @@ export const deleteVendorProduct = (id: ID) =>
   api<void>(`/vendor/products/${encodeURIComponent(id)}`, { method: "DELETE" });
 export const duplicateVendorProduct = (id: ID) =>
   api<Product>(`/vendor/products/${encodeURIComponent(id)}/duplicate`, { method: "POST" });
+export const uploadProductImage = (dataUrl: string) =>
+  api<{ url: string }>("/uploads/images/product", {
+    method: "POST",
+    ...json({ dataUrl }),
+  });

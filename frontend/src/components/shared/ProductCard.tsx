@@ -8,6 +8,7 @@ import { RatingStars } from "./RatingStars";
 import { PriceTag } from "./PriceTag";
 import { discountPercent } from "@/utils/format";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -27,6 +28,7 @@ export function ProductCard({
   const isWishlisted = wishlist.has(product.id);
   const outOfStock = product.stock === 0;
   const discount = discountPercent(product.price, product.oldPrice);
+  const [imageFailed, setImageFailed] = useState(false);
 
   return (
     <div
@@ -41,15 +43,22 @@ export function ProductCard({
         params={{ slug: product.slug }}
         className="relative block aspect-square overflow-hidden bg-muted"
       >
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          loading="lazy"
-          className={cn(
-            "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
-            outOfStock && "opacity-60",
-          )}
-        />
+        {!imageFailed && product.images[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            className={cn(
+              "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
+              outOfStock && "opacity-60",
+            )}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted px-5 text-center text-xs font-medium text-muted-foreground">
+            Image unavailable
+          </div>
+        )}
         {/* Badges */}
         <div className="absolute left-2 top-2 flex flex-col gap-1">
           {discount != null && (

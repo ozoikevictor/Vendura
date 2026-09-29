@@ -17,6 +17,7 @@ import { webhookRoutes } from "./routes/webhooks.js";
 import { adminRoutes } from "./routes/admin.js";
 import { aiRoutes } from "./routes/ai.js";
 import { supportRoutes } from "./routes/support.js";
+import { uploadRoutes } from "./routes/uploads.js";
 import type { AuthRequest } from "./types.js";
 
 export function createApp(db: Database) {
@@ -94,6 +95,7 @@ export function createApp(db: Database) {
   app.use("/api", notificationRoutes(db));
   app.use("/api", aiRoutes(db));
   app.use("/api/support", supportRoutes(db));
+  app.use("/api/uploads", uploadRoutes());
   app.use("/api", planRoutes(db));
   app.use("/api/vendor", vendorRoutes(db));
   app.use("/api/admin", adminRoutes(db));

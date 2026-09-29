@@ -2,13 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ImagePlus, Link as LinkIcon, Save, Trash2, X } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getVendorProducts, updateVendorProduct, deleteVendorProduct } from "@/services/productService";
+import { getVendorProducts, updateVendorProduct, deleteVendorProduct, uploadProductImage } from "@/services/productService";
 import { CURRENT_VENDOR_STORE_ID } from "@/data/stores";
 import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/services/api";
 import { DataLoader } from "@/components/shared/DataLoader";
+import { resizeProductImage } from "@/utils/imageUpload";
 
 export const Route = createFileRoute("/vendor/products/$productId")({
   head: () => ({
@@ -44,6 +45,7 @@ function EditProductPage() {
   const [image, setImage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageError, setImageError] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -59,24 +61,22 @@ function EditProductPage() {
     }
   }, [product]);
 
-  function handleImage(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImage(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setImageError("Choose a JPG, PNG, or WebP image.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setImageError("Image must be smaller than 2 MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImage(String(reader.result));
+    setUploadingImage(true);
+    try {
+      const compressed = await resizeProductImage(file);
+      const { url } = await uploadProductImage(compressed);
+      setImage(url);
       setImageUrl("");
       setImageError("");
-    };
-    reader.readAsDataURL(file);
+    } catch (caught) {
+      setImageError(getErrorMessage(caught, "Could not upload this image."));
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
   }
 
   function applyImageUrl() {
@@ -167,8 +167,8 @@ function EditProductPage() {
           ) : (
             <label className="flex h-40 max-w-sm cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background text-sm text-muted-foreground hover:border-primary hover:text-primary">
               <ImagePlus className="h-6 w-6" />
-              <span>Choose a new product image</span>
-              <span className="text-xs">JPG, PNG or WebP, up to 2 MB</span>
+              <span>{uploadingImage ? "Preparing image..." : "Choose a new product image"}</span>
+              <span className="text-xs">Phone photos are compressed automatically</span>
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImage} className="sr-only" />
             </label>
           )}
@@ -217,7 +217,7 @@ function EditProductPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button onClick={handleSave} disabled={loading} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+        <button onClick={handleSave} disabled={loading || uploadingImage} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
           <Save className="h-4 w-4" /> Save Changes
         </button>
         <button onClick={handleDelete} className="flex items-center gap-1.5 rounded-xl border border-destructive/30 px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive-soft">
