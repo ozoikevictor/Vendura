@@ -14,10 +14,7 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Log In — Vendraza" },
-      {
-        name: "description",
-        content: "Log in to your Vendraza account to shop and manage orders.",
-      },
+      { name: "description", content: "Log in to your Vendraza account to shop and manage orders." },
       { property: "og:title", content: "Log In — Vendraza" },
       { property: "og:description", content: "Log in to your Vendraza account." },
       { name: "twitter:card", content: "summary" },
@@ -61,7 +58,7 @@ function LoginPage() {
   }
 
   return (
-    <AuthLayout current="login">
+    <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
@@ -136,6 +133,19 @@ function LoginPage() {
             </button>
           </form>
         </div>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link to="/register" className="font-semibold text-primary hover:underline">
+            Sign up
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Want to sell?{" "}
+          <Link to="/vendor-register" className="font-semibold text-primary hover:underline">
+            Become a seller
+          </Link>
+        </p>
       </div>
     </AuthLayout>
   );

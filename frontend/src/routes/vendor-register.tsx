@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   User,
@@ -133,7 +133,7 @@ function VendorRegisterPage() {
   }
 
   return (
-    <AuthLayout current="seller">
+    <AuthLayout>
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Start Selling on Vendraza</h1>
@@ -144,21 +144,9 @@ function VendorRegisterPage() {
 
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           {[
-            {
-              icon: Store,
-              title: "Your storefront",
-              text: "A shareable store link for your customers.",
-            },
-            {
-              icon: PackageCheck,
-              title: "Simple management",
-              text: "Manage products, stock, and orders in one place.",
-            },
-            {
-              icon: CreditCard,
-              title: "Secure payments",
-              text: "Track sales, fees, balances, and payouts.",
-            },
+            { icon: Store, title: "Your storefront", text: "A shareable store link for your customers." },
+            { icon: PackageCheck, title: "Simple management", text: "Manage products, stock, and orders in one place." },
+            { icon: CreditCard, title: "Secure payments", text: "Track sales, fees, balances, and payouts." },
           ].map((benefit) => (
             <div key={benefit.title} className="rounded-lg border border-border bg-card/80 p-4">
               <benefit.icon className="h-5 w-5 text-primary" />
@@ -364,6 +352,13 @@ function VendorRegisterPage() {
             </button>
           </form>
         </div>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Already a seller?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </AuthLayout>
   );
@@ -385,9 +380,7 @@ function Field({
   id: string;
   type?: string;
   value: string;
-  onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   placeholder?: string;
   required?: boolean;
   error?: string | undefined;

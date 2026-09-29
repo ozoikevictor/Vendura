@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import * as authService from "@/services/authService";
@@ -83,7 +83,7 @@ function RegisterPage() {
   }
 
   return (
-    <AuthLayout current="customer">
+    <AuthLayout>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
@@ -178,6 +178,19 @@ function RegisterPage() {
             </button>
           </form>
         </div>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
+          Want to sell?{" "}
+          <Link to="/vendor-register" className="font-semibold text-primary hover:underline">
+            Become a seller
+          </Link>
+        </p>
       </div>
     </AuthLayout>
   );
