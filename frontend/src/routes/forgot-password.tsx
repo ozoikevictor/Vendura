@@ -46,7 +46,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout current="forgot-password">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground">Forgot password?</h1>
@@ -108,13 +108,6 @@ function ForgotPasswordPage() {
             </form>
           )}
         </div>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Remembered your password?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
-            Log in
-          </Link>
-        </p>
       </div>
     </AuthLayout>
   );
