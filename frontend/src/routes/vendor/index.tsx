@@ -19,6 +19,7 @@ import { getVendorStore } from "@/services/storeService";
 import { useAuthStore } from "@/store/auth";
 import { formatNaira, formatDate } from "@/utils/format";
 import { cn } from "@/lib/utils";
+import { useCompactStickyHeader } from "@/hooks/useCompactStickyHeader";
 
 export const Route = createFileRoute("/vendor/")({
   head: () => ({
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/vendor/")({
 });
 
 function VendorOverviewPage() {
+  const stickyHeader = useCompactStickyHeader();
   const user = useAuthStore((state) => state.user);
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ["vendor-store", user?.storeId],
@@ -107,19 +109,37 @@ function VendorOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">Overview</h1>
-        <p className="text-sm text-muted-foreground">
-          Welcome back, {user?.fullName?.split(" ")[0] ?? "seller"}. Here's how {store.name} is
-          doing.
-        </p>
-      </div>
+      <div
+        ref={stickyHeader.ref}
+        className="sticky top-0 z-20 -mx-4 space-y-3 border-b border-transparent bg-background/95 px-4 pb-3 backdrop-blur-md transition-all sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+      >
+        <div>
+          <h1
+            className={cn(
+              "font-display font-bold text-foreground transition-[font-size]",
+              stickyHeader.compact ? "text-xl" : "text-2xl",
+            )}
+          >
+            Overview
+          </h1>
+          <p
+            className={cn(
+              "text-sm text-muted-foreground",
+              stickyHeader.compact && "hidden sm:block",
+            )}
+          >
+            Welcome back, {user?.fullName?.split(" ")[0] ?? "seller"}. Here's how {store.name} is
+            doing.
+          </p>
+        </div>
 
-      <StoreLinkCard
-        storeSlug={store.slug}
-        storeName={store.name}
-        productCount={overview.productsCount}
-      />
+        <StoreLinkCard
+          storeSlug={store.slug}
+          storeName={store.name}
+          productCount={overview.productsCount}
+          compact={stickyHeader.compact}
+        />
+      </div>
 
       {/* Alerts */}
       <div className="flex flex-wrap gap-3">
@@ -191,7 +211,10 @@ function VendorOverviewPage() {
               >
                 <div
                   className="w-full rounded-t-md bg-primary/80 transition-colors hover:bg-primary"
-                  style={{ height: point.value > 0 ? `${Math.max((point.value / maxRevenue) * 100, 4)}%` : "2px" }}
+                  style={{
+                    height:
+                      point.value > 0 ? `${Math.max((point.value / maxRevenue) * 100, 4)}%` : "2px",
+                  }}
                   title={formatNaira(point.value)}
                 />
                 <span className="text-xs text-muted-foreground">{point.label}</span>
@@ -211,7 +234,10 @@ function VendorOverviewPage() {
               >
                 <div
                   className="w-full rounded-t-md bg-clay/70 transition-colors hover:bg-clay"
-                  style={{ height: point.value > 0 ? `${Math.max((point.value / maxOrders) * 100, 4)}%` : "2px" }}
+                  style={{
+                    height:
+                      point.value > 0 ? `${Math.max((point.value / maxOrders) * 100, 4)}%` : "2px",
+                  }}
                   title={`${point.value} orders`}
                 />
                 <span className="text-xs text-muted-foreground">{point.label}</span>
