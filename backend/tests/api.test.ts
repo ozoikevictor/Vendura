@@ -1121,8 +1121,59 @@ describe("Vendura API", () => {
       planId: "starter",
       status: "past_due",
       isActive: false,
+      freeProductLimit: 5,
+      productLimit: 5,
+      canAddProduct: true,
     });
     expect(response.body.data.plan).toMatchObject({ productLimit: 20 });
+  });
+  it("allows five free products before requiring a monthly plan", async () => {
+    const token = await login("vendor@vendura.test");
+    await db.update("subscriptions", "subscription-1", {
+      status: "past_due",
+      currentPeriodEnd: new Date(Date.now() - 1000).toISOString(),
+    });
+
+    for (let index = 2; index <= 5; index += 1) {
+      const response = await request(app)
+        .post("/api/vendor/products")
+        .set(auth(token))
+        .send({
+          name: `Free product ${index}`,
+          description: "A product added during free access.",
+          images: [],
+          price: 5000,
+          categoryId: "cat-electronics",
+          sku: `FREE-${index}`,
+          stock: 1,
+        });
+      expect(response.status).toBe(201);
+    }
+
+    const sixthProduct = await request(app)
+      .post("/api/vendor/products")
+      .set(auth(token))
+      .send({
+        name: "Sixth free product",
+        description: "This product requires a monthly plan.",
+        images: [],
+        price: 5000,
+        categoryId: "cat-electronics",
+        sku: "FREE-6",
+        stock: 1,
+      });
+    expect(sixthProduct.status).toBe(402);
+    expect(sixthProduct.body.error.message).toContain("5 free product listings");
+
+    const subscription = await request(app)
+      .get("/api/vendor/subscription")
+      .set(auth(token));
+    expect(subscription.body.data).toMatchObject({
+      productCount: 5,
+      productLimit: 5,
+      canAddProduct: false,
+      isActive: false,
+    });
   });
   it("enforces monthly subscription status and plan product limits", async () => {
     const token = await login("vendor@vendura.test");

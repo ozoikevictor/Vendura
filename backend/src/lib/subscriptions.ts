@@ -1,3 +1,5 @@
+export const FREE_PRODUCT_LIMIT = 5;
+
 export const SUBSCRIPTION_PLANS = [
   {
     id: "starter",
@@ -10,8 +12,8 @@ export const SUBSCRIPTION_PLANS = [
     id: "growth",
     name: "Growing Business",
     priceMonthly: 7500,
-    productLimit: 500,
-    features: ["Up to 500 products", "Price negotiation", "Advanced analytics"],
+    productLimit: 200,
+    features: ["Up to 200 products", "Price negotiation", "Advanced analytics"],
     highlighted: true,
   },
   {

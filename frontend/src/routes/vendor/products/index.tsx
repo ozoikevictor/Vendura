@@ -15,6 +15,8 @@ import { formatNaira } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { ProductStatus } from "@/types";
+import { getSubscription } from "@/services/vendorService";
+import { getErrorMessage } from "@/services/api";
 
 export const Route = createFileRoute("/vendor/products/")({
   head: () => ({
@@ -48,6 +50,10 @@ function VendorProductsPage() {
     queryKey: ["vendor-products"],
     queryFn: () => getVendorProducts(CURRENT_VENDOR_STORE_ID),
   });
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+  });
 
   const filtered = products?.filter((p) => {
     const matchesFilter = filter === "all" || p.status === filter;
@@ -59,6 +65,7 @@ function VendorProductsPage() {
     try {
       await deleteVendorProduct(id);
       queryClient.invalidateQueries({ queryKey: ["vendor-products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Product deleted");
     } catch {
       toast.error("Failed to delete");
@@ -69,9 +76,10 @@ function VendorProductsPage() {
     try {
       await duplicateVendorProduct(id);
       queryClient.invalidateQueries({ queryKey: ["vendor-products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success("Product duplicated");
-    } catch {
-      toast.error("Failed to duplicate");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to duplicate"));
     }
   }
 
@@ -82,8 +90,8 @@ function VendorProductsPage() {
           <h1 className="font-display text-2xl font-bold text-foreground">Products</h1>
           <p className="text-sm text-muted-foreground">{products?.length ?? 0} products in your catalog</p>
         </div>
-        <Link to="/vendor/products/new" className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4" /> Add Product
+        <Link to={subscription?.canAddProduct === false ? "/vendor/subscription" : "/vendor/products/new"} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <Plus className="h-4 w-4" /> {subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}
         </Link>
       </div>
 
@@ -123,7 +131,7 @@ function VendorProductsPage() {
           icon={<Package className="h-7 w-7" />}
           title="No products found"
           description="Add your first product or adjust your filters."
-          action={<Link to="/vendor/products/new" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Add Product</Link>}
+          action={<Link to={subscription?.canAddProduct === false ? "/vendor/subscription" : "/vendor/products/new"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">{subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}</Link>}
         />
       ) : (
         <div className="space-y-2">

@@ -537,7 +537,7 @@ function Index() {
           <SectionHeader
             eyebrow="Pricing"
             title="Plans for Every Seller"
-            description="Start free and scale as you grow. No hidden fees."
+            description="Add your first 5 products free. Upgrade only when you need more listings."
             className="justify-center text-center [&_div]:items-center"
           />
           <div className="stagger-grid mt-8 grid gap-4 md:grid-cols-3">

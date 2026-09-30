@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Save, Eye, ImagePlus, X, AlertCircle, Link as LinkIcon } from "lucide-react";
 import { createVendorProduct, uploadProductImage } from "@/services/productService";
 import { getCategories } from "@/services/categoryService";
-import { getErrorMessage } from "@/services/api";
+import { ApiError, getErrorMessage } from "@/services/api";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -151,12 +151,16 @@ function NewProductPage() {
         tags: [],
       });
       queryClient.invalidateQueries({ queryKey: ["vendor-products"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
       toast.success(status === "draft" ? "Draft saved" : "Product published");
       navigate({ to: "/vendor/products" });
     } catch (caught) {
       const message = getErrorMessage(caught, "Could not save this product. Please try again.");
       setError(message);
       toast.error(message);
+      if (caught instanceof ApiError && (caught.status === 402 || caught.status === 409)) {
+        navigate({ to: "/vendor/subscription" });
+      }
     } finally {
       setLoading(false);
     }

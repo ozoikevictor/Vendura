@@ -5,7 +5,7 @@ import { created, id, now, ok } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
 import { config } from "../config.js";
-import { getSubscriptionPlan, SUBSCRIPTION_PLANS } from "../lib/subscriptions.js";
+import { FREE_PRODUCT_LIMIT, getSubscriptionPlan, SUBSCRIPTION_PLANS } from "../lib/subscriptions.js";
 
 type PaystackResponse<T> = { status: boolean; message: string; data: T };
 type PaystackBank = { id: number; name: string; code: string; active: boolean };
@@ -127,7 +127,17 @@ export const vendorRoutes = (db: Database) => {
       : subscription;
     const plan = getSubscriptionPlan(String(current?.planId));
     const productCount = (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length;
-    ok(res, { ...current, plan, productCount, isActive: Boolean(current && ["active", "trialing"].includes(String(current.status)) && !expired) });
+    const isActive = Boolean(current && ["active", "trialing"].includes(String(current.status)) && !expired);
+    const productLimit = isActive ? (plan?.productLimit ?? null) : FREE_PRODUCT_LIMIT;
+    ok(res, {
+      ...current,
+      plan,
+      productCount,
+      productLimit,
+      freeProductLimit: FREE_PRODUCT_LIMIT,
+      canAddProduct: productLimit === null || productCount < productLimit,
+      isActive,
+    });
   }));
   router.post("/subscription/paystack/initialize", asyncRoute(async (req: AuthRequest, res) => {
     if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet. Add your test secret key to the backend environment.");

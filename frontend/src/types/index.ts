@@ -427,6 +427,9 @@ export interface Subscription {
   autoRenew: boolean;
   isActive?: boolean;
   productCount?: number;
+  productLimit?: number | null;
+  freeProductLimit?: number;
+  canAddProduct?: boolean;
   plan?: SubscriptionPlan;
 }
 

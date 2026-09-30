@@ -7,8 +7,8 @@ export const plans: SubscriptionPlan[] = [
     features: ["Up to 20 products", "Public storefront", "Customer chat", "Basic analytics", "Email support"],
   },
   {
-    id: "growth", name: "Growing Business", priceMonthly: 7500, productLimit: 500, highlighted: true,
-    features: ["Up to 500 products", "Price negotiation", "Advanced analytics", "Weekly payouts", "Priority support"],
+    id: "growth", name: "Growing Business", priceMonthly: 7500, productLimit: 200, highlighted: true,
+    features: ["Up to 200 products", "Price negotiation", "Advanced analytics", "Weekly payouts", "Priority support"],
   },
   {
     id: "business", name: "Enterprise", priceMonthly: 15000, productLimit: null,

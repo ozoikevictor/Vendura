@@ -59,8 +59,8 @@ function VendorSubscriptionPage() {
     <div className="space-y-5">
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">Subscription</h1>
-        <p className="text-sm text-muted-foreground">Status: <span className={cn("font-semibold", sub.isActive ? "text-success" : "text-destructive")}>{sub.isActive ? "Active" : "Payment due"}</span> · {sub.isActive ? `Valid until ${formatDate(sub.currentPeriodEnd)}` : "Choose a plan to reactivate your store"}</p>
-        {sub.plan && <p className="mt-1 text-xs text-muted-foreground">{sub.productCount ?? 0} of {sub.plan.productLimit ?? "unlimited"} products used</p>}
+        <p className="text-sm text-muted-foreground">Status: <span className={cn("font-semibold", sub.isActive ? "text-success" : "text-primary")}>{sub.isActive ? "Active" : "Free access"}</span> · {sub.isActive ? `Valid until ${formatDate(sub.currentPeriodEnd)}` : `Add up to ${sub.freeProductLimit ?? 5} products free, then choose a monthly plan`}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{sub.productCount ?? 0} of {sub.productLimit ?? "unlimited"} products used</p>
       </div>
 
       {/* Plan cards */}
@@ -98,7 +98,7 @@ function VendorSubscriptionPage() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
             <p className="text-xs text-muted-foreground">Current period</p>
-            <p className="text-sm font-medium text-foreground">{formatDate(sub.currentPeriodStart)} → {formatDate(sub.currentPeriodEnd)}</p>
+            <p className="text-sm font-medium text-foreground">{sub.isActive ? `${formatDate(sub.currentPeriodStart)} to ${formatDate(sub.currentPeriodEnd)}` : "Free access does not expire"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Auto-renew</p>

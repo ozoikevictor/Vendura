@@ -5,7 +5,7 @@ import { created, id, now, ok, slugify } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import { productSchema } from "../schemas.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
-import { getSubscriptionPlan } from "../lib/subscriptions.js";
+import { FREE_PRODUCT_LIMIT, getSubscriptionPlan } from "../lib/subscriptions.js";
 
 export const catalogRoutes = (db: Database) => {
   const router = Router();
@@ -158,14 +158,20 @@ async function ownedProduct(db: Database, id: string, req: AuthRequest) { const 
 async function enforceProductLimit(db: Database, req: AuthRequest) {
   if (req.user!.role === "admin") return;
   const subscription = await db.findOne<Entity>("subscriptions", { vendorId: req.user!.id });
-  if (!subscription || !["active", "trialing"].includes(String(subscription.status)) || Date.parse(String(subscription.currentPeriodEnd)) <= Date.now()) {
+  const count = (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length;
+  const hasActiveSubscription = Boolean(
+    subscription
+    && ["active", "trialing"].includes(String(subscription.status))
+    && Date.parse(String(subscription.currentPeriodEnd)) > Date.now(),
+  );
+  if (!hasActiveSubscription) {
     if (subscription?.id && subscription.status !== "past_due") await db.update("subscriptions", subscription.id, { status: "past_due" });
-    throw new ApiError(402, "Your monthly subscription has expired. Renew it before adding products.");
+    if (count < FREE_PRODUCT_LIMIT) return;
+    throw new ApiError(402, `You have used all ${FREE_PRODUCT_LIMIT} free product listings. Choose a monthly plan to add more products.`);
   }
-  const plan = getSubscriptionPlan(String(subscription.planId));
+  const plan = getSubscriptionPlan(String(subscription!.planId));
   if (!plan) throw new ApiError(409, "Your subscription plan is unavailable");
   if (plan.productLimit === null || plan.productLimit === undefined) return;
-  const count = (await db.list<Entity>("products")).filter((product) => product.storeId === req.user!.storeId).length;
   if (count >= Number(plan.productLimit)) throw new ApiError(409, `${plan.name} allows ${plan.productLimit} products. Upgrade your plan to add more.`);
 }
 
