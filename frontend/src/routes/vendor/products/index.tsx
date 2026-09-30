@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, Pencil, Copy, Trash2, Package, Share2 } from "lucide-react";
+import {
+  Plus, Search, Pencil, Copy, Trash2, Package, Share2,
+} from "lucide-react";
 import { buildProductUrl, copyToClipboard } from "@/utils/share";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getVendorProducts,
-  deleteVendorProduct,
-  duplicateVendorProduct,
+  getVendorProducts, deleteVendorProduct, duplicateVendorProduct,
 } from "@/services/productService";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
 import type { ProductStatus } from "@/types";
 import { getSubscription } from "@/services/vendorService";
 import { getErrorMessage } from "@/services/api";
-import { useCompactStickyHeader } from "@/hooks/useCompactStickyHeader";
 
 export const Route = createFileRoute("/vendor/products/")({
   head: () => ({
@@ -43,7 +42,6 @@ const statusBadge: Record<ProductStatus, string> = {
 };
 
 function VendorProductsPage() {
-  const stickyHeader = useCompactStickyHeader();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
@@ -87,67 +85,41 @@ function VendorProductsPage() {
 
   return (
     <div className="space-y-5">
-      <div
-        ref={stickyHeader.ref}
-        className="sticky top-0 z-20 -mx-4 space-y-3 border-b border-border bg-background/95 px-4 pb-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">Products</h1>
+          <p className="text-sm text-muted-foreground">{products?.length ?? 0} products in your catalog</p>
+        </div>
+        <Link to={subscription?.canAddProduct === false ? "/vendor/subscription" : "/vendor/products/new"} className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <Plus className="h-4 w-4" /> {subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}
+        </Link>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-1">
+          {statusFilter.map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
               className={cn(
-                "font-display font-bold text-foreground transition-[font-size]",
-                stickyHeader.compact ? "text-xl" : "text-2xl",
+                "rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors",
+                filter === s ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:bg-accent",
               )}
             >
-              Products
-            </h1>
-            <p className={cn("text-sm text-muted-foreground", stickyHeader.compact && "hidden")}>
-              {products?.length ?? 0} products in your catalog
-            </p>
-          </div>
-          <Link
-            to={
-              subscription?.canAddProduct === false
-                ? "/vendor/subscription"
-                : "/vendor/products/new"
-            }
-            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:px-4"
-          >
-            <Plus className="h-4 w-4" />{" "}
-            <span className="hidden sm:inline">
-              {subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}
-            </span>
-          </Link>
+              {s.replace(/_/g, " ")}
+            </button>
+          ))}
         </div>
-
-        {/* Filters */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 scrollbar-none sm:mx-0 sm:pb-0">
-            {statusFilter.map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilter(s)}
-                className={cn(
-                  "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors",
-                  filter === s
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border text-muted-foreground hover:bg-accent",
-                )}
-              >
-                {s.replace(/_/g, " ")}
-              </button>
-            ))}
-          </div>
-          <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products..."
-              className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search products..."
+            className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          />
         </div>
       </div>
 
@@ -159,18 +131,7 @@ function VendorProductsPage() {
           icon={<Package className="h-7 w-7" />}
           title="No products found"
           description="Add your first product or adjust your filters."
-          action={
-            <Link
-              to={
-                subscription?.canAddProduct === false
-                  ? "/vendor/subscription"
-                  : "/vendor/products/new"
-              }
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              {subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}
-            </Link>
-          }
+          action={<Link to={subscription?.canAddProduct === false ? "/vendor/subscription" : "/vendor/products/new"} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">{subscription?.canAddProduct === false ? "Choose a plan" : "Add Product"}</Link>}
         />
       ) : (
         <div className="space-y-2">
@@ -183,87 +144,43 @@ function VendorProductsPage() {
             <span className="w-32 text-center">Actions</span>
           </div>
           {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-card p-3 lg:grid-cols-[1fr_auto_auto_auto_auto] lg:items-center"
-            >
+            <div key={p.id} className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-card p-3 lg:grid-cols-[1fr_auto_auto_auto_auto] lg:items-center">
               {/* Product info */}
               <div className="flex items-center gap-3">
-                <img
-                  src={p.images[0]}
-                  alt=""
-                  className="h-12 w-12 rounded-lg border border-border object-cover"
-                />
+                <img src={p.images[0]} alt="" className="h-12 w-12 rounded-lg border border-border object-cover" />
                 <div className="min-w-0">
-                  <Link
-                    to="/vendor/products/$productId"
-                    params={{ productId: p.id }}
-                    className="text-sm font-medium text-foreground hover:text-primary line-clamp-1"
-                  >
+                  <Link to="/vendor/products/$productId" params={{ productId: p.id }} className="text-sm font-medium text-foreground hover:text-primary line-clamp-1">
                     {p.name}
                   </Link>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">SKU: {p.sku}</span>
-                    {p.negotiable && (
-                      <span className="rounded bg-primary-soft px-1.5 text-xs font-medium text-primary">
-                        Negotiable
-                      </span>
-                    )}
+                    {p.negotiable && <span className="rounded bg-primary-soft px-1.5 text-xs font-medium text-primary">Negotiable</span>}
                   </div>
                 </div>
               </div>
               {/* Status */}
               <div className="flex items-center gap-2 lg:w-20 lg:justify-center">
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
-                    statusBadge[p.status],
-                  )}
-                >
+                <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", statusBadge[p.status])}>
                   {p.status.replace(/_/g, " ")}
                 </span>
               </div>
               {/* Price */}
               <div className="lg:w-20 lg:text-right">
-                <span className="text-sm font-semibold text-foreground">
-                  {formatNaira(p.price)}
-                </span>
-                {p.oldPrice && (
-                  <span className="ml-1 text-xs text-muted-foreground line-through">
-                    {formatNaira(p.oldPrice)}
-                  </span>
-                )}
+                <span className="text-sm font-semibold text-foreground">{formatNaira(p.price)}</span>
+                {p.oldPrice && <span className="ml-1 text-xs text-muted-foreground line-through">{formatNaira(p.oldPrice)}</span>}
               </div>
               {/* Stock */}
               <div className="lg:w-16 lg:text-center">
-                <span
-                  className={cn(
-                    "text-sm font-medium",
-                    p.stock === 0
-                      ? "text-destructive"
-                      : p.stock <= p.lowStockThreshold
-                        ? "text-warning"
-                        : "text-foreground",
-                  )}
-                >
+                <span className={cn("text-sm font-medium", p.stock === 0 ? "text-destructive" : p.stock <= p.lowStockThreshold ? "text-warning" : "text-foreground")}>
                   {p.stock}
                 </span>
               </div>
               {/* Actions */}
               <div className="flex items-center gap-1 lg:w-32 lg:justify-center">
-                <Link
-                  to="/vendor/products/$productId"
-                  params={{ productId: p.id }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
-                  aria-label="Edit"
-                >
+                <Link to="/vendor/products/$productId" params={{ productId: p.id }} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Edit">
                   <Pencil className="h-3.5 w-3.5" />
                 </Link>
-                <button
-                  onClick={() => handleDuplicate(p.id)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
-                  aria-label="Duplicate"
-                >
+                <button onClick={() => handleDuplicate(p.id)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Duplicate">
                   <Copy className="h-3.5 w-3.5" />
                 </button>
                 <button
@@ -277,11 +194,7 @@ function VendorProductsPage() {
                 >
                   <Share2 className="h-3.5 w-3.5" />
                 </button>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-destructive"
-                  aria-label="Delete"
-                >
+                <button onClick={() => handleDelete(p.id)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-destructive" aria-label="Delete">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>

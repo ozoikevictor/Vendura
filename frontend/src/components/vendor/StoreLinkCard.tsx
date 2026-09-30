@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Copy, Check, ExternalLink, MessageCircle, Share2, Store as StoreIcon } from "lucide-react";
 import { toast } from "sonner";
-import { buildStoreUrl, buildWhatsAppShareUrl, copyToClipboard, displayUrl } from "@/utils/share";
+import {
+  buildStoreUrl,
+  buildWhatsAppShareUrl,
+  copyToClipboard,
+  displayUrl,
+} from "@/utils/share";
 import { cn } from "@/lib/utils";
 
 interface StoreLinkCardProps {
@@ -10,7 +15,6 @@ interface StoreLinkCardProps {
   storeName: string;
   productCount?: number;
   className?: string;
-  compact?: boolean;
 }
 
 /**
@@ -18,13 +22,7 @@ interface StoreLinkCardProps {
  * copy this one link, send it to a customer, and the customer browses every
  * published product and orders straight from the storefront.
  */
-export function StoreLinkCard({
-  storeSlug,
-  storeName,
-  productCount,
-  className,
-  compact = false,
-}: StoreLinkCardProps) {
+export function StoreLinkCard({ storeSlug, storeName, productCount, className }: StoreLinkCardProps) {
   const [copied, setCopied] = useState(false);
   const url = buildStoreUrl(storeSlug);
 
@@ -44,39 +42,27 @@ export function StoreLinkCard({
   return (
     <section
       className={cn(
-        "rounded-xl border border-primary/25 bg-primary/5 transition-[padding] duration-200",
-        compact ? "p-2.5 sm:p-3" : "p-4 sm:p-5",
+        "rounded-xl border border-primary/25 bg-primary/5 p-4 sm:p-5",
         className,
       )}
       aria-labelledby="store-link-heading"
     >
       <div className="flex items-start gap-3">
-        <div
-          className={cn(
-            "flex shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary transition-[width,height] duration-200",
-            compact ? "h-8 w-8" : "h-10 w-10",
-          )}
-        >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
           <StoreIcon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <h2 id="store-link-heading" className="text-base font-semibold text-foreground">
             Your store link
           </h2>
-          <p className={cn("text-sm text-muted-foreground", compact && "hidden")}>
+          <p className="text-sm text-muted-foreground">
             Share this one link with customers. They see everything you&apos;ve published
-            {typeof productCount === "number" ? ` (${productCount} items)` : ""} and order right
-            there.
+            {typeof productCount === "number" ? ` (${productCount} items)` : ""} and order right there.
           </p>
         </div>
       </div>
 
-      <div
-        className={cn(
-          "flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2",
-          compact ? "mt-2" : "mt-4",
-        )}
-      >
+      <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
         <span className="min-w-0 flex-1 truncate font-mono text-sm text-foreground" title={url}>
           {displayUrl(url)}
         </span>
@@ -91,7 +77,7 @@ export function StoreLinkCard({
         </button>
       </div>
 
-      <div className={cn("mt-3 flex flex-wrap gap-2", compact && "hidden sm:flex")}>
+      <div className="mt-3 flex flex-wrap gap-2">
         <a
           href={buildWhatsAppShareUrl(shareMessage)}
           target="_blank"
