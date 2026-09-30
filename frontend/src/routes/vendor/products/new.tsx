@@ -7,7 +7,7 @@ import { getErrorMessage } from "@/services/api";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { resizeProductImage } from "@/utils/imageUpload";
+import { resizeProductImage, scrollToFirstFormError } from "@/utils/imageUpload";
 
 type ProductForm = {
   name: string;
@@ -87,6 +87,7 @@ function NewProductPage() {
       next.lowStockThreshold = "Enter zero or a whole number.";
     if (!image) next.image = "Add a clear product image.";
     setErrors(next);
+    if (Object.keys(next).length > 0) scrollToFirstFormError();
     return Object.keys(next).length === 0;
   }
 
@@ -105,6 +106,7 @@ function NewProductPage() {
         ...current,
         image: getErrorMessage(caught, "Could not upload this image."),
       }));
+      scrollToFirstFormError();
     } finally {
       setUploadingImage(false);
       event.target.value = "";
@@ -213,7 +215,7 @@ function NewProductPage() {
               <span className="text-xs">JPG, PNG or WebP; phone photos are compressed automatically</span>
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 onChange={handleImage}
                 className="sr-only"
               />
@@ -225,7 +227,7 @@ function NewProductPage() {
               Replace from device
               <input
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 onChange={handleImage}
                 className="sr-only"
               />
@@ -253,7 +255,7 @@ function NewProductPage() {
               Use URL
             </button>
           </div>
-          {errors.image && <p className="mt-1 text-xs text-destructive">{errors.image}</p>}
+          {errors.image && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.image}</p>}
         </div>
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium text-foreground">
@@ -272,7 +274,7 @@ function NewProductPage() {
                 : "border-input focus:border-primary focus:ring-primary",
             )}
           />
-          {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
+          {errors.name && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.name}</p>}
         </div>
 
         <div>
@@ -288,7 +290,7 @@ function NewProductPage() {
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           />
           {errors.description && (
-            <p className="mt-1 text-xs text-destructive">{errors.description}</p>
+            <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.description}</p>
           )}
         </div>
 
@@ -306,7 +308,7 @@ function NewProductPage() {
               placeholder="245000"
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
-            {errors.price && <p className="mt-1 text-xs text-destructive">{errors.price}</p>}
+            {errors.price && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.price}</p>}
           </div>
           <div>
             <label htmlFor="oldPrice" className="mb-1 block text-sm font-medium text-foreground">
@@ -320,7 +322,7 @@ function NewProductPage() {
               placeholder="280000"
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
-            {errors.oldPrice && <p className="mt-1 text-xs text-destructive">{errors.oldPrice}</p>}
+            {errors.oldPrice && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.oldPrice}</p>}
           </div>
         </div>
 
@@ -349,7 +351,7 @@ function NewProductPage() {
               placeholder="50"
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
-            {errors.stock && <p className="mt-1 text-xs text-destructive">{errors.stock}</p>}
+            {errors.stock && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.stock}</p>}
           </div>
           <div>
             <label htmlFor="lowStock" className="mb-1 block text-sm font-medium text-foreground">
@@ -363,7 +365,7 @@ function NewProductPage() {
               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             {errors.lowStockThreshold && (
-              <p className="mt-1 text-xs text-destructive">{errors.lowStockThreshold}</p>
+              <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.lowStockThreshold}</p>
             )}
           </div>
         </div>
@@ -389,7 +391,7 @@ function NewProductPage() {
             ))}
           </select>
           {errors.categoryId && (
-            <p className="mt-1 text-xs text-destructive">{errors.categoryId}</p>
+            <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.categoryId}</p>
           )}
         </div>
 

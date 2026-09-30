@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/services/api";
 import { DataLoader } from "@/components/shared/DataLoader";
-import { resizeProductImage } from "@/utils/imageUpload";
+import { resizeProductImage, scrollToFirstFormError } from "@/utils/imageUpload";
 
 export const Route = createFileRoute("/vendor/products/$productId")({
   head: () => ({
@@ -73,6 +73,7 @@ function EditProductPage() {
       setImageError("");
     } catch (caught) {
       setImageError(getErrorMessage(caught, "Could not upload this image."));
+      scrollToFirstFormError();
     } finally {
       setUploadingImage(false);
       event.target.value = "";
@@ -105,6 +106,7 @@ function EditProductPage() {
   async function handleSave() {
     if (!image) {
       setImageError("Add a product image before saving.");
+      scrollToFirstFormError();
       return;
     }
     setLoading(true);
@@ -169,13 +171,13 @@ function EditProductPage() {
               <ImagePlus className="h-6 w-6" />
               <span>{uploadingImage ? "Preparing image..." : "Choose a new product image"}</span>
               <span className="text-xs">Phone photos are compressed automatically</span>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImage} className="sr-only" />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" onChange={handleImage} className="sr-only" />
             </label>
           )}
           {image && (
             <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
               <ImagePlus className="h-4 w-4" /> Replace from device
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImage} className="sr-only" />
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" onChange={handleImage} className="sr-only" />
             </label>
           )}
           <div className="mt-3 flex max-w-xl gap-2">
@@ -185,7 +187,7 @@ function EditProductPage() {
             </div>
             <button type="button" onClick={applyImageUrl} className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">Use URL</button>
           </div>
-          {imageError && <p className="mt-1 text-xs text-destructive">{imageError}</p>}
+          {imageError && <p data-form-error="true" className="mt-1 text-xs text-destructive">{imageError}</p>}
         </div>
         <div>
           <label htmlFor="name" className="mb-1 block text-sm font-medium text-foreground">Product name</label>
