@@ -1175,6 +1175,28 @@ describe("Vendura API", () => {
       isActive: false,
     });
   });
+  it("reserves seller AI for Growing Business and Enterprise plans", async () => {
+    const token = await login("vendor@vendura.test");
+    await db.update("subscriptions", "subscription-1", {
+      planId: "starter",
+      status: "active",
+      currentPeriodEnd: new Date(Date.now() + 864e5).toISOString(),
+    });
+
+    const starterResponse = await request(app)
+      .post("/api/vendor/ai/search")
+      .set(auth(token))
+      .send({ message: "What is my total revenue?" });
+    expect(starterResponse.status).toBe(402);
+    expect(starterResponse.body.error.message).toContain("Growing Business and Enterprise");
+
+    await db.update("subscriptions", "subscription-1", { planId: "growth" });
+    const growthResponse = await request(app)
+      .post("/api/vendor/ai/search")
+      .set(auth(token))
+      .send({ message: "What is my total revenue?" });
+    expect(growthResponse.status).toBe(200);
+  });
   it("enforces monthly subscription status and plan product limits", async () => {
     const token = await login("vendor@vendura.test");
     await db.update("subscriptions", "subscription-1", {

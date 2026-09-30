@@ -414,6 +414,7 @@ export interface SubscriptionPlan {
   priceMonthly: number;
   productLimit: number | null; // null = unlimited
   features: string[];
+  sellerAI?: boolean;
   highlighted?: boolean;
 }
 
@@ -430,6 +431,7 @@ export interface Subscription {
   productLimit?: number | null;
   freeProductLimit?: number;
   canAddProduct?: boolean;
+  sellerAIEnabled?: boolean;
   plan?: SubscriptionPlan;
 }
 

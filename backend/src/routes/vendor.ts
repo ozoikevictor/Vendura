@@ -5,7 +5,7 @@ import { created, id, now, ok } from "../lib/helpers.js";
 import { authenticate, authorize } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
 import { config } from "../config.js";
-import { FREE_PRODUCT_LIMIT, getSubscriptionPlan, SUBSCRIPTION_PLANS } from "../lib/subscriptions.js";
+import { FREE_PRODUCT_LIMIT, getSubscriptionPlan, SUBSCRIPTION_PLANS, vendorHasSellerAI } from "../lib/subscriptions.js";
 
 type PaystackResponse<T> = { status: boolean; message: string; data: T };
 type PaystackBank = { id: number; name: string; code: string; active: boolean };
@@ -49,6 +49,9 @@ export const vendorRoutes = (db: Database) => {
     });
   }));
   router.post("/ai/search", asyncRoute(async (req: AuthRequest, res) => {
+    if (req.user!.role !== "admin" && !await vendorHasSellerAI(db, req.user!.id)) {
+      throw new ApiError(402, "Seller AI is available on the Growing Business and Enterprise plans.");
+    }
     const { message } = z.object({ message: z.string().trim().min(1).max(1000) }).parse(req.body);
     const [store, allProducts, allOrders, allTransactions, allRequests, allPayouts] = await Promise.all([
       db.get<Entity>("stores", req.user!.storeId!),
@@ -136,6 +139,7 @@ export const vendorRoutes = (db: Database) => {
       productLimit,
       freeProductLimit: FREE_PRODUCT_LIMIT,
       canAddProduct: productLimit === null || productCount < productLimit,
+      sellerAIEnabled: isActive && plan?.sellerAI === true,
       isActive,
     });
   }));

@@ -4,15 +4,18 @@ import { daysAgo, daysFromNow } from "@/utils/format";
 export const plans: SubscriptionPlan[] = [
   {
     id: "starter", name: "Starter", priceMonthly: 3000, productLimit: 20,
-    features: ["Up to 20 products", "Public storefront", "Customer chat", "Basic analytics", "Email support"],
+    sellerAI: false,
+    features: ["Up to 20 products", "Public storefront", "Orders and customer messages", "Basic sales overview"],
   },
   {
     id: "growth", name: "Growing Business", priceMonthly: 7500, productLimit: 200, highlighted: true,
-    features: ["Up to 200 products", "Price negotiation", "Advanced analytics", "Weekly payouts", "Priority support"],
+    sellerAI: true,
+    features: ["Up to 200 products", "AI business assistant", "Buyer opportunity matching", "Price negotiation", "Advanced analytics"],
   },
   {
     id: "business", name: "Enterprise", priceMonthly: 15000, productLimit: null,
-    features: ["Unlimited products", "Team access (5 seats)", "Daily payouts", "Featured store placement", "Dedicated account manager"],
+    sellerAI: true,
+    features: ["Unlimited products", "AI business assistant", "Buyer opportunity matching", "Advanced analytics", "Priority support"],
   },
 ];
 

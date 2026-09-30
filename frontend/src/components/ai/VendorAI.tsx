@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { getErrorMessage } from "@/services/api";
-import { searchVendorAI, type VendorAIResult } from "@/services/vendorService";
+import { getSubscription, searchVendorAI, type VendorAIResult } from "@/services/vendorService";
+import { useQuery } from "@tanstack/react-query";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 const vendorPrompts = [
   "What is my total revenue?",
@@ -28,6 +30,27 @@ const vendorPrompts = [
 
 type VendorTurn = VendorAIResult & { message: string };
 const VENDOR_AI_SESSION_KEY = "vendura-vendor-ai-chat";
+
+export function VendorAIAccess({ children }: { children: React.ReactNode }) {
+  const { data: subscription, isLoading } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: getSubscription,
+  });
+  if (isLoading || !subscription) return <DataLoader label="Checking AI access" className="min-h-72" />;
+  if (!subscription.sellerAIEnabled) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-xl items-center justify-center p-4">
+        <div className="w-full rounded-lg border border-border bg-card p-6 text-center">
+          <Sparkles className="mx-auto h-8 w-8 text-primary" />
+          <h1 className="mt-3 text-xl font-bold">Unlock seller AI</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">The AI business assistant and buyer opportunity matching are included with the Growing Business and Enterprise plans.</p>
+          <Link to="/vendor/subscription" className="mt-5 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">View plans</Link>
+        </div>
+      </div>
+    );
+  }
+  return children;
+}
 
 function getSavedVendorTurns() {
   if (typeof window === "undefined") return [];
