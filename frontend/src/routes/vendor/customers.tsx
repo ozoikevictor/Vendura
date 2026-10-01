@@ -89,13 +89,17 @@ function VendorCustomersPage() {
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border border-border bg-card">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[640px] border-separate border-spacing-0 text-sm">
           <thead>
-            <tr className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Phone</th>
-              <th className="px-4 py-3 text-center">Orders</th>
-              <th className="px-4 py-3 text-right">Total Spent</th>
+            <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3">Name</th>
+              <th className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3">Phone</th>
+              <th className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 text-center">
+                Orders
+              </th>
+              <th className="sticky top-0 z-10 border-b border-border bg-card px-4 py-3 text-right">
+                Total Spent
+              </th>
             </tr>
           </thead>
           <tbody>
