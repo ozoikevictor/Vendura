@@ -156,21 +156,21 @@ function VendorOverviewPage() {
   ).length;
 
   return (
-    <div className="space-y-4 xl:space-y-5">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+    <div className="max-w-full space-y-4 overflow-x-hidden xl:space-y-5">
+      <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.95fr)]">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-primary">Vendor dashboard</p>
-              <h1 className="mt-1 font-display text-2xl font-bold text-foreground">
+              <h1 className="mt-1 break-words font-display text-xl font-bold text-foreground sm:text-2xl">
                 {store.name} overview
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
                 Welcome back, {user?.fullName?.split(" ")[0] ?? "seller"}. Keep today&apos;s orders,
                 cash flow, and stock issues in one place.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:min-w-72">
+            <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2 sm:min-w-72">
               <Signal
                 icon={Clock3}
                 label="Needs action"
@@ -185,11 +185,14 @@ function VendorOverviewPage() {
               />
             </div>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="rounded-lg border border-border bg-background p-4">
+                <div
+                  key={stat.label}
+                  className="min-w-0 overflow-hidden rounded-lg border border-border bg-background p-4"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div
                       className={cn(
@@ -213,7 +216,7 @@ function VendorOverviewPage() {
                       {stat.trend}
                     </span>
                   </div>
-                  <p className="mt-3 truncate text-2xl font-bold leading-none text-foreground">
+                  <p className="mt-3 break-words text-2xl font-bold leading-none text-foreground">
                     {stat.value}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
@@ -223,13 +226,13 @@ function VendorOverviewPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <StoreLinkCard
             storeSlug={store.slug}
             storeName={store.name}
             productCount={overview.productsCount}
           />
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {overview.pendingOrders > 0 && (
               <AlertLink
                 to="/vendor/orders"
@@ -247,9 +250,9 @@ function VendorOverviewPage() {
       </section>
 
       {/* Charts */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Revenue chart */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-4 lg:grid-cols-2">
           <ChartPanel title="Revenue (last 7 months)">
             {revenueSeries.map((point) => (
               <Bar
@@ -277,7 +280,7 @@ function VendorOverviewPage() {
         </div>
 
         {/* Balance */}
-        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <div className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="flex items-center gap-1.5 text-base font-semibold text-foreground">
             <Wallet className="h-4 w-4 text-primary" /> Balance
           </h2>
@@ -307,7 +310,7 @@ function VendorOverviewPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 gap-3 text-sm min-[430px]:grid-cols-2">
                 <InfoTile label="Total paid" value={formatNaira(balance.totalPaid)} />
                 <InfoTile
                   label="Next payout"
@@ -325,9 +328,9 @@ function VendorOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
         {/* Recent orders */}
-        <div className="flex min-h-0 flex-col rounded-xl border border-border bg-card p-5 shadow-card">
+        <div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold text-foreground">Recent Orders</h2>
@@ -339,7 +342,7 @@ function VendorOverviewPage() {
               View all
             </Link>
           </div>
-          <div className="mt-3 grid gap-2 lg:grid-cols-2">
+          <div className="mt-3 grid min-w-0 gap-2 lg:grid-cols-2">
             {recentOrders.map((order) => (
               <Link
                 key={order.id}
@@ -370,7 +373,7 @@ function VendorOverviewPage() {
         </div>
 
         {/* Top products */}
-        <div className="flex min-h-0 flex-col rounded-xl border border-border bg-card p-5 shadow-card">
+        <div className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
           <h2 className="text-base font-semibold text-foreground">Top Products</h2>
           <p className="text-xs text-muted-foreground">Best sellers by recorded revenue</p>
           <div className="mt-3 min-h-0 flex-1 overflow-auto overscroll-contain pr-1">
@@ -420,19 +423,22 @@ function Signal({
   return (
     <div
       className={cn(
-        "rounded-lg border p-3",
+        "min-w-0 overflow-hidden rounded-lg border p-3",
         tone === "success"
           ? "border-success/20 bg-success-soft"
           : "border-warning/30 bg-warning-soft",
       )}
     >
-      <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground">
         <Icon
-          className={cn("h-4 w-4", tone === "success" ? "text-success" : "text-warning-foreground")}
+          className={cn(
+            "h-4 w-4 shrink-0",
+            tone === "success" ? "text-success" : "text-warning-foreground",
+          )}
         />
-        {label}
+        <span className="truncate">{label}</span>
       </div>
-      <p className="mt-2 text-sm font-bold text-foreground">{value}</p>
+      <p className="mt-2 break-words text-sm font-bold text-foreground">{value}</p>
     </div>
   );
 }
@@ -441,18 +447,19 @@ function AlertLink({ to, label }: { to: "/vendor/orders" | "/vendor/inventory"; 
   return (
     <Link
       to={to}
-      className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-sm font-medium text-warning-foreground hover:bg-warning-soft/80"
+      className="flex min-w-0 items-center gap-2 rounded-lg border border-warning/30 bg-warning-soft px-3 py-2 text-sm font-medium text-warning-foreground hover:bg-warning-soft/80"
     >
-      <AlertTriangle className="h-4 w-4" /> {label}
+      <AlertTriangle className="h-4 w-4 shrink-0" />{" "}
+      <span className="min-w-0 break-words">{label}</span>
     </Link>
   );
 }
 
 function ChartPanel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+    <div className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
       <h2 className="text-base font-semibold text-foreground">{title}</h2>
-      <div className="mt-4 flex h-40 items-end gap-2">{children}</div>
+      <div className="mt-4 flex h-40 min-w-0 items-end gap-1.5 sm:gap-2">{children}</div>
     </div>
   );
 }
@@ -471,22 +478,22 @@ function Bar({
   className: string;
 }) {
   return (
-    <div className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+    <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
       <div
         className={cn("w-full rounded-t-md transition-colors", className)}
         style={{ height: value > 0 ? `${Math.max((value / max) * 100, 4)}%` : "2px" }}
         title={title}
       />
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-[11px] text-muted-foreground sm:text-xs">{label}</span>
     </div>
   );
 }
 
 function InfoTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-background p-3">
+    <div className="min-w-0 rounded-lg border border-border bg-background p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+      <p className="mt-1 break-words text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }
