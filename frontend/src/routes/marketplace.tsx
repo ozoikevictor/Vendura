@@ -12,22 +12,17 @@ import { getCategories } from "@/services/categoryService";
 import type { ProductQuery } from "@/types";
 import { getStores } from "@/services/storeService";
 import { queryProducts } from "@/services/productService";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/marketplace")({
   head: () => ({
-    meta: [
-      { title: "Marketplace — Vendraza" },
-      {
-        name: "description",
-        content: "Browse thousands of products from verified vendors across Nigeria.",
-      },
-      { property: "og:title", content: "Marketplace — Vendraza" },
-      {
-        property: "og:description",
-        content: "Browse products from verified vendors across Nigeria.",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+    meta: seoMeta({
+      title: "Marketplace | Shop Products & Vendors | Vendraza",
+      description:
+        "Browse products from Nigerian vendors on Vendraza. Shop electronics, fashion, home goods, beauty, building materials, and more.",
+      path: "/marketplace",
+    }),
+    links: canonicalLink("/marketplace"),
   }),
   component: MarketplacePage,
 });

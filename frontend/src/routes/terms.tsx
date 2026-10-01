@@ -1,7 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PolicyPage } from "@/components/support/PolicyPage";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
-export const Route = createFileRoute("/terms")({ component: TermsPage });
+export const Route = createFileRoute("/terms")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Terms of Service | Vendraza",
+      description:
+        "Read the terms that govern customer, seller, and visitor use of the Vendraza marketplace.",
+      path: "/terms",
+    }),
+    links: canonicalLink("/terms"),
+  }),
+  component: TermsPage,
+});
 
 function TermsPage() {
   return (
@@ -24,9 +36,9 @@ function TermsPage() {
           title: "Marketplace role",
           content: (
             <p>
-              Vendraza provides technology that connects independent sellers with customers. Unless a
-              product is explicitly sold by Vendraza, the seller is responsible for product accuracy,
-              quality, legality, availability, and fulfilment.
+              Vendraza provides technology that connects independent sellers with customers. Unless
+              a product is explicitly sold by Vendraza, the seller is responsible for product
+              accuracy, quality, legality, availability, and fulfilment.
             </p>
           ),
         },

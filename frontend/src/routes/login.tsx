@@ -9,16 +9,11 @@ import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 import { HumanCheck } from "@/components/shared/HumanCheck";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
-    meta: [
-      { title: "Log In — Vendraza" },
-      { name: "description", content: "Log in to your Vendraza account to shop and manage orders." },
-      { property: "og:title", content: "Log In — Vendraza" },
-      { property: "og:description", content: "Log in to your Vendraza account." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Log In | Vendraza", "Log in to your Vendraza account."),
   }),
   component: LoginPage,
 });

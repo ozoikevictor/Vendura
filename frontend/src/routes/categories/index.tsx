@@ -5,20 +5,17 @@ import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/categories/")({
   head: () => ({
-    meta: [
-      { title: "All Categories — Vendraza" },
-      {
-        name: "description",
-        content:
-          "Browse all product categories on Vendraza — phones, fashion, building materials, and more.",
-      },
-      { property: "og:title", content: "All Categories — Vendraza" },
-      { property: "og:description", content: "Browse all product categories on Vendraza." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: seoMeta({
+      title: "Shop by Category | Vendraza",
+      description:
+        "Browse Vendraza product categories including electronics, fashion, beauty, home goods, automotive items, and building materials.",
+      path: "/categories",
+    }),
+    links: canonicalLink("/categories"),
   }),
   component: CategoriesPage,
 });

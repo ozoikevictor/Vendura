@@ -6,8 +6,20 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { HumanCheck } from "@/components/shared/HumanCheck";
 import { createSupportRequest, type SupportCategory } from "@/services/supportService";
 import { getErrorMessage } from "@/services/api";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
-export const Route = createFileRoute("/contact")({ component: ContactPage });
+export const Route = createFileRoute("/contact")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Contact Vendraza",
+      description:
+        "Contact Vendraza support for help with marketplace orders, vendor stores, payments, delivery, and account issues.",
+      path: "/contact",
+    }),
+    links: canonicalLink("/contact"),
+  }),
+  component: ContactPage,
+});
 
 function ContactPage() {
   const [form, setForm] = useState({

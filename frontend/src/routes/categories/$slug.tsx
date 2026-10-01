@@ -12,18 +12,39 @@ import { queryProducts } from "@/services/productService";
 import { getCategoryBySlug } from "@/services/categoryService";
 import { categories } from "@/data/categories";
 import { getStores } from "@/services/storeService";
+import { breadcrumbJsonLd, canonicalLink, fetchPublicApi, seoMeta, jsonLdScript } from "@/lib/seo";
+import type { Category } from "@/types";
 
 export const Route = createFileRoute("/categories/$slug")({
-  head: ({ params }) => {
-    const cat = categories.find((c) => c.slug === params.slug);
+  loader: async ({ params }) => ({
+    category: await fetchPublicApi<Category>(`/categories/${encodeURIComponent(params.slug)}`),
+  }),
+  head: ({ params, loaderData }) => {
+    const cat = loaderData?.category ?? categories.find((c) => c.slug === params.slug);
+    const title = cat ? `${cat.name} Marketplace | Vendraza` : "Shop by Category | Vendraza";
+    const description = cat?.description
+      ? `${cat.description} Shop ${cat.name} products from vendors on Vendraza.`
+      : `Browse ${cat?.name ?? "products"} from vendors on Vendraza.`;
+    const path = `/categories/${params.slug}`;
     return {
-      meta: [
-        { title: `${cat?.name ?? "Category"} — Vendraza` },
-        { name: "description", content: `Browse ${cat?.name ?? "products"} from verified vendors on Vendraza.` },
-        { property: "og:title", content: `${cat?.name ?? "Category"} — Vendraza` },
-        { property: "og:description", content: `Browse ${cat?.name ?? "products"} on Vendraza.` },
-        { name: "twitter:card", content: "summary" },
-      ],
+      meta: seoMeta({
+        title,
+        description,
+        path,
+        robots: cat ? "index, follow" : "noindex, follow",
+      }),
+      links: canonicalLink(path),
+      scripts: cat
+        ? [
+            jsonLdScript(
+              breadcrumbJsonLd([
+                { name: "Home", path: "/" },
+                { name: "Categories", path: "/categories" },
+                { name: cat.name, path },
+              ]),
+            ),
+          ]
+        : [],
     };
   },
   component: CategoryDetailPage,
@@ -40,7 +61,12 @@ function CategoryDetailPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["category-products", slug, subSlug],
-    queryFn: () => queryProducts({ categorySlug: slug, ...(subSlug ? { subcategorySlug: subSlug } : {}), pageSize: 48 }),
+    queryFn: () =>
+      queryProducts({
+        categorySlug: slug,
+        ...(subSlug ? { subcategorySlug: subSlug } : {}),
+        pageSize: 48,
+      }),
   });
 
   const { data: storeList = [] } = useQuery({
@@ -57,7 +83,15 @@ function CategoryDetailPage() {
       <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <EmptyState title="Category not found" description="This category doesn't exist." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">All categories</Link>} />
+          <EmptyState
+            title="Category not found"
+            description="This category doesn't exist."
+            action={
+              <Link to="/categories" className="text-sm font-semibold text-primary hover:underline">
+                All categories
+              </Link>
+            }
+          />
         </div>
         <SiteFooter />
       </div>
@@ -74,7 +108,9 @@ function CategoryDetailPage() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Link to="/categories" className="hover:text-primary">Categories</Link>
+          <Link to="/categories" className="hover:text-primary">
+            Categories
+          </Link>
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-foreground">{category.name}</span>
         </div>
@@ -116,7 +152,18 @@ function CategoryDetailPage() {
           {isLoading ? (
             <DataLoader label="Loading category products" className="min-h-80" />
           ) : products.length === 0 ? (
-            <EmptyState title="No products in this category" description="Check back later or browse other categories." action={<Link to="/categories" className="text-sm font-semibold text-primary hover:underline">Browse categories</Link>} />
+            <EmptyState
+              title="No products in this category"
+              description="Check back later or browse other categories."
+              action={
+                <Link
+                  to="/categories"
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Browse categories
+                </Link>
+              }
+            />
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {products.map((p) => {

@@ -1,6 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PolicyPage } from "@/components/support/PolicyPage";
-export const Route = createFileRoute("/returns")({ component: ReturnsPage });
+import { canonicalLink, seoMeta } from "@/lib/seo";
+
+export const Route = createFileRoute("/returns")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Returns and Refunds | Vendraza",
+      description:
+        "Review Vendraza's returns and refunds policy for damaged, defective, incorrect, or materially different marketplace orders.",
+      path: "/returns",
+    }),
+    links: canonicalLink("/returns"),
+  }),
+  component: ReturnsPage,
+});
 function ReturnsPage() {
   return (
     <PolicyPage

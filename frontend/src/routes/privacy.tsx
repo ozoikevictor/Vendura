@@ -1,7 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PolicyPage } from "@/components/support/PolicyPage";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
-export const Route = createFileRoute("/privacy")({ component: PrivacyPage });
+export const Route = createFileRoute("/privacy")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Privacy Policy | Vendraza",
+      description:
+        "Learn how Vendraza collects, uses, protects, and shares marketplace account, order, and store information.",
+      path: "/privacy",
+    }),
+    links: canonicalLink("/privacy"),
+  }),
+  component: PrivacyPage,
+});
 
 function PrivacyPage() {
   return (
@@ -60,10 +72,10 @@ function PrivacyPage() {
           title: "Retention and security",
           content: (
             <p>
-              We retain information for as long as needed to provide Vendraza, resolve disputes, meet
-              financial and legal obligations, and prevent abuse. We use access controls, encryption
-              in transit, rate limits, and human-verification controls, but no online service can
-              promise absolute security.
+              We retain information for as long as needed to provide Vendraza, resolve disputes,
+              meet financial and legal obligations, and prevent abuse. We use access controls,
+              encryption in transit, rate limits, and human-verification controls, but no online
+              service can promise absolute security.
             </p>
           ),
         },

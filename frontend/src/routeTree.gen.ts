@@ -27,6 +27,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as SafetyRouteImport } from './routes/safety'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StoresRouteImport } from './routes/stores'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VendorRouteRouteImport } from './routes/vendor/route'
@@ -164,6 +165,11 @@ const SafetyRoute = SafetyRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoresRoute = StoresRouteImport.update({
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/returns': typeof ReturnsRoute
   '/safety': typeof SafetyRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stores': typeof StoresRoute
   '/terms': typeof TermsRoute
   '/vendor-register': typeof VendorRegisterRoute
@@ -494,6 +501,7 @@ export interface FileRoutesByTo {
   '/returns': typeof ReturnsRoute
   '/safety': typeof SafetyRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stores': typeof StoresRoute
   '/terms': typeof TermsRoute
   '/vendor-register': typeof VendorRegisterRoute
@@ -563,6 +571,7 @@ export interface FileRoutesById {
   '/returns': typeof ReturnsRoute
   '/safety': typeof SafetyRoute
   '/search': typeof SearchRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/stores': typeof StoresRoute
   '/terms': typeof TermsRoute
   '/vendor-register': typeof VendorRegisterRoute
@@ -633,6 +642,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/safety'
     | '/search'
+    | '/sitemap.xml'
     | '/stores'
     | '/terms'
     | '/vendor-register'
@@ -699,6 +709,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/safety'
     | '/search'
+    | '/sitemap.xml'
     | '/stores'
     | '/terms'
     | '/vendor-register'
@@ -767,6 +778,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/safety'
     | '/search'
+    | '/sitemap.xml'
     | '/stores'
     | '/terms'
     | '/vendor-register'
@@ -836,6 +848,7 @@ export interface RootRouteChildren {
   ReturnsRoute: typeof ReturnsRoute
   SafetyRoute: typeof SafetyRoute
   SearchRoute: typeof SearchRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoresRoute: typeof StoresRoute
   TermsRoute: typeof TermsRoute
   VendorRegisterRoute: typeof VendorRegisterRoute
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/stores': {
@@ -1419,6 +1439,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnsRoute: ReturnsRoute,
   SafetyRoute: SafetyRoute,
   SearchRoute: SearchRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoresRoute: StoresRoute,
   TermsRoute: TermsRoute,
   VendorRegisterRoute: VendorRegisterRoute,

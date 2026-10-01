@@ -22,19 +22,17 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/services/api";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { HumanCheck } from "@/components/shared/HumanCheck";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/vendor-register")({
   head: () => ({
-    meta: [
-      { title: "Start Selling — Vendraza" },
-      {
-        name: "description",
-        content: "Open your store on Vendraza and start selling to customers across Nigeria.",
-      },
-      { property: "og:title", content: "Start Selling — Vendraza" },
-      { property: "og:description", content: "Open your store on Vendraza." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: seoMeta({
+      title: "Sell Online in Nigeria | Start Selling on Vendraza",
+      description:
+        "Create a vendor store on Vendraza and sell products online to customers across Nigeria.",
+      path: "/vendor-register",
+    }),
+    links: canonicalLink("/vendor-register"),
   }),
   component: VendorRegisterPage,
 });
@@ -144,9 +142,21 @@ function VendorRegisterPage() {
 
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           {[
-            { icon: Store, title: "Your storefront", text: "A shareable store link for your customers." },
-            { icon: PackageCheck, title: "Simple management", text: "Manage products, stock, and orders in one place." },
-            { icon: CreditCard, title: "Secure payments", text: "Track sales, fees, balances, and payouts." },
+            {
+              icon: Store,
+              title: "Your storefront",
+              text: "A shareable store link for your customers.",
+            },
+            {
+              icon: PackageCheck,
+              title: "Simple management",
+              text: "Manage products, stock, and orders in one place.",
+            },
+            {
+              icon: CreditCard,
+              title: "Secure payments",
+              text: "Track sales, fees, balances, and payouts.",
+            },
           ].map((benefit) => (
             <div key={benefit.title} className="rounded-lg border border-border bg-card/80 p-4">
               <benefit.icon className="h-5 w-5 text-primary" />
@@ -380,7 +390,9 @@ function Field({
   id: string;
   type?: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
   placeholder?: string;
   required?: boolean;
   error?: string | undefined;

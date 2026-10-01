@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { GlobalDataLoader } from "@/components/shared/DataLoader";
+import { canonicalLink, organizationJsonLd, seoMeta, websiteJsonLd, jsonLdScript } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -109,16 +110,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content",
       },
-      { title: "Vendraza — Multi-vendor Marketplace" },
-      {
-        name: "description",
-        content: "Vendraza is Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere.",
-      },
       { name: "author", content: "Vendraza" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      ...seoMeta({
+        title: "Vendraza | Shop Products & Discover Vendors Online",
+        description:
+          "Vendraza is Nigeria's online multi-vendor marketplace for discovering products, finding vendors, shopping online, and selling through your own store.",
+      }),
     ],
     links: [
+      ...canonicalLink("/"),
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -131,6 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [jsonLdScript([organizationJsonLd(), websiteJsonLd()])],
   }),
   shellComponent: RootShell,
   component: RootComponent,

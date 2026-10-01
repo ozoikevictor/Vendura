@@ -1,6 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PolicyPage } from "@/components/support/PolicyPage";
-export const Route = createFileRoute("/safety")({ component: SafetyPage });
+import { canonicalLink, seoMeta } from "@/lib/seo";
+
+export const Route = createFileRoute("/safety")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Safety Center | Vendraza",
+      description:
+        "Learn how to shop and sell safely on Vendraza using messages, checkout, marketplace protections, and account safety checks.",
+      path: "/safety",
+    }),
+    links: canonicalLink("/safety"),
+  }),
+  component: SafetyPage,
+});
 function SafetyPage() {
   return (
     <PolicyPage

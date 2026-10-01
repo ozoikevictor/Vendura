@@ -8,16 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getStores } from "@/services/storeService";
 import { queryProducts } from "@/services/productService";
 import { useMemo } from "react";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
-    meta: [
-      { title: "Wishlist — Vendraza" },
-      { name: "description", content: "Your saved items on Vendraza." },
-      { property: "og:title", content: "Wishlist — Vendraza" },
-      { property: "og:description", content: "Your saved items on Vendraza." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Wishlist | Vendraza", "Your saved items on Vendraza."),
   }),
   component: WishlistPage,
 });
@@ -33,7 +28,12 @@ function WishlistPage() {
   const items = (productResult?.items ?? []).filter((product) => wishlist.has(product.id));
 
   const browseAction = (
-    <Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>
+    <Link
+      to="/marketplace"
+      className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+    >
+      Browse Marketplace
+    </Link>
   );
 
   if (items.length === 0) {
@@ -56,12 +56,23 @@ function WishlistPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-bold text-foreground">Wishlist</h1>
-          <button onClick={() => wishlist.clear()} className="text-sm text-muted-foreground hover:text-foreground">Clear all</button>
+          <button
+            onClick={() => wishlist.clear()}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Clear all
+          </button>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
           {items.map((p) => {
             const store = storeById.get(p.storeId);
-            return <ProductCard key={p.id} product={p} {...(store ? { storeName: store.name, storeSlug: store.slug } : {})} />;
+            return (
+              <ProductCard
+                key={p.id}
+                product={p}
+                {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
+              />
+            );
           })}
         </div>
       </div>

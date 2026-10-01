@@ -25,16 +25,11 @@ import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 import { useQueryClient } from "@tanstack/react-query";
 import { HumanCheck } from "@/components/shared/HumanCheck";
 import * as authService from "@/services/authService";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
-    meta: [
-      { title: "Checkout — Vendraza" },
-      { name: "description", content: "Complete your Vendraza purchase." },
-      { property: "og:title", content: "Checkout — Vendraza" },
-      { property: "og:description", content: "Complete your Vendraza purchase." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Checkout | Vendraza", "Complete your Vendraza purchase."),
   }),
   component: CheckoutPage,
 });

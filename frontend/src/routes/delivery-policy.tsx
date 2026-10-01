@@ -1,6 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PolicyPage } from "@/components/support/PolicyPage";
-export const Route = createFileRoute("/delivery-policy")({ component: DeliveryPolicyPage });
+import { canonicalLink, seoMeta } from "@/lib/seo";
+
+export const Route = createFileRoute("/delivery-policy")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Delivery Policy | Vendraza",
+      description:
+        "Understand Vendraza delivery options, estimates, charges, pickup choices, and order delivery responsibilities.",
+      path: "/delivery-policy",
+    }),
+    links: canonicalLink("/delivery-policy"),
+  }),
+  component: DeliveryPolicyPage,
+});
 function DeliveryPolicyPage() {
   return (
     <PolicyPage

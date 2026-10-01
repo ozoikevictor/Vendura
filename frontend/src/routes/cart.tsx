@@ -9,16 +9,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types";
 import { useStorefrontStore } from "@/store/storefront";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
-    meta: [
-      { title: "Cart — Vendraza" },
-      { name: "description", content: "Review items in your Vendraza cart." },
-      { property: "og:title", content: "Cart — Vendraza" },
-      { property: "og:description", content: "Review items in your Vendraza cart." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Cart | Vendraza", "Review items in your Vendraza cart."),
   }),
   component: CartPage,
 });
@@ -49,7 +44,11 @@ function CartPage() {
       return;
     }
     if (activeStoreSlug) {
-      navigate({ to: "/store/$storeSlug", params: { storeSlug: activeStoreSlug }, hash: "store-products" });
+      navigate({
+        to: "/store/$storeSlug",
+        params: { storeSlug: activeStoreSlug },
+        hash: "store-products",
+      });
       return;
     }
     navigate({ to: "/marketplace" });
@@ -63,11 +62,25 @@ function CartPage() {
           icon={<ShoppingBasket className="h-7 w-7" />}
           title="Your cart is empty"
           description="Browse the marketplace and add items to your cart."
-          action={activeStoreSlug ? (
-            <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse this store</Link>
-          ) : (
-            <Link to="/marketplace" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">Browse Marketplace</Link>
-          )}
+          action={
+            activeStoreSlug ? (
+              <Link
+                to="/store/$storeSlug"
+                params={{ storeSlug: activeStoreSlug }}
+                hash="store-products"
+                className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                Browse this store
+              </Link>
+            ) : (
+              <Link
+                to="/marketplace"
+                className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                Browse Marketplace
+              </Link>
+            )
+          }
         />
       </div>
     );
@@ -79,7 +92,13 @@ function CartPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <button type="button" onClick={goBack} aria-label="Go back" title="Go back" className="text-muted-foreground transition-colors hover:text-primary">
+            <button
+              type="button"
+              onClick={goBack}
+              aria-label="Go back"
+              title="Go back"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="font-display text-2xl font-bold text-foreground">Cart</h1>

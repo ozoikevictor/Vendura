@@ -11,8 +11,20 @@ import {
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
-export const Route = createFileRoute("/help")({ component: HelpPage });
+export const Route = createFileRoute("/help")({
+  head: () => ({
+    meta: seoMeta({
+      title: "Help Center | Vendraza",
+      description:
+        "Get help with buying, selling, orders, payments, delivery, account access, and safety on Vendraza.",
+      path: "/help",
+    }),
+    links: canonicalLink("/help"),
+  }),
+  component: HelpPage,
+});
 
 const topics = [
   { icon: ShoppingBag, title: "Buying", text: "Cart, checkout, orders, and product questions." },

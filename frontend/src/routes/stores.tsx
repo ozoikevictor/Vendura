@@ -9,16 +9,17 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { getStores } from "@/services/storeService";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/stores")({
   head: () => ({
-    meta: [
-      { title: "Stores — Vendraza" },
-      { name: "description", content: "Browse real vendor stores on Vendraza." },
-      { property: "og:title", content: "Stores — Vendraza" },
-      { property: "og:description", content: "Browse vendor stores on Vendraza." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: seoMeta({
+      title: "Online Stores in Nigeria | Vendraza",
+      description:
+        "Find vendors and online stores in Nigeria on Vendraza. Browse storefronts, products, seller details, and trusted marketplace shops.",
+      path: "/stores",
+    }),
+    links: canonicalLink("/stores"),
   }),
   component: StoresPage,
 });
@@ -70,9 +71,20 @@ function StoresPage() {
           ) : filteredStores.length === 0 ? (
             <EmptyState
               title="No stores found"
-              description={query ? "Try another store name or location." : "Vendor stores will appear here when sellers publish products."}
+              description={
+                query
+                  ? "Try another store name or location."
+                  : "Vendor stores will appear here when sellers publish products."
+              }
               icon={<StoreIcon className="h-8 w-8" />}
-              action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse marketplace</Link>}
+              action={
+                <Link
+                  to="/marketplace"
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Browse marketplace
+                </Link>
+              }
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

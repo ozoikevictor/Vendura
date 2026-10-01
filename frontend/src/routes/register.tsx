@@ -9,19 +9,11 @@ import { useStorefrontStore } from "@/store/storefront";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 import { HumanCheck } from "@/components/shared/HumanCheck";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
-    meta: [
-      { title: "Create Account — Vendraza" },
-      {
-        name: "description",
-        content: "Create a Vendraza customer account to shop from verified vendors.",
-      },
-      { property: "og:title", content: "Create Account — Vendraza" },
-      { property: "og:description", content: "Create a Vendraza customer account." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Create Account | Vendraza", "Create a Vendraza customer account."),
   }),
   component: RegisterPage,
 });

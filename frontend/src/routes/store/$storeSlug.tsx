@@ -1,8 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  ShieldCheck, MapPin, Package, Star, Truck, RotateCcw,
-} from "lucide-react";
+import { ShieldCheck, MapPin, Package, Star, Truck, RotateCcw } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -16,17 +14,65 @@ import { products as allProducts } from "@/data/products";
 import { formatNaira } from "@/utils/format";
 import fallbackBanner from "@/assets/store-banner-1.jpg";
 import { useStorefrontStore } from "@/store/storefront";
+import {
+  breadcrumbJsonLd,
+  canonicalLink,
+  fetchPublicApi,
+  seoMeta,
+  truncateSeoText,
+  jsonLdScript,
+} from "@/lib/seo";
+import type { Store } from "@/types";
 
 export const Route = createFileRoute("/store/$storeSlug")({
-  head: ({ params }) => ({
-    meta: [
-      { title: "Store — Vendraza" },
-      { name: "description", content: "View this store on Vendraza." },
-      { property: "og:title", content: "Store — Vendraza" },
-      { property: "og:description", content: "View this store on Vendraza." },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+  loader: async ({ params }) => ({
+    store: await fetchPublicApi<Store>(`/stores/slug/${encodeURIComponent(params.storeSlug)}`),
   }),
+  head: ({ params, loaderData }) => {
+    const store = loaderData?.store;
+    const path = `/store/${params.storeSlug}`;
+    const title = store ? `${store.name} | Shop on Vendraza` : "Store | Vendraza";
+    const description = store
+      ? truncateSeoText(
+          `${store.description} Shop products from ${store.name} on Vendraza in ${store.location.city}, ${store.location.state}.`,
+        )
+      : "Discover vendor stores and shop products on Vendraza.";
+    return {
+      meta: seoMeta({
+        title,
+        description,
+        path,
+        image: store?.bannerUrl ?? store?.logoUrl,
+        robots: store ? "index, follow" : "noindex, follow",
+      }),
+      links: canonicalLink(path),
+      scripts: store
+        ? [
+            jsonLdScript({
+              "@context": "https://schema.org",
+              "@type": "Store",
+              name: store.name,
+              description: store.description,
+              url: `https://vendraza.com${path}`,
+              image: store.bannerUrl ?? store.logoUrl,
+              address: {
+                "@type": "PostalAddress",
+                addressLocality: store.location.city,
+                addressRegion: store.location.state,
+                addressCountry: "NG",
+              },
+            }),
+            jsonLdScript(
+              breadcrumbJsonLd([
+                { name: "Home", path: "/" },
+                { name: "Stores", path: "/stores" },
+                { name: store.name, path },
+              ]),
+            ),
+          ]
+        : [],
+    };
+  },
   component: StorePage,
 });
 
@@ -43,7 +89,7 @@ function StorePage() {
 
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["store-products", storeSlug],
-    queryFn: () => store ? getProductsByStore(store.id) : Promise.resolve([]),
+    queryFn: () => (store ? getProductsByStore(store.id) : Promise.resolve([])),
     enabled: !!store,
   });
 
@@ -73,7 +119,18 @@ function StorePage() {
       <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <EmptyState title="Store not found" description="This store doesn't exist or has been removed." action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse marketplace</Link>} />
+          <EmptyState
+            title="Store not found"
+            description="This store doesn't exist or has been removed."
+            action={
+              <Link
+                to="/marketplace"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Browse marketplace
+              </Link>
+            }
+          />
         </div>
         <SiteFooter />
       </div>
@@ -86,7 +143,12 @@ function StorePage() {
 
       {/* Banner */}
       <div className="relative h-40 overflow-hidden sm:h-56">
-        <img src={!bannerFailed && store.bannerUrl ? store.bannerUrl : fallbackBanner} onError={() => setBannerFailed(true)} alt={`${store.name} banner`} className="h-full w-full object-cover" />
+        <img
+          src={!bannerFailed && store.bannerUrl ? store.bannerUrl : fallbackBanner}
+          onError={() => setBannerFailed(true)}
+          alt={`${store.name} store on Vendraza`}
+          className="h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
       </div>
 
@@ -95,19 +157,30 @@ function StorePage() {
         <div className="relative -mt-12 flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-4 border-background bg-primary-soft text-2xl font-bold text-primary shadow-card sm:h-24 sm:w-24">
             {store.logoUrl && !logoFailed ? (
-              <img src={store.logoUrl} onError={() => setLogoFailed(true)} alt={`${store.name} logo`} className="h-full w-full object-cover" />
-            ) : store.name.charAt(0)}
+              <img
+                src={store.logoUrl}
+                onError={() => setLogoFailed(true)}
+                alt={`${store.name} store on Vendraza`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              store.name.charAt(0)
+            )}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">{store.name}</h1>
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                {store.name}
+              </h1>
               {store.verified && (
                 <span className="flex items-center gap-1 rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
                   <ShieldCheck className="h-3 w-3" /> Verified
                 </span>
               )}
             </div>
-            {store.tagline && <p className="mt-0.5 text-sm text-muted-foreground">{store.tagline}</p>}
+            {store.tagline && (
+              <p className="mt-0.5 text-sm text-muted-foreground">{store.tagline}</p>
+            )}
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <RatingStars rating={store.rating} size={12} showValue />
               <span>· {store.reviewCount} reviews</span>
@@ -129,7 +202,9 @@ function StorePage() {
             <Truck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div>
               <p className="text-xs font-semibold text-foreground">Shipping</p>
-              <p className="text-xs text-muted-foreground line-clamp-2">{store.policies.shipping}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {store.policies.shipping}
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-2 rounded-lg border border-border bg-card p-3">
@@ -144,7 +219,9 @@ function StorePage() {
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div>
                 <p className="text-xs font-semibold text-foreground">Warranty</p>
-                <p className="text-xs text-muted-foreground line-clamp-2">{store.policies.warranty}</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {store.policies.warranty}
+                </p>
               </div>
             </div>
           )}
@@ -156,7 +233,10 @@ function StorePage() {
           {productsLoading ? (
             <DataLoader label="Loading store products" className="min-h-72" />
           ) : !products || products.length === 0 ? (
-            <EmptyState title="No products yet" description="This store hasn't listed any products." />
+            <EmptyState
+              title="No products yet"
+              description="This store hasn't listed any products."
+            />
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
               {products.map((p) => (

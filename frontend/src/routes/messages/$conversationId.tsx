@@ -4,8 +4,13 @@ import { Send, ArrowLeft, Tag, Check, X, RotateCw, ShoppingBasket } from "lucide
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getConversation, getMessages, getOffersForConversation,
-  sendMessage, makeOffer, respondToOffer, markConversationRead,
+  getConversation,
+  getMessages,
+  getOffersForConversation,
+  sendMessage,
+  makeOffer,
+  respondToOffer,
+  markConversationRead,
 } from "@/services/messageService";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
@@ -14,16 +19,11 @@ import { formatNaira, timeAgo } from "@/utils/format";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Offer } from "@/types";
+import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/messages/$conversationId")({
   head: () => ({
-    meta: [
-      { title: "Conversation — Vendraza" },
-      { name: "description", content: "Chat with a seller on Vendraza." },
-      { property: "og:title", content: "Conversation — Vendraza" },
-      { property: "og:description", content: "Chat with a seller on Vendraza." },
-      { name: "twitter:card", content: "summary" },
-    ],
+    meta: noindexMeta("Conversation | Vendraza", "Private Vendraza conversation."),
   }),
   component: ConversationPage,
 });
@@ -70,7 +70,8 @@ function ConversationPage() {
       if (!pageShell.current) return;
       const headerHeight = window.matchMedia("(min-width: 640px)").matches ? 64 : 0;
       const activeElement = document.activeElement;
-      const isEditing = activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
+      const isEditing =
+        activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement;
       const visibleHeight = isEditing
         ? (viewport?.height ?? window.innerHeight)
         : Math.max(viewport?.height ?? 0, window.innerHeight);
@@ -101,9 +102,11 @@ function ConversationPage() {
 
   useEffect(() => {
     if (!conv) return;
-    markConversationRead(conversationId, "customer").then(() => {
-      queryClient.invalidateQueries({ queryKey: ["customer-conversations"] });
-    }).catch(() => undefined);
+    markConversationRead(conversationId, "customer")
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["customer-conversations"] });
+      })
+      .catch(() => undefined);
   }, [conv, conversationId, messages?.length, queryClient]);
 
   const activeOffer = offers?.find((o) => o.status === "pending" || o.status === "countered");
@@ -142,7 +145,11 @@ function ConversationPage() {
     }
   }
 
-  async function handleRespondOffer(offer: Offer, response: "accepted" | "rejected" | "countered", counter?: string) {
+  async function handleRespondOffer(
+    offer: Offer,
+    response: "accepted" | "rejected" | "countered",
+    counter?: string,
+  ) {
     setActionLoading(true);
     try {
       await respondToOffer(offer.id, response, counter ? Number(counter) : undefined);
@@ -159,7 +166,10 @@ function ConversationPage() {
 
   function handleAddAgreedToCart() {
     if (!product || !acceptedOffer || !conv) return;
-    addToCart(product, null, 1, { offerId: acceptedOffer.id, agreedPrice: conv.agreedPrice ?? acceptedOffer.offeredPrice });
+    addToCart(product, null, 1, {
+      offerId: acceptedOffer.id,
+      agreedPrice: conv.agreedPrice ?? acceptedOffer.offeredPrice,
+    });
     toast.success("Added to cart at agreed price");
     navigate({ to: "/cart" });
   }
@@ -170,7 +180,12 @@ function ConversationPage() {
         <MarketplaceHeader />
         <div className="mx-auto max-w-2xl px-4 py-12 text-center">
           <h1 className="text-xl font-semibold text-foreground">Conversation not found</h1>
-          <Link to="/messages" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Back to messages</Link>
+          <Link
+            to="/messages"
+            className="mt-4 inline-block text-sm font-semibold text-primary hover:underline"
+          >
+            Back to messages
+          </Link>
         </div>
       </div>
     );
@@ -178,138 +193,238 @@ function ConversationPage() {
 
   return (
     <div className="fixed inset-0 overflow-hidden lagoon-wash">
-      <div className="hidden sm:block"><MarketplaceHeader /></div>
-      <div ref={pageShell} className="absolute inset-x-0 top-0 flex min-h-0 flex-col overflow-hidden sm:top-16">
-      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-3 py-2 sm:px-6 sm:py-4">
-        {/* Header */}
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <Link to="/messages" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">{conv.storeName}</p>
-            <p className="text-xs text-muted-foreground line-clamp-1">{conv.productName}</p>
+      <div className="hidden sm:block">
+        <MarketplaceHeader />
+      </div>
+      <div
+        ref={pageShell}
+        className="absolute inset-x-0 top-0 flex min-h-0 flex-col overflow-hidden sm:top-16"
+      >
+        <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-3 py-2 sm:px-6 sm:py-4">
+          {/* Header */}
+          <div className="flex items-center gap-2 border-b border-border pb-3">
+            <Link to="/messages" className="text-muted-foreground hover:text-primary">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">{conv.storeName}</p>
+              <p className="text-xs text-muted-foreground line-clamp-1">{conv.productName}</p>
+            </div>
           </div>
-        </div>
 
-        {/* Product preview */}
-        <Link to="/product/$slug" params={{ slug: product?.slug ?? "" }} className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary/30">
-          <img src={conv.productImage} alt="" className="h-10 w-10 rounded border border-border object-cover" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-foreground line-clamp-1">{conv.productName}</p>
-            <p className="text-xs text-muted-foreground">{formatNaira(conv.productPrice)}</p>
-          </div>
-          {conv.agreedPrice && (
-            <span className="flex items-center gap-1 rounded-md bg-success-soft px-2 py-1 text-xs font-semibold text-success">
-              <Tag className="h-3 w-3" /> {formatNaira(conv.agreedPrice)}
-            </span>
+          {/* Product preview */}
+          <Link
+            to="/product/$slug"
+            params={{ slug: product?.slug ?? "" }}
+            className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary/30"
+          >
+            <img
+              src={conv.productImage}
+              alt=""
+              className="h-10 w-10 rounded border border-border object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground line-clamp-1">{conv.productName}</p>
+              <p className="text-xs text-muted-foreground">{formatNaira(conv.productPrice)}</p>
+            </div>
+            {conv.agreedPrice && (
+              <span className="flex items-center gap-1 rounded-md bg-success-soft px-2 py-1 text-xs font-semibold text-success">
+                <Tag className="h-3 w-3" /> {formatNaira(conv.agreedPrice)}
+              </span>
+            )}
+          </Link>
+
+          {/* Agreed price CTA */}
+          {acceptedOffer && conv.agreedPrice && (
+            <div className="mt-2 flex items-center justify-between rounded-lg bg-success-soft px-3 py-2">
+              <span className="text-sm font-semibold text-success">
+                Agreed price: {formatNaira(conv.agreedPrice)}
+              </span>
+              <button
+                onClick={handleAddAgreedToCart}
+                className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90"
+              >
+                <ShoppingBasket className="h-3.5 w-3.5" /> Add to cart
+              </button>
+            </div>
           )}
-        </Link>
 
-        {/* Agreed price CTA */}
-        {acceptedOffer && conv.agreedPrice && (
-          <div className="mt-2 flex items-center justify-between rounded-lg bg-success-soft px-3 py-2">
-            <span className="text-sm font-semibold text-success">Agreed price: {formatNaira(conv.agreedPrice)}</span>
-            <button onClick={handleAddAgreedToCart} className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90">
-              <ShoppingBasket className="h-3.5 w-3.5" /> Add to cart
-            </button>
-          </div>
-        )}
-
-        {/* Messages */}
-        <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto py-4 scrollbar-none">
-          {messages?.map((msg) => {
-            const isCustomer = msg.senderRole === "customer";
-            const isSystem = msg.senderRole === "system";
-            if (isSystem) {
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto py-4 scrollbar-none">
+            {messages?.map((msg) => {
+              const isCustomer = msg.senderRole === "customer";
+              const isSystem = msg.senderRole === "system";
+              if (isSystem) {
+                return (
+                  <div key={msg.id} className="flex justify-center">
+                    <span className="rounded-full bg-accent px-3 py-1 text-xs text-muted-foreground">
+                      {msg.text}
+                    </span>
+                  </div>
+                );
+              }
+              const offer = msg.offerId ? offers?.find((o) => o.id === msg.offerId) : null;
               return (
-                <div key={msg.id} className="flex justify-center">
-                  <span className="rounded-full bg-accent px-3 py-1 text-xs text-muted-foreground">{msg.text}</span>
+                <div
+                  key={msg.id}
+                  className={cn("flex", isCustomer ? "justify-end" : "justify-start")}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[75%] rounded-2xl px-3 py-2 text-sm",
+                      isCustomer
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card border border-border text-foreground",
+                    )}
+                  >
+                    {offer ? (
+                      <div>
+                        <p className="text-xs opacity-80">
+                          Offer: {formatNaira(offer.offeredPrice)}
+                        </p>
+                        {offer.counterPrice && (
+                          <p className="text-xs opacity-80">
+                            Counter: {formatNaira(offer.counterPrice)}
+                          </p>
+                        )}
+                        <p className="mt-0.5 text-xs font-semibold">
+                          {offer.status === "accepted"
+                            ? "✓ Accepted"
+                            : offer.status === "rejected"
+                              ? "✗ Rejected"
+                              : offer.status === "countered"
+                                ? "↻ Countered"
+                                : "Pending"}
+                        </p>
+                      </div>
+                    ) : (
+                      <p>{msg.text}</p>
+                    )}
+                    <p
+                      className={cn(
+                        "mt-0.5 text-xs",
+                        isCustomer ? "text-primary-foreground/60" : "text-muted-foreground",
+                      )}
+                    >
+                      {timeAgo(msg.sentAt)}
+                    </p>
+                  </div>
                 </div>
               );
-            }
-            const offer = msg.offerId ? offers?.find((o) => o.id === msg.offerId) : null;
-            return (
-              <div key={msg.id} className={cn("flex", isCustomer ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[75%] rounded-2xl px-3 py-2 text-sm",
-                  isCustomer ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground",
-                )}>
-                  {offer ? (
-                    <div>
-                      <p className="text-xs opacity-80">Offer: {formatNaira(offer.offeredPrice)}</p>
-                      {offer.counterPrice && <p className="text-xs opacity-80">Counter: {formatNaira(offer.counterPrice)}</p>}
-                      <p className="mt-0.5 text-xs font-semibold">
-                        {offer.status === "accepted" ? "✓ Accepted" : offer.status === "rejected" ? "✗ Rejected" : offer.status === "countered" ? "↻ Countered" : "Pending"}
-                      </p>
-                    </div>
-                  ) : (
-                    <p>{msg.text}</p>
-                  )}
-                  <p className={cn("mt-0.5 text-xs", isCustomer ? "text-primary-foreground/60" : "text-muted-foreground")}>
-                    {timeAgo(msg.sentAt)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Offer action bar */}
-        {activeOffer && activeOffer.by === "vendor" && (
-          <div className="border-t border-border pt-2">
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-muted-foreground">Seller's counter: <span className="font-semibold text-foreground">{formatNaira(activeOffer.counterPrice ?? activeOffer.offeredPrice)}</span></p>
-              <div className="flex-1" />
-              <button onClick={() => handleRespondOffer(activeOffer, "accepted")} disabled={actionLoading} className="flex items-center gap-1 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60">
-                <Check className="h-3.5 w-3.5" /> Accept
-              </button>
-              <button onClick={() => handleRespondOffer(activeOffer, "rejected")} disabled={actionLoading} className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60">
-                <X className="h-3.5 w-3.5" /> Reject
-              </button>
-            </div>
-            <div className="mt-1 flex items-center gap-2">
-              <input type="number" value={counterAmount} onChange={(e) => setCounterAmount(e.target.value)} placeholder="Counter offer ₦" className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm" />
-              <button onClick={() => counterAmount && handleRespondOffer(activeOffer, "countered", counterAmount)} disabled={actionLoading || !counterAmount} className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60">
-                <RotateCw className="h-3.5 w-3.5" /> Counter
-              </button>
-            </div>
+            })}
           </div>
-        )}
 
-        {/* Make offer / message input */}
-        <div className="border-t border-border pt-2">
-          {showOffer && (
-            <div className="mb-2 flex items-center gap-2">
-              <input type="number" value={offerAmount} onChange={(e) => setOfferAmount(e.target.value)} placeholder={`Offer amount (list: ${formatNaira(conv.productPrice)})`} className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm" />
-              <button onClick={handleMakeOffer} disabled={actionLoading || !offerAmount} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">Send offer</button>
-              <button onClick={() => setShowOffer(false)} className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-accent">Cancel</button>
+          {/* Offer action bar */}
+          {activeOffer && activeOffer.by === "vendor" && (
+            <div className="border-t border-border pt-2">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Seller's counter:{" "}
+                  <span className="font-semibold text-foreground">
+                    {formatNaira(activeOffer.counterPrice ?? activeOffer.offeredPrice)}
+                  </span>
+                </p>
+                <div className="flex-1" />
+                <button
+                  onClick={() => handleRespondOffer(activeOffer, "accepted")}
+                  disabled={actionLoading}
+                  className="flex items-center gap-1 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60"
+                >
+                  <Check className="h-3.5 w-3.5" /> Accept
+                </button>
+                <button
+                  onClick={() => handleRespondOffer(activeOffer, "rejected")}
+                  disabled={actionLoading}
+                  className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60"
+                >
+                  <X className="h-3.5 w-3.5" /> Reject
+                </button>
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="number"
+                  value={counterAmount}
+                  onChange={(e) => setCounterAmount(e.target.value)}
+                  placeholder="Counter offer ₦"
+                  className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+                />
+                <button
+                  onClick={() =>
+                    counterAmount && handleRespondOffer(activeOffer, "countered", counterAmount)
+                  }
+                  disabled={actionLoading || !counterAmount}
+                  className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-60"
+                >
+                  <RotateCw className="h-3.5 w-3.5" /> Counter
+                </button>
+              </div>
             </div>
           )}
-          <form onSubmit={handleSend} className="flex items-center gap-2">
-            {!showOffer && product?.negotiable && (
-              <button type="button" onClick={() => setShowOffer(true)} className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent">
-                <Tag className="h-4 w-4" /> Make Offer
-              </button>
+
+          {/* Make offer / message input */}
+          <div className="border-t border-border pt-2">
+            {showOffer && (
+              <div className="mb-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  value={offerAmount}
+                  onChange={(e) => setOfferAmount(e.target.value)}
+                  placeholder={`Offer amount (list: ${formatNaira(conv.productPrice)})`}
+                  className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+                />
+                <button
+                  onClick={handleMakeOffer}
+                  disabled={actionLoading || !offerAmount}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  Send offer
+                </button>
+                <button
+                  onClick={() => setShowOffer(false)}
+                  className="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-accent"
+                >
+                  Cancel
+                </button>
+              </div>
             )}
-            <input
-              ref={composerInput}
-              value={text}
-              onPointerDown={(event) => {
-                if (document.activeElement !== composerInput.current) {
-                  event.preventDefault();
-                  composerInput.current?.focus({ preventScroll: true });
+            <form onSubmit={handleSend} className="flex items-center gap-2">
+              {!showOffer && product?.negotiable && (
+                <button
+                  type="button"
+                  onClick={() => setShowOffer(true)}
+                  className="flex items-center gap-1 rounded-lg border border-border bg-card px-3 py-2.5 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <Tag className="h-4 w-4" /> Make Offer
+                </button>
+              )}
+              <input
+                ref={composerInput}
+                value={text}
+                onPointerDown={(event) => {
+                  if (document.activeElement !== composerInput.current) {
+                    event.preventDefault();
+                    composerInput.current?.focus({ preventScroll: true });
+                  }
+                }}
+                onFocus={() =>
+                  requestAnimationFrame(() =>
+                    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }),
+                  )
                 }
-              }}
-              onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }))}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Type a message..."
-              className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
-            />
-            <button type="submit" disabled={!text.trim()} className="flex items-center justify-center rounded-lg bg-primary p-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
-              <Send className="h-4 w-4" />
-            </button>
-          </form>
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type a message..."
+                className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2.5 text-base text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+              />
+              <button
+                type="submit"
+                disabled={!text.trim()}
+                className="flex items-center justify-center rounded-lg bg-primary p-2.5 text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

@@ -39,26 +39,18 @@ import { StoreCard } from "@/components/shared/StoreCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { getFeaturedProducts } from "@/services/productService";
 import { getFeaturedStores } from "@/services/storeService";
+import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
-    meta: [
-      { title: "Vendraza — Sell Smarter. Shop Anywhere." },
-      {
-        name: "description",
-        content:
-          "Nigeria's multi-vendor marketplace. Buy and sell phones, fashion, building materials, and more from verified vendors nationwide.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:title", content: "Vendraza — Sell Smarter. Shop Anywhere." },
-      {
-        property: "og:description",
-        content:
-          "Nigeria's multi-vendor marketplace. Buy and sell from verified vendors nationwide.",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
+    meta: seoMeta({
+      title: "Vendraza | Shop Products & Discover Vendors Online",
+      description:
+        "Shop products online in Nigeria, discover trusted vendors, and open your own store on Vendraza's multi-vendor marketplace.",
+      path: "/",
+    }),
+    links: canonicalLink("/"),
   }),
 });
 
