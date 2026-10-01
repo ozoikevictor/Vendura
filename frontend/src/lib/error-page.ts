@@ -15,13 +15,31 @@ export function renderErrorPage(): string {
       .primary { background: #111; color: #fff; }
       .secondary { background: #fff; color: #111; border-color: #d1d5db; }
     </style>
+    <script>
+      (function () {
+        var key = "vendraza:server-error-refresh-attempted";
+        var message = document.referrer + " " + location.href;
+        var staleAsset = /assets\\/(route|chunk)-|refresh=/.test(message);
+        if (!staleAsset || sessionStorage.getItem(key) === "1") return;
+        sessionStorage.setItem(key, "1");
+        var url = new URL(location.href);
+        url.searchParams.set("refresh", String(Date.now()));
+        setTimeout(function () { location.replace(url.toString()); }, 50);
+      })();
+      function retryWithFreshAssets() {
+        sessionStorage.removeItem("vendraza:server-error-refresh-attempted");
+        var url = new URL(location.href);
+        url.searchParams.set("refresh", String(Date.now()));
+        location.replace(url.toString());
+      }
+    </script>
   </head>
   <body>
     <div class="card">
       <h1>This page didn't load</h1>
-      <p>Something went wrong on our end. You can try refreshing or head back home.</p>
+      <p>The app may have been updated while your browser still had an older file. Try loading the newest version.</p>
       <div class="actions">
-        <button class="primary" onclick="location.reload()">Try again</button>
+        <button class="primary" onclick="retryWithFreshAssets()">Try again</button>
         <a class="secondary" href="/">Go home</a>
       </div>
     </div>

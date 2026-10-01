@@ -35,9 +35,33 @@ function NotFoundComponent() {
   );
 }
 
+const CHUNK_RECOVERY_KEY = "vendraza:chunk-recovery-attempted";
+
+function isStaleChunkError(error: Error) {
+  const message = `${error.name} ${error.message} ${error.stack ?? ""}`.toLowerCase();
+  return (
+    message.includes("failed to fetch dynamically imported module") ||
+    message.includes("error loading dynamically imported module") ||
+    message.includes("importing a module script failed") ||
+    message.includes("loading chunk") ||
+    message.includes("assets/route-")
+  );
+}
+
+function refreshWithFreshAssets() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("refresh", String(Date.now()));
+  window.location.replace(url.toString());
+}
+
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const staleChunk = typeof window !== "undefined" && isStaleChunkError(error);
+  if (staleChunk && sessionStorage.getItem(CHUNK_RECOVERY_KEY) !== "1") {
+    sessionStorage.setItem(CHUNK_RECOVERY_KEY, "1");
+    setTimeout(refreshWithFreshAssets, 50);
+  }
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -45,11 +69,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {staleChunk
+            ? "The app was updated while your browser still had an older file. Refresh once to load the newest version."
+            : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
+              if (staleChunk) {
+                sessionStorage.removeItem(CHUNK_RECOVERY_KEY);
+                refreshWithFreshAssets();
+                return;
+              }
               router.invalidate();
               reset();
             }}
@@ -81,8 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Vendraza — Multi-vendor Marketplace" },
       {
         name: "description",
-        content:
-          "Vendraza is Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere.",
+        content: "Vendraza is Nigeria's multi-vendor marketplace. Sell smarter, shop anywhere.",
       },
       { name: "author", content: "Vendraza" },
       { property: "og:type", content: "website" },
