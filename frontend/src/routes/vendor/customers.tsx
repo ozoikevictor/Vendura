@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Users } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getVendorOrders } from "@/services/orderService";
 import { CURRENT_VENDOR_STORE_ID } from "@/data/stores";
@@ -26,45 +26,87 @@ function VendorCustomersPage() {
   });
 
   // Aggregate customers from orders
-  const customerMap = new Map<string, { name: string; phone: string; orders: number; spent: number }>();
+  const customerMap = new Map<
+    string,
+    { name: string; phone: string; orders: number; spent: number }
+  >();
   orders?.forEach((o) => {
     const existing = customerMap.get(o.customerId);
     if (existing) {
       existing.orders++;
       existing.spent += o.total;
     } else {
-      customerMap.set(o.customerId, { name: o.customerName, phone: o.customerPhone, orders: 1, spent: o.total });
+      customerMap.set(o.customerId, {
+        name: o.customerName,
+        phone: o.customerPhone,
+        orders: 1,
+        spent: o.total,
+      });
     }
   });
   const customers = Array.from(customerMap.values()).sort((a, b) => b.spent - a.spent);
 
   if (customers.length === 0) {
-    return <EmptyState icon={<Users className="h-7 w-7" />} title="No customers yet" description="Customers who buy from you will appear here." />;
+    return (
+      <div className="flex h-full min-h-0 flex-col gap-5">
+        <div className="flex shrink-0 items-start gap-2">
+          <Link
+            to="/vendor"
+            className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+            aria-label="Back to overview"
+            title="Back to overview"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold text-foreground">Customers</h1>
+            <p className="text-sm text-muted-foreground">0 customers</p>
+          </div>
+        </div>
+        <EmptyState
+          icon={<Users className="h-7 w-7" />}
+          title="No customers yet"
+          description="Customers who buy from you will appear here."
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">Customers</h1>
-        <p className="text-sm text-muted-foreground">{customers.length} customers</p>
+    <div className="flex h-full min-h-0 flex-col gap-5">
+      <div className="flex shrink-0 items-start gap-2">
+        <Link
+          to="/vendor"
+          className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+          aria-label="Back to overview"
+          title="Back to overview"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold text-foreground">Customers</h1>
+          <p className="text-sm text-muted-foreground">{customers.length} customers</p>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain rounded-xl border border-border bg-card">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-xs text-muted-foreground">
-              <th className="pb-2 pr-4">Name</th>
-              <th className="pb-2 pr-4">Phone</th>
-              <th className="pb-2 pr-4 text-center">Orders</th>
-              <th className="pb-2 pr-4 text-right">Total Spent</th>
+            <tr className="sticky top-0 z-10 border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Phone</th>
+              <th className="px-4 py-3 text-center">Orders</th>
+              <th className="px-4 py-3 text-right">Total Spent</th>
             </tr>
           </thead>
           <tbody>
             {customers.map((c) => (
               <tr key={c.name} className="border-b border-border last:border-0">
-                <td className="py-3 pr-4 font-medium text-foreground">{c.name}</td>
-                <td className="py-3 pr-4 text-muted-foreground">{c.phone}</td>
-                <td className="py-3 pr-4 text-center text-muted-foreground">{c.orders}</td>
-                <td className="py-3 pr-4 text-right font-semibold text-foreground">{formatNaira(c.spent)}</td>
+                <td className="px-4 py-3 font-medium text-foreground">{c.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.phone}</td>
+                <td className="px-4 py-3 text-center text-muted-foreground">{c.orders}</td>
+                <td className="px-4 py-3 text-right font-semibold text-foreground">
+                  {formatNaira(c.spent)}
+                </td>
               </tr>
             ))}
           </tbody>
