@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, Pencil, Copy, Trash2, Package, Share2, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Search, Pencil, Copy, Trash2, Package, Share2, Eye } from "lucide-react";
 import { buildProductUrl, copyToClipboard } from "@/utils/share";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -96,11 +96,21 @@ function VendorProductsPage() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-5">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Products</h1>
-          <p className="text-sm text-muted-foreground">
-            {products?.length ?? 0} products in your catalog
-          </p>
+        <div className="flex min-w-0 items-start gap-2">
+          <Link
+            to="/vendor"
+            className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+            aria-label="Back to overview"
+            title="Back to overview"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold text-foreground">Products</h1>
+            <p className="text-sm text-muted-foreground">
+              {products?.length ?? 0} products in your catalog
+            </p>
+          </div>
         </div>
         <Link
           to={
