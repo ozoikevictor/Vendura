@@ -63,9 +63,10 @@ export function VendorLayout() {
   const pageContent = useRef<HTMLElement>(null);
   const user = useAuthStore((state) => state.user);
   const { data: store } = useQuery({
-    queryKey: ["vendor-store", user?.storeId],
+    queryKey: ["vendor-store", user?.id],
     queryFn: () => getVendorStore(user?.id ?? ""),
-    enabled: Boolean(user?.storeId),
+    enabled: Boolean(user),
+    retry: false,
   });
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications", user?.id],
@@ -167,13 +168,24 @@ export function VendorLayout() {
     return <div className="min-h-screen bg-background" />;
   }
 
-  const isFocusedMobilePage = location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" || /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname);
+  const isFocusedMobilePage =
+    location.pathname === "/vendor/ai" ||
+    location.pathname === "/vendor/ai/" ||
+    /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname);
 
   return (
     <div ref={vendorShell} className="fixed inset-0 overflow-hidden bg-background">
       {/* Desktop sidebar */}
-      <aside className={cn("fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex", vendorSidebarCollapsed ? "w-20" : "w-64")}>
-        <VendorSidebar collapsed={vendorSidebarCollapsed} {...(store?.slug ? { storeSlug: String(store.slug) } : {})} />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-300 lg:flex",
+          vendorSidebarCollapsed ? "w-20" : "w-64",
+        )}
+      >
+        <VendorSidebar
+          collapsed={vendorSidebarCollapsed}
+          {...(store?.slug ? { storeSlug: String(store.slug) } : {})}
+        />
       </aside>
 
       {/* Mobile sidebar overlay */}
@@ -196,9 +208,20 @@ export function VendorLayout() {
       </aside>
 
       {/* Main content */}
-      <div className={cn("h-full overflow-hidden transition-[padding] duration-300", vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
+      <div
+        className={cn(
+          "h-full overflow-hidden transition-[padding] duration-300",
+          vendorSidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
+        )}
+      >
         {/* Top bar */}
-        <header className={cn("absolute left-0 right-0 top-0 z-20 h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6", isFocusedMobilePage ? "hidden sm:flex" : "flex", vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64")}>
+        <header
+          className={cn(
+            "absolute left-0 right-0 top-0 z-20 h-16 items-center gap-3 border-b border-border bg-card px-4 shadow-sm transition-[left] duration-300 sm:px-6",
+            isFocusedMobilePage ? "hidden sm:flex" : "flex",
+            vendorSidebarCollapsed ? "lg:left-20" : "lg:left-64",
+          )}
+        >
           <button
             type="button"
             aria-label="Open menu"
@@ -209,7 +232,9 @@ export function VendorLayout() {
           </button>
 
           <Link to="/vendor" className="flex min-w-0 items-center gap-2 lg:hidden">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Store className="h-4 w-4" /></span>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Store className="h-4 w-4" />
+            </span>
             <span className="font-display text-base font-bold">Vendraza</span>
           </Link>
 
@@ -220,7 +245,11 @@ export function VendorLayout() {
             onClick={() => setVendorSidebarCollapsed(!vendorSidebarCollapsed)}
             className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-accent hover:text-foreground lg:flex"
           >
-            {vendorSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            {vendorSidebarCollapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
           </button>
 
           <div className="relative hidden flex-1 max-w-md sm:block">
@@ -247,7 +276,9 @@ export function VendorLayout() {
               )}
             </Link>
             <Link
-              {...(store ? { to: "/store/$storeSlug" as const, params: { storeSlug: String(store.slug) } } : { to: "/vendor" as const })}
+              {...(store
+                ? { to: "/store/$storeSlug" as const, params: { storeSlug: String(store.slug) } }
+                : { to: "/vendor" as const })}
               className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Store className="h-4 w-4" />
@@ -269,12 +300,17 @@ export function VendorLayout() {
         <div className={cn("h-16", isFocusedMobilePage && "h-0 sm:h-16")} aria-hidden="true" />
 
         {/* Page content */}
-        <main ref={pageContent} className={cn(
-          "h-[calc(100dvh-4rem)] overscroll-contain",
-          location.pathname === "/vendor/ai" || location.pathname === "/vendor/ai/" || /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname)
-            ? "overflow-hidden p-0 sm:p-4 lg:p-6"
-            : "overflow-y-auto p-4 sm:p-6 lg:p-8",
-        )}>
+        <main
+          ref={pageContent}
+          className={cn(
+            "h-[calc(100dvh-4rem)] overscroll-contain",
+            location.pathname === "/vendor/ai" ||
+              location.pathname === "/vendor/ai/" ||
+              /^\/vendor\/messages\/[^/]+\/?$/.test(location.pathname)
+              ? "overflow-hidden p-0 sm:p-4 lg:p-6"
+              : "overflow-y-auto p-4 sm:p-6 lg:p-8",
+          )}
+        >
           <Outlet />
         </main>
       </div>
@@ -282,7 +318,15 @@ export function VendorLayout() {
   );
 }
 
-function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigate?: () => void; collapsed?: boolean; storeSlug?: string }) {
+function VendorSidebar({
+  onNavigate,
+  collapsed = false,
+  storeSlug,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+  storeSlug?: string;
+}) {
   const navigate = useNavigate();
   const { location } = useRouterState();
   const clearAuth = useAuthStore((state) => state.clear);
@@ -295,13 +339,28 @@ function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigat
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "justify-between px-4")}>
-        <Link to="/vendor" onClick={onNavigate} className={cn("flex items-center", collapsed ? "flex-col gap-0.5" : "gap-2")} title={collapsed ? "Vendraza dashboard" : undefined}>
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-sidebar-border",
+          collapsed ? "justify-center px-2" : "justify-between px-4",
+        )}
+      >
+        <Link
+          to="/vendor"
+          onClick={onNavigate}
+          className={cn("flex items-center", collapsed ? "flex-col gap-0.5" : "gap-2")}
+          title={collapsed ? "Vendraza dashboard" : undefined}
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Store className="h-4 w-4" />
           </div>
           <div className={cn(collapsed && "text-center")}>
-            <span className={cn("font-display font-bold tracking-tight text-sidebar-foreground", collapsed ? "text-[10px]" : "text-base")}>
+            <span
+              className={cn(
+                "font-display font-bold tracking-tight text-sidebar-foreground",
+                collapsed ? "text-[10px]" : "text-base",
+              )}
+            >
               Vendraza
             </span>
             {!collapsed && <p className="text-xs text-muted-foreground">Vendor Panel</p>}
@@ -354,7 +413,10 @@ function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigat
             to="/store/$storeSlug"
             params={{ storeSlug }}
             title={collapsed ? "Storefront" : undefined}
-            className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground", collapsed && "justify-center gap-0 px-0")}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+              collapsed && "justify-center gap-0 px-0",
+            )}
           >
             <Store className="h-4 w-4 shrink-0" />
             {!collapsed && "Storefront"}
@@ -367,7 +429,10 @@ function VendorSidebar({ onNavigate, collapsed = false, storeSlug }: { onNavigat
         <button
           onClick={handleLogout}
           title={collapsed ? "Logout" : undefined}
-          className={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive-soft hover:text-destructive", collapsed && "justify-center gap-0 px-0")}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 hover:bg-destructive-soft hover:text-destructive",
+            collapsed && "justify-center gap-0 px-0",
+          )}
         >
           <LogOut className="h-4 w-4" />
           {!collapsed && "Logout"}

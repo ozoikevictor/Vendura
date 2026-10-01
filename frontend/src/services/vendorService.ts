@@ -44,7 +44,10 @@ export const updateBankAccount = (input: { bankCode: string; accountNumber: stri
 export const getSubscription = () => api<Subscription>("/vendor/subscription");
 export const getPlans = () => api<SubscriptionPlan[]>("/plans");
 export const initializeSubscriptionPayment = (planId: SubscriptionPlan["id"]) =>
-  api<{ authorizationUrl: string; accessCode: string; reference: string }>("/vendor/subscription/paystack/initialize", { method: "POST", ...json({ planId }) });
+  api<{ authorizationUrl: string; accessCode: string; reference: string }>(
+    "/vendor/subscription/paystack/initialize",
+    { method: "POST", ...json({ planId }) },
+  );
 export const verifySubscriptionPayment = (reference: string) =>
   api<Subscription>(`/vendor/subscription/paystack/verify/${encodeURIComponent(reference)}`);
 export const getDeliverySettings = () => api<DeliverySettings>("/vendor/delivery-settings");
