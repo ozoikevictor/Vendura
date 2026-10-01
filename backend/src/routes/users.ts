@@ -43,10 +43,15 @@ export const userRoutes = (db: Database) => {
   router.delete("/me/addresses/:id", asyncRoute(async (req: AuthRequest, res) => { const addressId = String(req.params.id); await ownedAddress(db, addressId, req.user!.id); await db.remove("addresses", addressId); res.status(204).end(); }));
   return router;
 };
+const optionalPhoneSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+  z.string().trim().min(7).max(20).optional(),
+);
+
 const profileSchema = z.object({
   fullName: z.string().trim().min(2).max(100).optional(),
   email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
-  phone: z.string().trim().min(7).max(20).optional(),
+  phone: optionalPhoneSchema,
   avatarUrl: z.string().refine(
     (value) => value === "" || /^https?:\/\//i.test(value) || /^data:image\/(jpeg|png|webp);base64,/i.test(value),
     "Profile picture must be an HTTP image URL or an uploaded JPG, PNG, or WebP image"

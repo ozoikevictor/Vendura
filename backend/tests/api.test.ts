@@ -246,6 +246,22 @@ describe("Vendura API", () => {
       ).status,
     ).toBe(204);
   });
+  it("saves a profile picture when the optional phone field is blank", async () => {
+    const token = await login("vendor@vendura.test");
+    const avatarUrl = "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA";
+    const response = await request(app)
+      .patch("/api/users/me")
+      .set(auth(token))
+      .send({
+        fullName: "Demo Vendor",
+        email: "vendor@vendura.test",
+        phone: "",
+        avatarUrl,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.avatarUrl).toBe(avatarUrl);
+  });
   it("manages customer addresses", async () => {
     const token = await login("customer@vendura.test");
     const created = await request(app)
