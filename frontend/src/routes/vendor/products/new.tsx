@@ -167,285 +167,326 @@ function NewProductPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-5">
-      <div className="flex items-center gap-2">
-        <Link to="/vendor/products" className="text-muted-foreground hover:text-primary">
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="font-display text-2xl font-bold text-foreground">Add Product</h1>
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col overflow-hidden">
+      <div className="shrink-0 border-b border-border bg-background pb-4">
+        <div className="flex items-center gap-2">
+          <Link to="/vendor/products" className="text-muted-foreground hover:text-primary">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="font-display text-2xl font-bold text-foreground">Add Product</h1>
+        </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-border bg-card p-5">
-        {error && (
-          <div
-            role="alert"
-            className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive-soft p-3 text-sm text-destructive"
-          >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
-          </div>
-        )}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">Product image *</label>
-          {image ? (
-            <div className="relative h-48 w-48 overflow-hidden rounded-lg border border-border">
-              <img
-                src={image}
-                alt="Product preview"
-                onLoad={() => setErrors((current) => ({ ...current, image: undefined }))}
-                onError={() => setErrors((current) => ({ ...current, image: "This image URL could not be loaded. Try another URL or upload a file." }))}
-                className="h-full w-full object-cover"
-              />
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain py-5 pr-1">
+        <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive-soft p-3 text-sm text-destructive"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
+            </div>
+          )}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">
+              Product image *
+            </label>
+            {image ? (
+              <div className="relative h-48 w-48 overflow-hidden rounded-lg border border-border">
+                <img
+                  src={image}
+                  alt="Product preview"
+                  onLoad={() => setErrors((current) => ({ ...current, image: undefined }))}
+                  onError={() =>
+                    setErrors((current) => ({
+                      ...current,
+                      image:
+                        "This image URL could not be loaded. Try another URL or upload a file.",
+                    }))
+                  }
+                  className="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImage("");
+                    setImageUrl("");
+                  }}
+                  aria-label="Remove image"
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <label
+                className={cn(
+                  "flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background text-sm text-muted-foreground hover:border-primary hover:text-primary",
+                  errors.image && "border-destructive text-destructive",
+                )}
+              >
+                <ImagePlus className="h-6 w-6" />
+                <span>{uploadingImage ? "Preparing image..." : "Choose product image"}</span>
+                <span className="text-xs">
+                  JPG, PNG or WebP; phone photos are compressed automatically
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                  onChange={handleImage}
+                  className="sr-only"
+                />
+              </label>
+            )}
+            {image && (
+              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
+                <ImagePlus className="h-4 w-4" />
+                Replace from device
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                  onChange={handleImage}
+                  className="sr-only"
+                />
+              </label>
+            )}
+            <div className="mt-3 flex max-w-xl flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(event) => {
+                    setImageUrl(event.target.value);
+                    setErrors((current) => ({ ...current, image: undefined }));
+                  }}
+                  placeholder="Or paste an image URL"
+                  className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                />
+              </div>
               <button
                 type="button"
-                onClick={() => {
-                  setImage("");
-                  setImageUrl("");
-                }}
-                aria-label="Remove image"
-                className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow"
+                onClick={applyImageUrl}
+                className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
               >
-                <X className="h-4 w-4" />
+                Use URL
               </button>
             </div>
-          ) : (
-            <label
+            {errors.image && (
+              <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                {errors.image}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="name" className="mb-1 block text-sm font-medium text-foreground">
+              Product name *
+            </label>
+            <input
+              id="name"
+              required
+              value={form.name}
+              onChange={set("name")}
+              placeholder="e.g. Aurora 5G Smartphone"
               className={cn(
-                "flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background text-sm text-muted-foreground hover:border-primary hover:text-primary",
-                errors.image && "border-destructive text-destructive",
+                "w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1",
+                errors.name
+                  ? "border-destructive focus:ring-destructive"
+                  : "border-input focus:border-primary focus:ring-primary",
               )}
+            />
+            {errors.name && (
+              <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                {errors.name}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="desc" className="mb-1 block text-sm font-medium text-foreground">
+              Description
+            </label>
+            <textarea
+              id="desc"
+              rows={4}
+              value={form.description}
+              onChange={set("description")}
+              placeholder="Describe your product..."
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            {errors.description && (
+              <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                {errors.description}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="price" className="mb-1 block text-sm font-medium text-foreground">
+                Price (₦) *
+              </label>
+              <input
+                id="price"
+                type="number"
+                required
+                value={form.price}
+                onChange={set("price")}
+                placeholder="245000"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {errors.price && (
+                <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                  {errors.price}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="oldPrice" className="mb-1 block text-sm font-medium text-foreground">
+                Old price (₦)
+              </label>
+              <input
+                id="oldPrice"
+                type="number"
+                value={form.oldPrice}
+                onChange={set("oldPrice")}
+                placeholder="280000"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {errors.oldPrice && (
+                <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                  {errors.oldPrice}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label htmlFor="sku" className="mb-1 block text-sm font-medium text-foreground">
+                SKU
+              </label>
+              <input
+                id="sku"
+                value={form.sku}
+                onChange={set("sku")}
+                placeholder="AUTO"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label htmlFor="stock" className="mb-1 block text-sm font-medium text-foreground">
+                Stock
+              </label>
+              <input
+                id="stock"
+                type="number"
+                value={form.stock}
+                onChange={set("stock")}
+                placeholder="50"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {errors.stock && (
+                <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                  {errors.stock}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="lowStock" className="mb-1 block text-sm font-medium text-foreground">
+                Low stock alert
+              </label>
+              <input
+                id="lowStock"
+                type="number"
+                value={form.lowStockThreshold}
+                onChange={set("lowStockThreshold")}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              {errors.lowStockThreshold && (
+                <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                  {errors.lowStockThreshold}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="cat" className="mb-1 block text-sm font-medium text-foreground">
+              Category
+            </label>
+            <select
+              id="cat"
+              value={form.categoryId}
+              onChange={set("categoryId")}
+              disabled={categoriesLoading}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             >
-              <ImagePlus className="h-6 w-6" />
-              <span>{uploadingImage ? "Preparing image..." : "Choose product image"}</span>
-              <span className="text-xs">JPG, PNG or WebP; phone photos are compressed automatically</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                onChange={handleImage}
-                className="sr-only"
-              />
-            </label>
-          )}
-          {image && (
-            <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-accent">
-              <ImagePlus className="h-4 w-4" />
-              Replace from device
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                onChange={handleImage}
-                className="sr-only"
-              />
-            </label>
-          )}
-          <div className="mt-3 flex max-w-xl flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
-              <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(event) => {
-                  setImageUrl(event.target.value);
-                  setErrors((current) => ({ ...current, image: undefined }));
-                }}
-                placeholder="Or paste an image URL"
-                className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-              />
+              <option value="">
+                {categoriesLoading ? "Loading categories..." : "Select category"}
+              </option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {errors.categoryId && (
+              <p data-form-error="true" className="mt-1 text-xs text-destructive">
+                {errors.categoryId}
+              </p>
+            )}
+          </div>
+
+          {/* Negotiation toggle */}
+          <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium text-foreground">Allow price negotiation</p>
+              <p className="text-xs text-muted-foreground">
+                Let customers make offers on this product
+              </p>
             </div>
             <button
               type="button"
-              onClick={applyImageUrl}
-              className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
-            >
-              Use URL
-            </button>
-          </div>
-          {errors.image && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.image}</p>}
-        </div>
-        <div>
-          <label htmlFor="name" className="mb-1 block text-sm font-medium text-foreground">
-            Product name *
-          </label>
-          <input
-            id="name"
-            required
-            value={form.name}
-            onChange={set("name")}
-            placeholder="e.g. Aurora 5G Smartphone"
-            className={cn(
-              "w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1",
-              errors.name
-                ? "border-destructive focus:ring-destructive"
-                : "border-input focus:border-primary focus:ring-primary",
-            )}
-          />
-          {errors.name && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.name}</p>}
-        </div>
-
-        <div>
-          <label htmlFor="desc" className="mb-1 block text-sm font-medium text-foreground">
-            Description
-          </label>
-          <textarea
-            id="desc"
-            rows={4}
-            value={form.description}
-            onChange={set("description")}
-            placeholder="Describe your product..."
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          />
-          {errors.description && (
-            <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.description}</p>
-          )}
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="price" className="mb-1 block text-sm font-medium text-foreground">
-              Price (₦) *
-            </label>
-            <input
-              id="price"
-              type="number"
-              required
-              value={form.price}
-              onChange={set("price")}
-              placeholder="245000"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            {errors.price && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.price}</p>}
-          </div>
-          <div>
-            <label htmlFor="oldPrice" className="mb-1 block text-sm font-medium text-foreground">
-              Old price (₦)
-            </label>
-            <input
-              id="oldPrice"
-              type="number"
-              value={form.oldPrice}
-              onChange={set("oldPrice")}
-              placeholder="280000"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            {errors.oldPrice && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.oldPrice}</p>}
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <label htmlFor="sku" className="mb-1 block text-sm font-medium text-foreground">
-              SKU
-            </label>
-            <input
-              id="sku"
-              value={form.sku}
-              onChange={set("sku")}
-              placeholder="AUTO"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label htmlFor="stock" className="mb-1 block text-sm font-medium text-foreground">
-              Stock
-            </label>
-            <input
-              id="stock"
-              type="number"
-              value={form.stock}
-              onChange={set("stock")}
-              placeholder="50"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            {errors.stock && <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.stock}</p>}
-          </div>
-          <div>
-            <label htmlFor="lowStock" className="mb-1 block text-sm font-medium text-foreground">
-              Low stock alert
-            </label>
-            <input
-              id="lowStock"
-              type="number"
-              value={form.lowStockThreshold}
-              onChange={set("lowStockThreshold")}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-            {errors.lowStockThreshold && (
-              <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.lowStockThreshold}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="cat" className="mb-1 block text-sm font-medium text-foreground">
-            Category
-          </label>
-          <select
-            id="cat"
-            value={form.categoryId}
-            onChange={set("categoryId")}
-            disabled={categoriesLoading}
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          >
-            <option value="">
-              {categoriesLoading ? "Loading categories..." : "Select category"}
-            </option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          {errors.categoryId && (
-            <p data-form-error="true" className="mt-1 text-xs text-destructive">{errors.categoryId}</p>
-          )}
-        </div>
-
-        {/* Negotiation toggle */}
-        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-border p-3">
-          <div>
-            <p className="text-sm font-medium text-foreground">Allow price negotiation</p>
-            <p className="text-xs text-muted-foreground">
-              Let customers make offers on this product
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setForm((f) => ({ ...f, negotiable: !f.negotiable }))}
-            className={cn(
-              "relative h-6 w-11 rounded-full transition-colors",
-              form.negotiable ? "bg-primary" : "bg-muted",
-            )}
-          >
-            <span
+              onClick={() => setForm((f) => ({ ...f, negotiable: !f.negotiable }))}
               className={cn(
-                "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-                form.negotiable ? "left-[1.375rem]" : "left-0.5",
+                "relative h-6 w-11 rounded-full transition-colors",
+                form.negotiable ? "bg-primary" : "bg-muted",
               )}
-            />
-          </button>
-        </label>
-      </div>
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+                  form.negotiable ? "left-[1.375rem]" : "left-0.5",
+                )}
+              />
+            </button>
+          </label>
+        </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => handleSubmit("draft")}
-          disabled={loading || uploadingImage}
-          className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-60"
-        >
-          <Save className="h-4 w-4" /> Save as Draft
-        </button>
-        <button
-          onClick={() => handleSubmit("active")}
-          disabled={loading || uploadingImage}
-          className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-        >
-          <Eye className="h-4 w-4" /> Publish Product
-        </button>
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleSubmit("draft")}
+            disabled={loading || uploadingImage}
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" /> Save as Draft
+          </button>
+          <button
+            onClick={() => handleSubmit("active")}
+            disabled={loading || uploadingImage}
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            <Eye className="h-4 w-4" /> Publish Product
+          </button>
+        </div>
+        <p className="pb-1 text-xs text-muted-foreground">
+          Prices and stock are validated by the backend. You can edit variants, specs, and delivery
+          options after creation.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Prices and stock are validated by the backend. You can edit variants, specs, and delivery
-        options after creation.
-      </p>
     </div>
   );
 }
