@@ -92,6 +92,16 @@ describe("Vendura API", () => {
     expect(response.status).toBe(200);
     expect(response.body.status).toBe("ok");
   });
+  it("serves a public XML sitemap", async () => {
+    const response = await request(app).get("/sitemap.xml");
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toContain("application/xml");
+    expect(response.text).toContain("<loc>https://vendraza.com/</loc>");
+    expect(response.text).toContain("<loc>https://vendraza.com/marketplace</loc>");
+    expect(response.text).toContain("/product/");
+    expect(response.text).not.toContain("/vendor/");
+    expect(response.text).not.toContain("/checkout");
+  });
   it("registers, logs in, and returns the current user", async () => {
     const registration = await request(app)
       .post("/api/auth/register/customer")

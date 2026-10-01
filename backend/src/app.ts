@@ -18,7 +18,7 @@ import { adminRoutes } from "./routes/admin.js";
 import { aiRoutes } from "./routes/ai.js";
 import { supportRoutes } from "./routes/support.js";
 import { uploadRoutes } from "./routes/uploads.js";
-import type { AuthRequest } from "./types.js";
+import type { AuthRequest, Entity } from "./types.js";
 
 export function createApp(db: Database) {
   const app = express();
@@ -85,6 +85,17 @@ export function createApp(db: Database) {
   app.get("/health", (_req, res) =>
     res.json({ status: "ok", service: "vendura-api" }),
   );
+  app.get("/sitemap.xml", async (_req, res, next) => {
+    try {
+      const sitemap = await buildSitemap(db);
+      res
+        .type("application/xml")
+        .set("Cache-Control", "public, max-age=300, s-maxage=3600")
+        .send(sitemap);
+    } catch (error) {
+      next(error);
+    }
+  });
   app.use("/api", webhookRoutes(db));
   app.use("/api/auth", authRoutes(db));
   app.use("/api/users", userRoutes(db));
@@ -102,4 +113,96 @@ export function createApp(db: Database) {
   app.use(notFound);
   app.use(errorHandler);
   return app;
+}
+
+type SitemapUrl = {
+  loc: string;
+  lastmod: string;
+  changefreq: string;
+  priority: string;
+};
+
+const SITE_URL = "https://vendraza.com";
+
+async function buildSitemap(db: Database) {
+  const now = new Date().toISOString();
+  const [products, stores, categories] = await Promise.all([
+    db.list<Entity>("products"),
+    db.list<Entity>("stores"),
+    db.list<Entity>("categories"),
+  ]);
+  const liveProducts = products.filter(
+    (product) => product.status === "active" && Number(product.stock) > 0,
+  );
+  const productCounts = new Map<string, number>();
+  for (const product of liveProducts) {
+    const storeId = String(product.storeId ?? "");
+    productCounts.set(storeId, (productCounts.get(storeId) ?? 0) + 1);
+  }
+  const urls: SitemapUrl[] = [
+    { loc: "/", lastmod: now, changefreq: "daily", priority: "1.0" },
+    { loc: "/marketplace", lastmod: now, changefreq: "daily", priority: "0.9" },
+    { loc: "/categories", lastmod: now, changefreq: "weekly", priority: "0.8" },
+    { loc: "/stores", lastmod: now, changefreq: "daily", priority: "0.8" },
+    { loc: "/vendor-register", lastmod: now, changefreq: "monthly", priority: "0.7" },
+    { loc: "/help", lastmod: now, changefreq: "monthly", priority: "0.5" },
+    { loc: "/contact", lastmod: now, changefreq: "monthly", priority: "0.5" },
+    { loc: "/safety", lastmod: now, changefreq: "monthly", priority: "0.4" },
+    { loc: "/terms", lastmod: now, changefreq: "yearly", priority: "0.3" },
+    { loc: "/privacy", lastmod: now, changefreq: "yearly", priority: "0.3" },
+    { loc: "/returns", lastmod: now, changefreq: "yearly", priority: "0.3" },
+    { loc: "/delivery-policy", lastmod: now, changefreq: "yearly", priority: "0.3" },
+    ...categories
+      .filter((category) => typeof category.slug === "string")
+      .map((category) => ({
+        loc: `/categories/${category.slug}`,
+        lastmod: now,
+        changefreq: "weekly",
+        priority: "0.7",
+      })),
+    ...stores
+      .filter((store) => typeof store.slug === "string" && productCounts.has(String(store.id)))
+      .map((store) => ({
+        loc: `/store/${store.slug}`,
+        lastmod: String(store.updatedAt ?? store.joinedAt ?? now),
+        changefreq: "daily",
+        priority: "0.7",
+      })),
+    ...liveProducts
+      .filter((product) => typeof product.slug === "string")
+      .map((product) => ({
+        loc: `/product/${product.slug}`,
+        lastmod: String(product.updatedAt ?? product.createdAt ?? now),
+        changefreq: "daily",
+        priority: "0.8",
+      })),
+  ];
+
+  return renderSitemap(urls);
+}
+
+function renderSitemap(urls: SitemapUrl[]) {
+  const uniqueUrls = new Map(urls.map((url) => [url.loc, url]));
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${[...uniqueUrls.values()]
+  .map(
+    (url) => `  <url>
+    <loc>${escapeXml(`${SITE_URL}${url.loc}`)}</loc>
+    <lastmod>${escapeXml(url.lastmod)}</lastmod>
+    <changefreq>${url.changefreq}</changefreq>
+    <priority>${url.priority}</priority>
+  </url>`,
+  )
+  .join("\n")}
+</urlset>`;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
