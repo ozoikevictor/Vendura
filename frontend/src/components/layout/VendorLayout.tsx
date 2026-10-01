@@ -284,9 +284,18 @@ export function VendorLayout() {
               <Store className="h-4 w-4" />
               <span className="hidden sm:inline">Storefront</span>
             </Link>
-            <div className="flex items-center gap-2 rounded-lg px-2 py-1">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                {initials}
+            <Link
+              to="/vendor/settings"
+              className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-accent"
+              aria-label="Open profile settings"
+              title="Open profile"
+            >
+              <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
               </span>
               <div className="hidden sm:block">
                 <p className="text-xs font-semibold text-foreground">
@@ -294,7 +303,7 @@ export function VendorLayout() {
                 </p>
                 <p className="text-xs text-muted-foreground">{store?.name ?? "Your store"}</p>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
         <div className={cn("h-16", isFocusedMobilePage && "h-0 sm:h-16")} aria-hidden="true" />

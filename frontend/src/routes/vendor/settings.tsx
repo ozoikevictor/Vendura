@@ -3,11 +3,16 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bell,
+  Camera,
   ImagePlus,
   KeyRound,
   Link as LinkIcon,
+  Mail,
+  Phone,
+  Save,
   Shield,
   Store,
+  Trash2,
   Truck,
   User,
   X,
@@ -55,7 +60,7 @@ function VendorSettingsPage() {
   const setUser = useAuthStore((state) => state.set);
   const [tab, setTab] = useState<TabId>("profile");
   const [saving, setSaving] = useState<string | null>(null);
-  const [profile, setProfile] = useState({ fullName: "", email: "", phone: "" });
+  const [profile, setProfile] = useState({ fullName: "", email: "", phone: "", avatarUrl: "" });
   const [storeForm, setStoreForm] = useState({
     name: "",
     description: "",
@@ -70,6 +75,7 @@ function VendorSettingsPage() {
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
   const [preferences, setPreferences] = useState(defaultPreferences);
+  const [profileImageError, setProfileImageError] = useState("");
   const [logoUrlInput, setLogoUrlInput] = useState("");
   const [logoError, setLogoError] = useState("");
   const [bannerUrlInput, setBannerUrlInput] = useState("");
@@ -92,7 +98,12 @@ function VendorSettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    setProfile({ fullName: user.fullName, email: user.email, phone: user.phone ?? "" });
+    setProfile({
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone ?? "",
+      avatarUrl: user.avatarUrl ?? "",
+    });
     setPreferences(user.notificationPreferences ?? defaultPreferences);
   }, [user]);
 
@@ -112,9 +123,18 @@ function VendorSettingsPage() {
   }, [store]);
 
   async function saveProfile() {
+    if (profile.fullName.trim().length < 2) {
+      toast.error("Enter your full name");
+      return;
+    }
     setSaving("profile");
     try {
-      const updated = await updateProfile(profile);
+      const updated = await updateProfile({
+        fullName: profile.fullName.trim(),
+        email: profile.email.trim(),
+        phone: profile.phone.trim(),
+        avatarUrl: profile.avatarUrl,
+      });
       setUser(updated);
       toast.success(
         updated.emailVerified ? "Profile saved" : "Profile saved. Verify your new email address.",
@@ -124,6 +144,27 @@ function VendorSettingsPage() {
       toast.error(error instanceof Error ? error.message : "Could not save your profile");
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function uploadProfilePicture(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setProfileImageError("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileImageError("Choose an image smaller than 5 MB.");
+      return;
+    }
+    try {
+      const avatarUrl = await resizeImage(file, 512);
+      setProfile((current) => ({ ...current, avatarUrl }));
+      setProfileImageError("");
+    } catch {
+      setProfileImageError("This picture could not be opened. Try another image.");
     }
   }
 
@@ -308,26 +349,84 @@ function VendorSettingsPage() {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
         {tab === "profile" && (
           <Panel title="Profile">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label="Full name"
-                value={profile.fullName}
-                onChange={(fullName) => setProfile((value) => ({ ...value, fullName }))}
-              />
-              <Field
-                label="Email"
-                type="email"
-                value={profile.email}
-                onChange={(email) => setProfile((value) => ({ ...value, email }))}
-              />
-              <Field
-                label="Phone"
-                type="tel"
-                value={profile.phone}
-                onChange={(phone) => setProfile((value) => ({ ...value, phone }))}
-              />
+            <div className="grid gap-6 md:grid-cols-[12rem_1fr]">
+              <div>
+                <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full border border-border bg-primary-soft text-primary">
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt="Profile"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-3xl font-bold">
+                      {(user?.fullName ?? "Vendor")
+                        .split(" ")
+                        .filter(Boolean)
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
+                  )}
+                  <label className="absolute inset-x-0 bottom-0 flex cursor-pointer items-center justify-center gap-1 bg-foreground/75 py-2 text-xs font-semibold text-white">
+                    <Camera className="h-3.5 w-3.5" /> Change
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={uploadProfilePicture}
+                      className="sr-only"
+                    />
+                  </label>
+                </div>
+                {profile.avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setProfile((current) => ({ ...current, avatarUrl: "" }))}
+                    className="mx-auto mt-3 flex items-center gap-1.5 text-xs font-semibold text-destructive hover:underline"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Remove picture
+                  </button>
+                )}
+                {profileImageError && (
+                  <p className="mt-2 text-center text-xs text-destructive">{profileImageError}</p>
+                )}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ProfileField
+                  label="Full name"
+                  icon={<User className="h-4 w-4" />}
+                  value={profile.fullName}
+                  onChange={(fullName) => setProfile((value) => ({ ...value, fullName }))}
+                />
+                <ProfileField
+                  label="Phone"
+                  icon={<Phone className="h-4 w-4" />}
+                  value={profile.phone}
+                  onChange={(phone) => setProfile((value) => ({ ...value, phone }))}
+                />
+                <div className="sm:col-span-2">
+                  <ProfileField
+                    label="Email"
+                    icon={<Mail className="h-4 w-4" />}
+                    type="email"
+                    value={profile.email}
+                    onChange={(email) => setProfile((value) => ({ ...value, email }))}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={saveProfile}
+                    disabled={saving === "profile"}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    <Save className="h-4 w-4" />{" "}
+                    {saving === "profile" ? "Saving..." : "Save profile"}
+                  </button>
+                </div>
+              </div>
             </div>
-            <SaveButton saving={saving === "profile"} onClick={saveProfile} />
           </Panel>
         )}
 
@@ -704,6 +803,37 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
       />
+    </label>
+  );
+}
+
+function ProfileField({
+  label,
+  icon,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <label className="block text-sm font-medium text-foreground">
+      {label}
+      <span className="relative mt-1 block">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          {icon}
+        </span>
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+      </span>
     </label>
   );
 }
