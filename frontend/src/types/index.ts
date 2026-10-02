@@ -20,6 +20,8 @@ export interface User {
   avatarUrl?: string;
   role: UserRole;
   storeId?: ID;
+  wishlistProductIds?: ID[];
+  followedStoreIds?: ID[];
   emailVerified: boolean;
   createdAt: ISODate;
   notificationPreferences?: {
@@ -435,7 +437,16 @@ export interface Subscription {
   plan?: SubscriptionPlan;
 }
 
-export type TransactionType = "sale" | "delivery" | "refund" | "payout" | "subscription" | "fee" | "payment_processing_fee" | "platform_refund" | "platform_withdrawal";
+export type TransactionType =
+  | "sale"
+  | "delivery"
+  | "refund"
+  | "payout"
+  | "subscription"
+  | "fee"
+  | "payment_processing_fee"
+  | "platform_refund"
+  | "platform_withdrawal";
 
 export interface Transaction {
   id: ID;

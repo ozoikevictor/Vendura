@@ -3,12 +3,14 @@ import { Heart, ShoppingBasket } from "lucide-react";
 import type { Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlist";
+import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { RatingStars } from "./RatingStars";
 import { PriceTag } from "./PriceTag";
 import { discountPercent } from "@/utils/format";
 import { toast } from "sonner";
 import { useState } from "react";
+import { addWishlistItem, removeWishlistItem } from "@/services/engagementService";
 
 interface ProductCardProps {
   product: Product;
@@ -17,18 +19,35 @@ interface ProductCardProps {
   className?: string;
 }
 
-export function ProductCard({
-  product,
-  storeName,
-  storeSlug,
-  className,
-}: ProductCardProps) {
+export function ProductCard({ product, storeName, storeSlug, className }: ProductCardProps) {
   const wishlist = useWishlistStore();
+  const user = useAuthStore((state) => state.user);
   const addToCart = useCartStore((s) => s.addByProductId);
   const isWishlisted = wishlist.has(product.id);
   const outOfStock = product.stock === 0;
   const discount = discountPercent(product.price, product.oldPrice);
   const [imageFailed, setImageFailed] = useState(false);
+
+  async function handleWishlistToggle() {
+    if (!user) {
+      toast.error("Please log in to save items to your wishlist.");
+      return;
+    }
+    const nextWishlisted = !isWishlisted;
+    if (nextWishlisted) wishlist.add(product.id);
+    else wishlist.remove(product.id);
+    try {
+      const ids = nextWishlisted
+        ? await addWishlistItem(product.id)
+        : await removeWishlistItem(product.id);
+      wishlist.setIds(ids);
+      toast.success(nextWishlisted ? "Added to wishlist" : "Removed from wishlist");
+    } catch (error) {
+      if (nextWishlisted) wishlist.remove(product.id);
+      else wishlist.add(product.id);
+      toast.error(error instanceof Error ? error.message : "Could not update wishlist");
+    }
+  }
 
   return (
     <div
@@ -87,8 +106,7 @@ export function ProductCard({
         aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         onClick={(e) => {
           e.preventDefault();
-          wishlist.toggle(product.id);
-          toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
+          void handleWishlistToggle();
         }}
         className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md shadow-sm transition-colors hover:bg-card"
       >
@@ -123,12 +141,7 @@ export function ProductCard({
         </Link>
 
         {/* Rating */}
-        <RatingStars
-          rating={product.rating}
-          size={12}
-          showValue
-          count={product.reviewCount}
-        />
+        <RatingStars rating={product.rating} size={12} showValue count={product.reviewCount} />
 
         {/* Price + basket */}
         <div className="mt-auto flex items-end justify-between pt-1">

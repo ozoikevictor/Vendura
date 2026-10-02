@@ -30,7 +30,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getStoreBySlug } from "@/services/storeService";
 import { getProductsByStore } from "@/services/productService";
 import { startConversation } from "@/services/messageService";
+import { followStore, getStoreFollow, unfollowStore } from "@/services/engagementService";
 import { useStorefrontStore } from "@/store/storefront";
+import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
 import {
   breadcrumbJsonLd,
@@ -122,7 +124,10 @@ function StorePage() {
   const [expandedDescription, setExpandedDescription] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [followed, setFollowed] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followSaving, setFollowSaving] = useState(false);
   const [startingConversation, setStartingConversation] = useState(false);
+  const user = useAuthStore((state) => state.user);
   const setActiveStore = useStorefrontStore((state) => state.setActiveStore);
 
   const { data: liveStore, isLoading: storeLoading } = useQuery({
@@ -135,6 +140,11 @@ function StorePage() {
     queryKey: ["store-products", storeSlug],
     queryFn: () => (store ? getProductsByStore(store.id) : Promise.resolve([])),
     enabled: !!store,
+  });
+  const { data: followState } = useQuery({
+    queryKey: ["store-follow", store?.id, user?.id],
+    queryFn: () => getStoreFollow(store!.id),
+    enabled: !!store && !!user,
   });
 
   const productList = useMemo(
@@ -177,8 +187,15 @@ function StorePage() {
     setLogoFailed(false);
     setMoreOpen(false);
     setExpandedDescription(false);
-    setFollowed(window.localStorage.getItem(getFollowKey(store.id)) === "true");
+    setFollowerCount(store.followers);
+    setFollowed(false);
   }, [store]);
+
+  useEffect(() => {
+    if (!followState) return;
+    setFollowed(followState.following);
+    setFollowerCount(followState.followers);
+  }, [followState]);
 
   if (!store && storeLoading) {
     return (
@@ -213,18 +230,35 @@ function StorePage() {
     );
   }
 
-  const displayedFollowers = store.followers + (followed ? 1 : 0);
+  const displayedFollowers = followerCount;
   const shortDescription =
     store.description.length > 180 && !expandedDescription
       ? `${store.description.slice(0, 180).trim()}...`
       : store.description;
 
-  function toggleFollow() {
+  async function toggleFollow() {
     if (!store) return;
+    if (!user) {
+      toast.error("Please log in to follow this store.");
+      return;
+    }
+    if (followSaving) return;
     const next = !followed;
+    setFollowSaving(true);
     setFollowed(next);
-    window.localStorage.setItem(getFollowKey(store.id), String(next));
-    toast.success(next ? `Following ${store.name}` : `Unfollowed ${store.name}`);
+    setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1)));
+    try {
+      const result = next ? await followStore(store.id) : await unfollowStore(store.id);
+      setFollowed(result.following);
+      setFollowerCount(result.followers);
+      toast.success(result.following ? `Following ${store.name}` : `Unfollowed ${store.name}`);
+    } catch (error) {
+      setFollowed(!next);
+      setFollowerCount((count) => Math.max(0, count + (next ? -1 : 1)));
+      toast.error(error instanceof Error ? error.message : "Could not update follow");
+    } finally {
+      setFollowSaving(false);
+    }
   }
 
   async function copyStoreLink() {
@@ -336,8 +370,9 @@ function StorePage() {
                     <button
                       type="button"
                       onClick={toggleFollow}
+                      disabled={followSaving}
                       className={cn(
-                        "grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:-translate-y-0.5 hover:border-primary/30",
+                        "grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:-translate-y-0.5 hover:border-primary/30 disabled:cursor-not-allowed disabled:opacity-70",
                         followed && "border-primary bg-primary text-primary-foreground",
                       )}
                       aria-label={followed ? "Unfollow store" : "Follow store"}
@@ -844,8 +879,4 @@ function getStoreReviews(products: Product[]) {
 function getStorefrontUrl(storeSlug: string) {
   if (typeof window === "undefined") return `https://vendraza.com/store/${storeSlug}`;
   return `${window.location.origin}/store/${storeSlug}`;
-}
-
-function getFollowKey(storeId: string) {
-  return `vendraza-follow-store:${storeId}`;
 }

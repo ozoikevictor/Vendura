@@ -27,6 +27,8 @@ import { getStoreById } from "@/services/storeService";
 import { startConversation } from "@/services/messageService";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
+import { useAuthStore } from "@/store/auth";
+import { addWishlistItem, removeWishlistItem } from "@/services/engagementService";
 import { stores } from "@/data/stores";
 import { categories } from "@/data/categories";
 import { formatNaira, discountPercent } from "@/utils/format";
@@ -101,6 +103,7 @@ function ProductDetailPage() {
   const navigate = useNavigate();
   const addToCart = useCartStore((s) => s.add);
   const wishlist = useWishlistStore();
+  const user = useAuthStore((state) => state.user);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariantIdx, setselectedVariantIdx] = useState(0);
   const [qty, setQty] = useState(1);
@@ -172,6 +175,27 @@ function ProductDetailPage() {
 
   const store = liveStore ?? stores.find((s) => s.id === product.storeId);
   const isWishlisted = wishlist.has(product.id);
+
+  async function handleWishlistToggle() {
+    if (!user) {
+      toast.error("Please log in to save items to your wishlist.");
+      return;
+    }
+    const nextWishlisted = !isWishlisted;
+    if (nextWishlisted) wishlist.add(product.id);
+    else wishlist.remove(product.id);
+    try {
+      const ids = nextWishlisted
+        ? await addWishlistItem(product.id)
+        : await removeWishlistItem(product.id);
+      wishlist.setIds(ids);
+      toast.success(nextWishlisted ? "Added to wishlist" : "Removed from wishlist");
+    } catch (error) {
+      if (nextWishlisted) wishlist.remove(product.id);
+      else wishlist.add(product.id);
+      toast.error(error instanceof Error ? error.message : "Could not update wishlist");
+    }
+  }
   const outOfStock = product.stock === 0;
   const lowStock = product.stock > 0 && product.stock <= product.lowStockThreshold;
   const discount = discountPercent(product.price, product.oldPrice);
@@ -384,10 +408,7 @@ function ProductDetailPage() {
                 Buy Now
               </button>
               <button
-                onClick={() => {
-                  wishlist.toggle(product.id);
-                  toast.success(isWishlisted ? "Removed from wishlist" : "Added to wishlist");
-                }}
+                onClick={() => void handleWishlistToggle()}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 className={cn(
                   "flex items-center justify-center rounded-xl border px-3 py-2.5 transition-colors",

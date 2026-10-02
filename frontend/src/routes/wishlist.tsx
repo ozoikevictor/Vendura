@@ -5,9 +5,12 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { useWishlistStore } from "@/store/wishlist";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { getStores } from "@/services/storeService";
 import { queryProducts } from "@/services/productService";
-import { useMemo } from "react";
+import { clearWishlistItems, getWishlistIds } from "@/services/engagementService";
+import { useAuthStore } from "@/store/auth";
+import { useEffect, useMemo, useState } from "react";
 import { noindexMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/wishlist")({
@@ -19,6 +22,13 @@ export const Route = createFileRoute("/wishlist")({
 
 function WishlistPage() {
   const wishlist = useWishlistStore();
+  const user = useAuthStore((state) => state.user);
+  const [clearing, setClearing] = useState(false);
+  const { data: savedWishlistIds } = useQuery({
+    queryKey: ["wishlist-ids", user?.id],
+    queryFn: getWishlistIds,
+    enabled: !!user,
+  });
   const { data: productResult } = useQuery({
     queryKey: ["wishlist-marketplace-products"],
     queryFn: () => queryProducts({ pageSize: 100 }),
@@ -26,6 +36,27 @@ function WishlistPage() {
   const { data: stores = [] } = useQuery({ queryKey: ["stores"], queryFn: getStores });
   const storeById = useMemo(() => new Map(stores.map((store) => [store.id, store])), [stores]);
   const items = (productResult?.items ?? []).filter((product) => wishlist.has(product.id));
+
+  useEffect(() => {
+    if (savedWishlistIds) wishlist.setIds(savedWishlistIds);
+  }, [savedWishlistIds, wishlist]);
+
+  async function clearWishlist() {
+    if (!user) {
+      wishlist.clear();
+      return;
+    }
+    setClearing(true);
+    try {
+      const ids = await clearWishlistItems();
+      wishlist.setIds(ids);
+      toast.success("Wishlist cleared");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not clear wishlist");
+    } finally {
+      setClearing(false);
+    }
+  }
 
   const browseAction = (
     <Link
@@ -57,10 +88,11 @@ function WishlistPage() {
         <div className="flex items-center justify-between">
           <h1 className="font-display text-2xl font-bold text-foreground">Wishlist</h1>
           <button
-            onClick={() => wishlist.clear()}
+            onClick={() => void clearWishlist()}
+            disabled={clearing}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Clear all
+            {clearing ? "Clearing..." : "Clear all"}
           </button>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
