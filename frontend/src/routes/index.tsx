@@ -22,7 +22,7 @@ import {
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { CategoryIcon } from "@/components/shared/CategoryIcon";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { categories, popularCategorySlugs } from "@/data/categories";
 import { plans } from "@/data/finance";
 import { formatNaira } from "@/utils/format";
@@ -295,15 +295,18 @@ function Index() {
               .map((c) => (
                 <Link
                   key={c.id}
-                  to="/explore"
-                  className="landing-card-lift group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-4 shadow-card transition-all hover:border-primary/30 hover:shadow-frost"
+                  to="/categories/$slug"
+                  params={{ slug: c.slug }}
+                  className="landing-card-lift group overflow-hidden rounded-xl border border-border bg-card p-2 text-center shadow-card transition-all hover:border-primary/30 hover:shadow-frost"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <CategoryIcon name={c.icon} className="h-6 w-6" />
+                  <div className="aspect-[1.72/1] overflow-hidden rounded-lg border border-emerald-100/70 bg-[#eef8f1] transition-all group-hover:border-primary/25">
+                    <CategoryArtwork slug={c.slug} name={c.name} />
                   </div>
-                  <span className="text-center text-xs font-medium text-foreground">{c.name}</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {formatNaira(c.productCount, { compact: true })}
+                  <span className="mt-2 block min-h-8 text-xs font-semibold leading-tight text-foreground">
+                    {c.name}
+                  </span>
+                  <span className="block text-[10px] text-muted-foreground">
+                    {c.productCount} {c.productCount === 1 ? "product" : "products"}
                   </span>
                 </Link>
               ))}

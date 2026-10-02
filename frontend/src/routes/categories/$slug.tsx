@@ -6,13 +6,13 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
 import { getCategoryBySlug } from "@/services/categoryService";
 import { categories } from "@/data/categories";
 import { getStores } from "@/services/storeService";
 import { breadcrumbJsonLd, canonicalLink, fetchPublicApi, seoMeta, jsonLdScript } from "@/lib/seo";
-import { getCategoryVisual } from "@/utils/categoryVisuals";
 import type { Category } from "@/types";
 
 type AudienceFilter = "men" | "women" | "unisex" | "kids";
@@ -130,7 +130,6 @@ function CategoryDetailPage() {
   const showAudienceFilters = ["fashion", "shoes", "watches", "perfumes", "sports"].includes(
     displayCategory.slug,
   );
-  const visual = getCategoryVisual(displayCategory.slug);
 
   return (
     <div className="flex min-h-screen flex-col lagoon-wash">
@@ -147,33 +146,19 @@ function CategoryDetailPage() {
         </div>
 
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          <div
-            className="relative h-44 overflow-hidden bg-emerald-950 sm:h-56"
-            style={{ background: visual.fallback }}
-          >
-            <img
-              src={visual.imageUrl}
-              alt=""
-              onError={(event) => {
-                event.currentTarget.remove();
-              }}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute right-5 top-5 rounded-full bg-white/85 px-3 py-1.5 text-xs font-bold text-emerald-900 shadow-sm">
-              {visual.code}
+          <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_1.1fr] sm:items-center sm:p-5">
+            <div className="aspect-[2/1.05] overflow-hidden border border-emerald-100/70 bg-[#eef8f1]">
+              <CategoryArtwork slug={displayCategory.slug} name={displayCategory.name} />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-950/20 to-transparent" />
-            <div className="absolute bottom-5 left-5 right-5">
-              <h1 className="font-display text-3xl font-bold text-white drop-shadow">
+            <div>
+              <h1 className="font-display text-3xl font-bold text-foreground">
                 {displayCategory.name}
               </h1>
-              <p className="mt-1 text-sm font-medium text-white/85">{total} products</p>
+              <p className="mt-1 text-sm font-medium text-muted-foreground">{total} products</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Choose a subcategory to narrow what you want to shop.
+              </p>
             </div>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-muted-foreground">
-              Choose a subcategory to narrow what you want to shop.
-            </p>
           </div>
         </div>
 
