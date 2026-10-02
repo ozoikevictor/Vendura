@@ -602,7 +602,7 @@ function CheckoutPage() {
                 <CreditCard className="h-4 w-4 text-primary" /> Payment Method
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Paystack securely handles online card and bank payments.
+                Complete payment securely with card, bank transfer, or other available methods.
               </p>
               <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/25 bg-primary-soft/40 p-3">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
@@ -616,8 +616,8 @@ function CheckoutPage() {
                 {[
                   {
                     id: "card",
-                    label: "Pay Online with Paystack",
-                    desc: "Card, bank transfer, USSD, or another available Paystack option",
+                    label: "Pay Online",
+                    desc: "Card, bank transfer, USSD, or another available payment option",
                   },
                   {
                     id: "pay_on_delivery",
@@ -698,7 +698,7 @@ function CheckoutPage() {
               >
                 {loading
                   ? form.paymentMethod === "card"
-                    ? "Opening Paystack..."
+                    ? "Opening payment..."
                     : "Placing order..."
                   : form.paymentMethod === "card"
                     ? `Pay ${formatNaira(total)}`
@@ -731,12 +731,12 @@ function CheckoutLoadingOverlay({
       body: "Please wait while we confirm your cart and delivery details.",
     },
     loading_paystack: {
-      title: "Loading Paystack",
-      body: "We are opening the secure payment method. Do not refresh this page.",
+      title: "Loading payment",
+      body: "We are opening the secure payment page. Do not refresh this page.",
     },
     redirecting: {
       title: "Opening payment page",
-      body: "You will be redirected to Paystack in a moment.",
+      body: "You will continue to the secure payment page in a moment.",
     },
   }[stage];
 
