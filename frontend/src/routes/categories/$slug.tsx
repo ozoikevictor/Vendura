@@ -12,6 +12,7 @@ import { getCategoryBySlug } from "@/services/categoryService";
 import { categories } from "@/data/categories";
 import { getStores } from "@/services/storeService";
 import { breadcrumbJsonLd, canonicalLink, fetchPublicApi, seoMeta, jsonLdScript } from "@/lib/seo";
+import { getCategoryVisual } from "@/utils/categoryVisuals";
 import type { Category } from "@/types";
 
 type AudienceFilter = "men" | "women" | "unisex" | "kids";
@@ -67,6 +68,15 @@ function CategoryDetailPage() {
     queryKey: ["category", slug],
     queryFn: () => getCategoryBySlug(slug),
   });
+  const displayCategory = category
+    ? {
+        ...categories.find((fallback) => fallback.slug === category.slug),
+        ...category,
+        imageUrl:
+          category.imageUrl ??
+          categories.find((fallback) => fallback.slug === category.slug)?.imageUrl,
+      }
+    : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["category-products", slug, subSlug, audience],
@@ -88,7 +98,7 @@ function CategoryDetailPage() {
     [storeList],
   );
 
-  if (!category) {
+  if (!displayCategory) {
     return (
       <div className="flex min-h-screen flex-col lagoon-wash">
         <MarketplaceHeader />
@@ -111,8 +121,9 @@ function CategoryDetailPage() {
   const products = data?.items ?? [];
   const total = data?.total ?? 0;
   const showAudienceFilters = ["fashion", "shoes", "watches", "perfumes", "sports"].includes(
-    category.slug,
+    displayCategory.slug,
   );
+  const visual = getCategoryVisual(displayCategory.slug);
 
   return (
     <div className="flex min-h-screen flex-col lagoon-wash">
@@ -125,24 +136,29 @@ function CategoryDetailPage() {
             Categories
           </Link>
           <ChevronRight className="h-3.5 w-3.5" />
-          <span className="text-foreground">{category.name}</span>
+          <span className="text-foreground">{displayCategory.name}</span>
         </div>
 
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          <div className="relative h-44 overflow-hidden bg-emerald-950 sm:h-56">
-            {category.imageUrl ? (
-              <img
-                src={category.imageUrl}
-                alt={category.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-primary-soft" />
-            )}
+          <div
+            className="relative h-44 overflow-hidden bg-emerald-950 sm:h-56"
+            style={{ background: visual.fallback }}
+          >
+            <img
+              src={visual.imageUrl}
+              alt=""
+              onError={(event) => {
+                event.currentTarget.remove();
+              }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute right-5 top-5 rounded-full bg-white/85 px-3 py-1.5 text-xs font-bold text-emerald-900 shadow-sm">
+              {visual.code}
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-950/20 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5">
               <h1 className="font-display text-3xl font-bold text-white drop-shadow">
-                {category.name}
+                {displayCategory.name}
               </h1>
               <p className="mt-1 text-sm font-medium text-white/85">{total} products</p>
             </div>
@@ -155,7 +171,7 @@ function CategoryDetailPage() {
         </div>
 
         {/* Subcategory chips */}
-        {category.subcategories.length > 0 && (
+        {displayCategory.subcategories.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => setSubSlug(undefined)}
@@ -163,7 +179,7 @@ function CategoryDetailPage() {
             >
               All
             </button>
-            {category.subcategories.map((sub) => (
+            {displayCategory.subcategories.map((sub) => (
               <button
                 key={sub.id}
                 onClick={() => setSubSlug(sub.slug)}

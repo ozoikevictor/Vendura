@@ -530,7 +530,7 @@ function isLiveProduct(product: Entity) {
 }
 
 const image = (query: string) =>
-  `https://images.unsplash.com/800x600/?${encodeURIComponent(query)}&auto=format&fit=crop&w=900&q=80`;
+  `https://source.unsplash.com/900x675/?${encodeURIComponent(query)}`;
 
 const sub = (categorySlug: string, names: string[]) =>
   names.map((name) => ({
