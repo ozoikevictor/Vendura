@@ -292,7 +292,7 @@ function StorePage() {
                 Trusted Store
               </div>
             )}
-            <div className="pointer-events-none absolute -bottom-16 left-[-8%] h-32 w-[116%] rounded-[50%] bg-background" />
+            <div className="pointer-events-none absolute -bottom-20 left-[-8%] h-28 w-[116%] rounded-[50%] bg-background" />
           </div>
 
           <div className="relative px-4 pb-2 pt-0 sm:px-2 lg:px-3">
