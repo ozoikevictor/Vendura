@@ -52,6 +52,9 @@ function VendorPayoutsPage() {
     queryFn: getNigerianBanks,
     staleTime: 86400000,
   });
+  const pendingPayout = payouts?.find((payout) =>
+    ["pending", "processing"].includes(payout.status),
+  );
 
   async function handleRequestPayout() {
     if (!bank) {
@@ -199,12 +202,29 @@ function VendorPayoutsPage() {
           </button>
           <button
             onClick={handleRequestPayout}
-            disabled={requesting || !bank?.verified || balance.available <= 0}
+            disabled={
+              requesting || Boolean(pendingPayout) || !bank?.verified || balance.available <= 0
+            }
             className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
-            {requesting ? "Requesting..." : `Request Payout (${formatNaira(balance.available)})`}
+            {requesting
+              ? "Requesting..."
+              : pendingPayout
+                ? "Payout waiting for admin"
+                : `Request Payout (${formatNaira(balance.available)})`}
           </button>
         </div>
+
+        {pendingPayout && (
+          <div className="rounded-xl border border-warning/30 bg-warning-soft p-4 text-sm text-warning-foreground">
+            <p className="font-semibold">You already have a payout request waiting.</p>
+            <p className="mt-1">
+              {formatNaira(pendingPayout.amount)} was requested on{" "}
+              {formatDateTime(pendingPayout.requestedAt)}. You can request another payout after
+              admin marks this one as paid or declines it.
+            </p>
+          </div>
+        )}
 
         {/* Bank edit form */}
         {showBank && (
