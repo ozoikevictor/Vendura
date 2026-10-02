@@ -132,16 +132,16 @@ export function CategoryArtwork({ slug, name }: CategoryArtworkProps) {
     <div
       role="img"
       aria-label={`${name} category image`}
-      className="relative h-full w-full overflow-hidden bg-[#eef8f1]"
+      className="relative h-full w-full overflow-hidden bg-[#0b5d35]"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_34%_36%,rgba(255,255,255,.9)_0,rgba(255,255,255,.9)_31%,transparent_32%),radial-gradient(circle_at_68%_46%,rgba(255,255,255,.72)_0,rgba(255,255,255,.72)_28%,transparent_29%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_35%,rgba(188,245,208,.38)_0,rgba(188,245,208,.38)_31%,transparent_32%),radial-gradient(circle_at_70%_46%,rgba(219,255,231,.28)_0,rgba(219,255,231,.28)_29%,transparent_30%),linear-gradient(135deg,#064524_0%,#0b5d35_52%,#11965a_100%)]" />
       {items.map((item, index) => (
         <img
           key={`${item.src}-${index}`}
           src={item.src}
           alt=""
           loading="lazy"
-          className={`absolute object-contain mix-blend-multiply drop-shadow-[0_10px_16px_rgba(15,23,42,0.16)] ${item.className}`}
+          className={`absolute object-contain drop-shadow-[0_10px_16px_rgba(2,29,16,0.24)] ${item.className}`}
         />
       ))}
     </div>
