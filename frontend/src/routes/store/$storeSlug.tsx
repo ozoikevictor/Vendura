@@ -273,8 +273,8 @@ function StorePage() {
       <MarketplaceHeader />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8">
-        <section className="relative">
-          <div className="relative h-56 overflow-hidden rounded-[2rem] bg-emerald-950 shadow-frost sm:h-72 lg:h-[21rem]">
+        <section className="relative -mx-4 sm:mx-0">
+          <div className="relative h-52 overflow-hidden bg-emerald-950 sm:h-72 sm:rounded-[2rem] sm:shadow-frost lg:h-[21rem]">
             {store.bannerUrl && !bannerFailed ? (
               <img
                 src={store.bannerUrl}
@@ -295,7 +295,7 @@ function StorePage() {
             <div className="pointer-events-none absolute -bottom-16 left-[-8%] h-32 w-[116%] rounded-[50%] bg-background" />
           </div>
 
-          <div className="relative px-1 pb-2 pt-0 sm:px-2 lg:px-3">
+          <div className="relative px-4 pb-2 pt-0 sm:px-2 lg:px-3">
             <div className="-mt-16 flex flex-col gap-4 sm:-mt-20 sm:flex-row sm:items-end">
               <StoreAvatar
                 storeName={store.name}
