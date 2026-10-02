@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { z } from "zod";
 import { asyncRoute, ApiError } from "../lib/errors.js";
-import { platformFinanceSummary, releaseEarnings, reverseEarnings } from "../lib/finance.js";
+import {
+  platformFinanceSummary,
+  releaseEarnings,
+  reverseEarnings,
+} from "../lib/finance.js";
 import { config } from "../config.js";
 import { ORDER_STATUS, transitionOrder } from "../lib/order-protection.js";
 import { id, now, ok, publicUser } from "../lib/helpers.js";
@@ -125,12 +129,16 @@ export const adminRoutes = (db: Database) => {
       const user = await db.get<Entity>("users", String(req.params.id));
       if (!user) throw new ApiError(404, "User not found");
       if (role === user.role)
-        throw new ApiError(409, `This user is already ${role === "admin" ? "an administrator" : `a ${role}`}`);
+        throw new ApiError(
+          409,
+          `This user is already ${role === "admin" ? "an administrator" : `a ${role}`}`,
+        );
       if (role !== "admin" && user.role !== "admin")
-        throw new ApiError(400, "Only administrator access can be removed here");
-      const previousRole = role === "admin"
-        ? user.role
-        : undefined;
+        throw new ApiError(
+          400,
+          "Only administrator access can be removed here",
+        );
+      const previousRole = role === "admin" ? user.role : undefined;
       ok(
         res,
         publicUser(
@@ -257,79 +265,273 @@ export const adminRoutes = (db: Database) => {
     }),
   );
 
+  router.patch(
+    "/payouts/:id",
+    asyncRoute(async (req: AuthRequest, res) => {
+      const { status, note } = z
+        .object({
+          status: z.enum(["paid", "failed"]),
+          note: z.string().trim().max(300).optional(),
+        })
+        .parse(req.body);
+      const payout = await db.get<Entity>("payouts", String(req.params.id));
+      if (!payout) throw new ApiError(404, "Payout not found");
+      if (!["pending", "processing"].includes(String(payout.status)))
+        throw new ApiError(409, "This payout is already closed");
+
+      const closedAt = now();
+      const updated = await db.update<Entity>(
+        "payouts",
+        payout.id,
+        status === "paid"
+          ? {
+              status: "paid",
+              paidAt: closedAt,
+              providerStatus: "manual_paid",
+              adminNote: note,
+              processedBy: req.user!.id,
+            }
+          : {
+              status: "failed",
+              failedAt: closedAt,
+              providerStatus: "manual_failed",
+              failureReason: note || "Manual payout request was declined",
+              adminNote: note,
+              processedBy: req.user!.id,
+            },
+      );
+
+      const ledger = await db.findOne<Entity>("transactions", {
+        reference: payout.reference,
+        type: "payout",
+      });
+      if (ledger) {
+        await db.update(
+          "transactions",
+          ledger.id,
+          status === "paid"
+            ? { status: "paid", paidAt: closedAt, adminNote: note }
+            : {
+                status: "reversed",
+                reversedAt: closedAt,
+                adminNote: note,
+              },
+        );
+      }
+
+      await db.create("adminActivity", {
+        id: id("activity"),
+        kind: "admin_activity",
+        adminId: req.user!.id,
+        action:
+          status === "paid" ? "manual_payout_paid" : "manual_payout_failed",
+        payoutId: payout.id,
+        amount: payout.amount,
+        note,
+        createdAt: closedAt,
+      });
+      await db.create("notifications", {
+        id: id("notification"),
+        userId: payout.vendorId,
+        type: "payout_processed",
+        title: status === "paid" ? "Payout paid" : "Payout request declined",
+        body:
+          status === "paid"
+            ? `NGN ${Number(payout.amount).toLocaleString("en-NG")} has been marked as paid to your bank account.`
+            : "Your payout request was not paid. The amount is available to request again.",
+        href: "/vendor/payouts",
+        read: false,
+        createdAt: closedAt,
+      });
+      ok(res, updated);
+    }),
+  );
+
   router.get(
     "/finance",
     asyncRoute(async (_req, res) => {
       await backfillSubscriptionRevenue(db);
-      const [transactions, payouts, users, stores, bankAccount] = await Promise.all([
-        db.list<Entity>("transactions"),
-        db.list<Entity>("payouts"),
-        db.list<Entity>("users"),
-        db.list<Entity>("stores"),
-        db.get<Entity>("bankAccounts", "platform-owner-bank"),
-      ]);
+      const [transactions, payouts, users, stores, bankAccount] =
+        await Promise.all([
+          db.list<Entity>("transactions"),
+          db.list<Entity>("payouts"),
+          db.list<Entity>("users"),
+          db.list<Entity>("stores"),
+          db.get<Entity>("bankAccounts", "platform-owner-bank"),
+        ]);
       const summary = platformFinanceSummary(transactions, payouts);
       const ledger = transactions
         .map<Entity>((transaction) => {
           const vendor = users.find((user) => user.id === transaction.vendorId);
-          const store = stores.find((item) => item.ownerId === transaction.vendorId);
-          return { ...transaction, vendorName: vendor?.fullName, storeName: store?.name };
+          const store = stores.find(
+            (item) => item.ownerId === transaction.vendorId,
+          );
+          return {
+            ...transaction,
+            vendorName: vendor?.fullName,
+            storeName: store?.name,
+          };
         })
         .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       ok(res, {
         summary,
         ledger,
-        withdrawals: ledger.filter((item) => item.type === "platform_withdrawal"),
+        withdrawals: ledger.filter(
+          (item) => item.type === "platform_withdrawal",
+        ),
         bankAccount,
-        recipientConfigured: Boolean(bankAccount?.recipientCode || config.PLATFORM_PAYSTACK_RECIPIENT_CODE),
+        recipientConfigured: Boolean(
+          bankAccount?.recipientCode || config.PLATFORM_PAYSTACK_RECIPIENT_CODE,
+        ),
       });
     }),
   );
 
-  router.get("/platform-bank", asyncRoute(async (_req, res) => ok(res, await db.get("bankAccounts", "platform-owner-bank"))));
-  router.put("/platform-bank", asyncRoute(async (req, res) => {
-    if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
-    const input = z.object({ bankCode: z.string().min(2), accountNumber: z.string().regex(/^\d{10}$/) }).parse(req.body);
-    const banks = await paystackRequest<PaystackBank[]>("/bank?country=nigeria&currency=NGN&perPage=100");
-    const bank = banks.find((item) => item.active && item.code === input.bankCode);
-    if (!bank) throw new ApiError(400, "Select a valid Nigerian bank");
-    const resolved = await paystackRequest<ResolvedAccount>(`/bank/resolve?account_number=${encodeURIComponent(input.accountNumber)}&bank_code=${encodeURIComponent(input.bankCode)}`);
-    const recipient = await paystackRequest<TransferRecipient>("/transferrecipient", { method: "POST", body: JSON.stringify({ type: "nuban", name: resolved.account_name, account_number: resolved.account_number, bank_code: input.bankCode, currency: "NGN" }) });
-    const account = { bankName: bank.name, bankCode: input.bankCode, accountNumber: resolved.account_number, accountName: resolved.account_name, recipientCode: recipient.recipient_code, verified: true, verifiedAt: now(), kind: "platform_bank" };
-    const existing = await db.get("bankAccounts", "platform-owner-bank");
-    ok(res, existing ? await db.update("bankAccounts", "platform-owner-bank", account) : await db.create("bankAccounts", { id: "platform-owner-bank", ...account }));
-  }));
+  router.get(
+    "/platform-bank",
+    asyncRoute(async (_req, res) =>
+      ok(res, await db.get("bankAccounts", "platform-owner-bank")),
+    ),
+  );
+  router.put(
+    "/platform-bank",
+    asyncRoute(async (req, res) => {
+      if (!config.PAYSTACK_SECRET_KEY)
+        throw new ApiError(503, "Paystack is not configured yet");
+      const input = z
+        .object({
+          bankCode: z.string().min(2),
+          accountNumber: z.string().regex(/^\d{10}$/),
+        })
+        .parse(req.body);
+      const banks = await paystackRequest<PaystackBank[]>(
+        "/bank?country=nigeria&currency=NGN&perPage=100",
+      );
+      const bank = banks.find(
+        (item) => item.active && item.code === input.bankCode,
+      );
+      if (!bank) throw new ApiError(400, "Select a valid Nigerian bank");
+      const resolved = await paystackRequest<ResolvedAccount>(
+        `/bank/resolve?account_number=${encodeURIComponent(input.accountNumber)}&bank_code=${encodeURIComponent(input.bankCode)}`,
+      );
+      const recipient = await paystackRequest<TransferRecipient>(
+        "/transferrecipient",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            type: "nuban",
+            name: resolved.account_name,
+            account_number: resolved.account_number,
+            bank_code: input.bankCode,
+            currency: "NGN",
+          }),
+        },
+      );
+      const account = {
+        bankName: bank.name,
+        bankCode: input.bankCode,
+        accountNumber: resolved.account_number,
+        accountName: resolved.account_name,
+        recipientCode: recipient.recipient_code,
+        verified: true,
+        verifiedAt: now(),
+        kind: "platform_bank",
+      };
+      const existing = await db.get("bankAccounts", "platform-owner-bank");
+      ok(
+        res,
+        existing
+          ? await db.update("bankAccounts", "platform-owner-bank", account)
+          : await db.create("bankAccounts", {
+              id: "platform-owner-bank",
+              ...account,
+            }),
+      );
+    }),
+  );
 
   router.post(
     "/platform-withdrawals",
     asyncRoute(async (req: AuthRequest, res) => {
-      if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet");
-      const platformBank = await db.get<Entity>("bankAccounts", "platform-owner-bank");
-      const recipientCode = String(platformBank?.recipientCode ?? config.PLATFORM_PAYSTACK_RECIPIENT_CODE ?? "");
-      if (!recipientCode) throw new ApiError(503, "Connect the Vendraza company bank account before withdrawing");
-      const { amount, note } = z.object({
-        amount: z.number().min(100),
-        note: z.string().trim().min(3).max(200),
-      }).parse(req.body);
+      if (!config.PAYSTACK_SECRET_KEY)
+        throw new ApiError(503, "Paystack is not configured yet");
+      const platformBank = await db.get<Entity>(
+        "bankAccounts",
+        "platform-owner-bank",
+      );
+      const recipientCode = String(
+        platformBank?.recipientCode ??
+          config.PLATFORM_PAYSTACK_RECIPIENT_CODE ??
+          "",
+      );
+      if (!recipientCode)
+        throw new ApiError(
+          503,
+          "Connect the Vendraza company bank account before withdrawing",
+        );
+      const { amount, note } = z
+        .object({
+          amount: z.number().min(100),
+          note: z.string().trim().min(3).max(200),
+        })
+        .parse(req.body);
       const transactions = await db.list<Entity>("transactions");
       const payouts = await db.list<Entity>("payouts");
       const summary = platformFinanceSummary(transactions, payouts);
-      if (amount > summary.withdrawable) throw new ApiError(409, "This withdrawal exceeds Vendraza's available platform revenue");
+      if (amount > summary.withdrawable)
+        throw new ApiError(
+          409,
+          "This withdrawal exceeds Vendraza's available platform revenue",
+        );
       const reference = `VENDURA-OWNER-${Date.now()}-${id("withdrawal").slice(-8)}`;
       const response = await fetch("https://api.paystack.co/transfer", {
         method: "POST",
-        headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "balance", amount: Math.round(amount * 100), recipient: recipientCode, reference, reason: note, currency: "NGN" }),
+        headers: {
+          Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          source: "balance",
+          amount: Math.round(amount * 100),
+          recipient: recipientCode,
+          reference,
+          reason: note,
+          currency: "NGN",
+        }),
       });
-      const payload = await response.json() as { status: boolean; message: string; data?: Entity };
-      if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the owner withdrawal");
+      const payload = (await response.json()) as {
+        status: boolean;
+        message: string;
+        data?: Entity;
+      };
+      if (!response.ok || !payload.status || !payload.data)
+        throw new ApiError(
+          502,
+          payload.message || "Paystack could not initiate the owner withdrawal",
+        );
       const entry = await db.create("transactions", {
-        id: id("transaction"), type: "platform_withdrawal", scope: "platform",
-        amount: -amount, status: "processing", reference, description: note,
-        adminId: req.user!.id, transferCode: payload.data.transfer_code,
-        providerStatus: payload.data.status, createdAt: now(),
+        id: id("transaction"),
+        type: "platform_withdrawal",
+        scope: "platform",
+        amount: -amount,
+        status: "processing",
+        reference,
+        description: note,
+        adminId: req.user!.id,
+        transferCode: payload.data.transfer_code,
+        providerStatus: payload.data.status,
+        createdAt: now(),
       });
-      await db.create("adminActivity", { id: id("activity"), kind: "admin_activity", adminId: req.user!.id, action: "platform_withdrawal", amount, reference, note, createdAt: now() });
+      await db.create("adminActivity", {
+        id: id("activity"),
+        kind: "admin_activity",
+        adminId: req.user!.id,
+        action: "platform_withdrawal",
+        amount,
+        reference,
+        note,
+        createdAt: now(),
+      });
       ok(res, entry);
     }),
   );
@@ -338,8 +540,19 @@ export const adminRoutes = (db: Database) => {
     "/disputes",
     asyncRoute(async (_req, res) => {
       const orders = await db.list<Entity>("orders");
-      for (const order of orders.filter((item) => item.status === ORDER_STATUS.AWAITING_CONFIRMATION && Date.parse(String(item.confirmationDeadline || "")) <= Date.now())) {
-        await transitionOrder(db, order, ORDER_STATUS.REVIEW_REQUIRED, { id: "system", role: "system" }, "Customer confirmation deadline expired; manual review required", { payoutStatus: "manual_review" });
+      for (const order of orders.filter(
+        (item) =>
+          item.status === ORDER_STATUS.AWAITING_CONFIRMATION &&
+          Date.parse(String(item.confirmationDeadline || "")) <= Date.now(),
+      )) {
+        await transitionOrder(
+          db,
+          order,
+          ORDER_STATUS.REVIEW_REQUIRED,
+          { id: "system", role: "system" },
+          "Customer confirmation deadline expired; manual review required",
+          { payoutStatus: "manual_review" },
+        );
       }
       const disputes = await db.list<Entity>("disputes");
       ok(
@@ -347,12 +560,25 @@ export const adminRoutes = (db: Database) => {
         orders
           .filter(
             (order) =>
-              (order.escrow as Entity | undefined)?.status === "disputed" || order.status === ORDER_STATUS.REVIEW_REQUIRED,
+              (order.escrow as Entity | undefined)?.status === "disputed" ||
+              order.status === ORDER_STATUS.REVIEW_REQUIRED,
           )
-          .map((order) => ({ ...order, dispute: disputes.find((item) => item.orderId === order.id && item.kind === "order_dispute") }))
+          .map((order) => ({
+            ...order,
+            dispute: disputes.find(
+              (item) =>
+                item.orderId === order.id && item.kind === "order_dispute",
+            ),
+          }))
           .sort((a, b) =>
-            String(((b as Entity).escrow as Entity | undefined)?.disputeOpenedAt ?? (b as Entity).confirmationDeadline).localeCompare(
-              String(((a as Entity).escrow as Entity | undefined)?.disputeOpenedAt ?? (a as Entity).confirmationDeadline),
+            String(
+              ((b as Entity).escrow as Entity | undefined)?.disputeOpenedAt ??
+                (b as Entity).confirmationDeadline,
+            ).localeCompare(
+              String(
+                ((a as Entity).escrow as Entity | undefined)?.disputeOpenedAt ??
+                  (a as Entity).confirmationDeadline,
+              ),
             ),
           ),
       );
@@ -402,28 +628,131 @@ export const adminRoutes = (db: Database) => {
         .parse(req.body);
       const order = await db.get<Entity>("orders", String(req.params.orderId));
       if (!order) throw new ApiError(404, "Order not found");
-      if ((order.escrow as Entity | undefined)?.status !== "disputed" && order.status !== ORDER_STATUS.REVIEW_REQUIRED)
+      if (
+        (order.escrow as Entity | undefined)?.status !== "disputed" &&
+        order.status !== ORDER_STATUS.REVIEW_REQUIRED
+      )
         throw new ApiError(409, "This dispute is no longer open");
       let updated: Entity | null;
       if (resolution === "release_to_vendor") {
-        if (order.paymentStatus !== "paid") throw new ApiError(409, "Only a verified paid order can be released");
+        if (order.paymentStatus !== "paid")
+          throw new ApiError(409, "Only a verified paid order can be released");
         await releaseEarnings(db, order.id);
-        updated = await transitionOrder(db, order, ORDER_STATUS.COMPLETED, req.user!, note, { customerConfirmedAt: order.customerConfirmedAt ?? now(), payoutStatus: "eligible", escrow: { ...(order.escrow as object), status: "released", releasedAt: now(), resolution, resolutionNote: note, resolvedBy: req.user!.id } });
+        updated = await transitionOrder(
+          db,
+          order,
+          ORDER_STATUS.COMPLETED,
+          req.user!,
+          note,
+          {
+            customerConfirmedAt: order.customerConfirmedAt ?? now(),
+            payoutStatus: "eligible",
+            escrow: {
+              ...(order.escrow as object),
+              status: "released",
+              releasedAt: now(),
+              resolution,
+              resolutionNote: note,
+              resolvedBy: req.user!.id,
+            },
+          },
+        );
       } else {
-        if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack must be configured before a real refund can be initiated");
-        if (!order.paymentReference) throw new ApiError(409, "This order does not have a Paystack transaction reference");
-        const existing = await db.findOne<Entity>("refunds", { kind: "refund", orderId: order.id });
-        if (existing && !["failed"].includes(String(existing.providerStatus))) throw new ApiError(409, "A refund already exists for this order");
-        const response = await fetch("https://api.paystack.co/refund", { method: "POST", headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ transaction: order.paymentReference, amount: Math.round(Number(order.total) * 100), currency: "NGN", customer_note: note, merchant_note: `Vendraza dispute ${order.orderNumber}` }) });
-        const payload = await response.json() as { status: boolean; message: string; data?: Entity };
-        if (!response.ok || !payload.status || !payload.data) throw new ApiError(502, payload.message || "Paystack could not initiate the refund");
-        const refund = await db.create("refunds", { id: id("refund"), kind: "refund", orderId: order.id, transactionReference: order.paymentReference, refundReference: payload.data.refund_reference ?? payload.data.id, amount: order.total, reason: note, initiatedBy: req.user!.id, initiatedAt: now(), providerStatus: payload.data.status ?? "pending", updatedAt: now() });
+        if (!config.PAYSTACK_SECRET_KEY)
+          throw new ApiError(
+            503,
+            "Paystack must be configured before a real refund can be initiated",
+          );
+        if (!order.paymentReference)
+          throw new ApiError(
+            409,
+            "This order does not have a Paystack transaction reference",
+          );
+        const existing = await db.findOne<Entity>("refunds", {
+          kind: "refund",
+          orderId: order.id,
+        });
+        if (existing && !["failed"].includes(String(existing.providerStatus)))
+          throw new ApiError(409, "A refund already exists for this order");
+        const response = await fetch("https://api.paystack.co/refund", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            transaction: order.paymentReference,
+            amount: Math.round(Number(order.total) * 100),
+            currency: "NGN",
+            customer_note: note,
+            merchant_note: `Vendraza dispute ${order.orderNumber}`,
+          }),
+        });
+        const payload = (await response.json()) as {
+          status: boolean;
+          message: string;
+          data?: Entity;
+        };
+        if (!response.ok || !payload.status || !payload.data)
+          throw new ApiError(
+            502,
+            payload.message || "Paystack could not initiate the refund",
+          );
+        const refund = await db.create("refunds", {
+          id: id("refund"),
+          kind: "refund",
+          orderId: order.id,
+          transactionReference: order.paymentReference,
+          refundReference: payload.data.refund_reference ?? payload.data.id,
+          amount: order.total,
+          reason: note,
+          initiatedBy: req.user!.id,
+          initiatedAt: now(),
+          providerStatus: payload.data.status ?? "pending",
+          updatedAt: now(),
+        });
         await reverseEarnings(db, order);
-        updated = await transitionOrder(db, order, ORDER_STATUS.REFUND_PROCESSING, req.user!, note, { refundId: refund.id, refundStatus: "processing", payoutStatus: "frozen", escrow: { ...(order.escrow as object), status: "disputed", resolution, resolutionNote: note, resolvedBy: req.user!.id } });
+        updated = await transitionOrder(
+          db,
+          order,
+          ORDER_STATUS.REFUND_PROCESSING,
+          req.user!,
+          note,
+          {
+            refundId: refund.id,
+            refundStatus: "processing",
+            payoutStatus: "frozen",
+            escrow: {
+              ...(order.escrow as object),
+              status: "disputed",
+              resolution,
+              resolutionNote: note,
+              resolvedBy: req.user!.id,
+            },
+          },
+        );
       }
-      const dispute = await db.findOne<Entity>("disputes", { kind: "order_dispute", orderId: order.id });
-      if (dispute) await db.update("disputes", dispute.id, { status: "resolved", resolution, resolutionNote: note, resolvedAt: now(), resolvedBy: req.user!.id });
-      await db.create("adminActivity", { id: id("activity"), kind: "admin_activity", adminId: req.user!.id, action: resolution, orderId: order.id, note, createdAt: now() });
+      const dispute = await db.findOne<Entity>("disputes", {
+        kind: "order_dispute",
+        orderId: order.id,
+      });
+      if (dispute)
+        await db.update("disputes", dispute.id, {
+          status: "resolved",
+          resolution,
+          resolutionNote: note,
+          resolvedAt: now(),
+          resolvedBy: req.user!.id,
+        });
+      await db.create("adminActivity", {
+        id: id("activity"),
+        kind: "admin_activity",
+        adminId: req.user!.id,
+        action: resolution,
+        orderId: order.id,
+        note,
+        createdAt: now(),
+      });
       const store = await db.get<Entity>("stores", String(order.storeId));
       for (const userId of [order.customerId, store?.ownerId].filter(Boolean)) {
         await db.create("notifications", {
@@ -452,11 +781,25 @@ async function backfillSubscriptionRevenue(db: Database) {
   for (const subscription of subscriptions) {
     const reference = String(subscription.lastPaymentReference ?? "");
     const amount = Number(subscription.lastPaymentAmount ?? 0);
-    if (!reference || amount <= 0 || await db.findOne<Entity>("transactions", { reference, type: "subscription" })) continue;
+    if (
+      !reference ||
+      amount <= 0 ||
+      (await db.findOne<Entity>("transactions", {
+        reference,
+        type: "subscription",
+      }))
+    )
+      continue;
     await db.create("transactions", {
-      id: id("transaction"), vendorId: subscription.vendorId, type: "subscription",
-      amount, status: "available", reference, scope: "platform",
-      subscriptionId: subscription.id, description: "Verified vendor subscription",
+      id: id("transaction"),
+      vendorId: subscription.vendorId,
+      type: "subscription",
+      amount,
+      status: "available",
+      reference,
+      scope: "platform",
+      subscriptionId: subscription.id,
+      description: "Verified vendor subscription",
       createdAt: subscription.lastPaymentAt ?? now(),
     });
   }
@@ -477,7 +820,9 @@ async function deleteUserAccount(db: Database, user: Entity) {
       conversation.vendorId === user.id ||
       storeIds.has(String(conversation.storeId)),
   );
-  const conversationIds = new Set(conversations.map((conversation) => conversation.id));
+  const conversationIds = new Set(
+    conversations.map((conversation) => conversation.id),
+  );
   const orders = (await db.list<Entity>("orders")).filter(
     (order) =>
       order.customerId === user.id ||
@@ -486,42 +831,66 @@ async function deleteUserAccount(db: Database, user: Entity) {
   );
   const orderIds = new Set(orders.map((order) => order.id));
 
-  await removeMatching(db, "messages", (item) =>
-    item.userId === user.id ||
-    item.senderId === user.id ||
-    item.customerId === user.id ||
-    item.vendorId === user.id ||
-    item.adminId === user.id ||
-    conversationIds.has(String(item.conversationId)) ||
-    orderIds.has(String(item.orderId)) ||
-    storeIds.has(String(item.storeId)),
+  await removeMatching(
+    db,
+    "messages",
+    (item) =>
+      item.userId === user.id ||
+      item.senderId === user.id ||
+      item.customerId === user.id ||
+      item.vendorId === user.id ||
+      item.adminId === user.id ||
+      conversationIds.has(String(item.conversationId)) ||
+      orderIds.has(String(item.orderId)) ||
+      storeIds.has(String(item.storeId)),
   );
-  await removeMatching(db, "offers", (item) =>
-    conversationIds.has(String(item.conversationId)) ||
-    productIds.has(String(item.productId)),
+  await removeMatching(
+    db,
+    "offers",
+    (item) =>
+      conversationIds.has(String(item.conversationId)) ||
+      productIds.has(String(item.productId)),
   );
   await removeMatching(db, "addresses", (item) => item.userId === user.id);
   await removeMatching(db, "notifications", (item) => item.userId === user.id);
-  await removeMatching(db, "subscriptions", (item) => item.vendorId === user.id);
-  await removeMatching(db, "bankAccounts", (item) =>
-    item.id === user.id || item.userId === user.id || item.vendorId === user.id,
+  await removeMatching(
+    db,
+    "subscriptions",
+    (item) => item.vendorId === user.id,
   );
-  await removeMatching(db, "deliverySettings", (item) =>
-    item.vendorId === user.id || storeIds.has(String(item.storeId)),
+  await removeMatching(
+    db,
+    "bankAccounts",
+    (item) =>
+      item.id === user.id ||
+      item.userId === user.id ||
+      item.vendorId === user.id,
   );
-  await removeMatching(db, "transactions", (item) =>
-    item.userId === user.id ||
-    item.vendorId === user.id ||
-    storeIds.has(String(item.storeId)) ||
-    orderIds.has(String(item.orderId)),
+  await removeMatching(
+    db,
+    "deliverySettings",
+    (item) => item.vendorId === user.id || storeIds.has(String(item.storeId)),
   );
-  await removeMatching(db, "payouts", (item) =>
-    item.vendorId === user.id || storeIds.has(String(item.storeId)),
+  await removeMatching(
+    db,
+    "transactions",
+    (item) =>
+      item.userId === user.id ||
+      item.vendorId === user.id ||
+      storeIds.has(String(item.storeId)) ||
+      orderIds.has(String(item.orderId)),
+  );
+  await removeMatching(
+    db,
+    "payouts",
+    (item) => item.vendorId === user.id || storeIds.has(String(item.storeId)),
   );
 
   await Promise.all([
     ...products.map((product) => db.remove("products", product.id)),
-    ...conversations.map((conversation) => db.remove("conversations", conversation.id)),
+    ...conversations.map((conversation) =>
+      db.remove("conversations", conversation.id),
+    ),
     ...orders.map((order) => db.remove("orders", order.id)),
   ]);
   await Promise.all(stores.map((store) => db.remove("stores", store.id)));
@@ -540,9 +909,17 @@ async function removeMatching(
 async function paystackRequest<T>(path: string, init: RequestInit = {}) {
   const response = await fetch(`https://api.paystack.co${path}`, {
     ...init,
-    headers: { Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json", ...init.headers },
+    headers: {
+      Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
   });
-  const payload = await response.json() as PaystackResponse<T>;
-  if (!response.ok || !payload.status) throw new ApiError(502, payload.message || "Paystack could not verify this bank account");
+  const payload = (await response.json()) as PaystackResponse<T>;
+  if (!response.ok || !payload.status)
+    throw new ApiError(
+      502,
+      payload.message || "Paystack could not verify this bank account",
+    );
   return payload.data;
 }

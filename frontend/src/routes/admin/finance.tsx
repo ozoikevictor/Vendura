@@ -8,6 +8,7 @@ import {
   createPlatformWithdrawal,
   getAdminFinance,
   getAdminPayouts,
+  updateAdminPayout,
   updatePlatformBank,
 } from "@/services/adminService";
 import { getErrorMessage } from "@/services/api";
@@ -28,6 +29,7 @@ function FinancePage() {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("Transfer Vendraza platform revenue to company bank account");
   const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
+  const [payoutNote, setPayoutNote] = useState("");
   const saveBank = useMutation({
     mutationFn: () => updatePlatformBank(bankForm),
     onSuccess: async () => {
@@ -45,6 +47,23 @@ function FinancePage() {
       await queryClient.invalidateQueries({ queryKey: ["admin-finance"] });
     },
     onError: (error) => toast.error(getErrorMessage(error, "Could not create the withdrawal")),
+  });
+  const payoutAction = useMutation({
+    mutationFn: ({ payoutId, status }: { payoutId: string; status: "paid" | "failed" }) =>
+      updateAdminPayout(payoutId, status, payoutNote || undefined),
+    onSuccess: async (_result, variables) => {
+      toast.success(
+        variables.status === "paid"
+          ? "Seller payout marked as paid"
+          : "Seller payout declined and balance released",
+      );
+      setPayoutNote("");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin-payouts"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin-finance"] }),
+      ]);
+    },
+    onError: (error) => toast.error(getErrorMessage(error, "Could not update seller payout")),
   });
 
   if (finance.isLoading || payouts.isLoading || !finance.data) return <LoadingRows />;
@@ -248,8 +267,21 @@ function FinancePage() {
       </TableShell>
 
       <h2 className="mb-3 mt-8 font-display text-lg font-bold">Seller payout history</h2>
+      <div className="mb-3 rounded-lg border border-border bg-card p-4 text-sm">
+        <p className="font-semibold text-foreground">Manual seller payout note</p>
+        <p className="mt-1 text-muted-foreground">
+          Add a short note before marking a pending payout paid or declined.
+        </p>
+        <input
+          value={payoutNote}
+          onChange={(event) => setPayoutNote(event.target.value)}
+          maxLength={300}
+          placeholder="Example: Paid by bank transfer, receipt saved"
+          className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2"
+        />
+      </div>
       <TableShell>
-        <table className="w-full min-w-[820px] text-sm">
+        <table className="w-full min-w-[980px] text-sm">
           <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Reference</th>
@@ -258,6 +290,7 @@ function FinancePage() {
               <th>Amount</th>
               <th>Status</th>
               <th>Requested</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -276,6 +309,32 @@ function FinancePage() {
                   <Status value={payout.status} />
                 </td>
                 <td className="text-muted-foreground">{formatDateTime(payout.requestedAt)}</td>
+                <td>
+                  {["pending", "processing"].includes(payout.status) ? (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={payoutAction.isPending}
+                        onClick={() => payoutAction.mutate({ payoutId: payout.id, status: "paid" })}
+                        className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                      >
+                        Mark paid
+                      </button>
+                      <button
+                        type="button"
+                        disabled={payoutAction.isPending}
+                        onClick={() =>
+                          payoutAction.mutate({ payoutId: payout.id, status: "failed" })
+                        }
+                        className="rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-50"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Closed</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

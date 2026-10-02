@@ -16,11 +16,6 @@ type PaystackResponse<T> = { status: boolean; message: string; data: T };
 type PaystackBank = { id: number; name: string; code: string; active: boolean };
 type ResolvedAccount = { account_number: string; account_name: string };
 type TransferRecipient = { recipient_code: string };
-type PaystackTransfer = {
-  status: string;
-  reference: string;
-  transfer_code?: string;
-};
 type InitializedTransaction = {
   authorization_url: string;
   access_code: string;
@@ -196,7 +191,11 @@ export const vendorRoutes = (db: Database) => {
         .reduce((s, t) => s + Number(t.amount), 0);
       ok(res, {
         available: active
-          .filter((t) => t.status === "available")
+          .filter(
+            (t) =>
+              t.status === "available" ||
+              (t.type === "payout" && t.status === "paid"),
+          )
           .reduce((s, t) => s + Number(t.amount), 0),
         pending: active
           .filter((t) => t.status === "pending")
@@ -211,7 +210,7 @@ export const vendorRoutes = (db: Database) => {
         ),
         totalPaid: Math.abs(
           active
-            .filter((t) => t.type === "payout")
+            .filter((t) => t.type === "payout" && t.status === "paid")
             .reduce((s, t) => s + Number(t.amount), 0),
         ),
       });
@@ -254,10 +253,10 @@ export const vendorRoutes = (db: Database) => {
           "A payout is already being processed. Wait for its final status before requesting another.",
         );
       const bank = await db.get<Entity>("bankAccounts", req.user!.id);
-      if (!bank?.verified || !bank.recipientCode)
+      if (!bank?.verified)
         throw new ApiError(
           400,
-          "Verify your bank account with Paystack before requesting a payout",
+          "Add and verify your bank account before requesting a payout",
         );
       const transactions = (await db.list<Entity>("transactions")).filter(
         (t) => t.vendorId === req.user!.id && t.status === "available",
@@ -287,50 +286,29 @@ export const vendorRoutes = (db: Database) => {
         bankAccount: bank,
         reference,
         requestedAt,
+        mode: "manual",
       });
-      const ledgerEntry = await db.create<Entity>("transactions", {
+      await db.create<Entity>("transactions", {
         id: id("transaction"),
         vendorId: req.user!.id,
         type: "payout",
         amount: -amount,
         status: "available",
         reference,
-        description: `Payout to ${bank.bankName} ending ${String(bank.accountNumber).slice(-4)}`,
+        description: `Manual payout request to ${bank.bankName} ending ${String(bank.accountNumber).slice(-4)}`,
         createdAt: requestedAt,
       });
-      try {
-        const transfer = await paystackRequest<PaystackTransfer>("/transfer", {
-          method: "POST",
-          body: JSON.stringify({
-            source: "balance",
-            amount: Math.round(amount * 100),
-            recipient: bank.recipientCode,
-            reference,
-            reason: "Vendraza seller payout",
-            currency: "NGN",
-          }),
-        });
-        const updated = await db.update<Entity>("payouts", payout.id, {
-          status: "processing",
-          transferCode: transfer.transfer_code,
-          providerStatus: transfer.status,
-        });
-        created(res, updated);
-      } catch (error) {
-        await db.update("payouts", payout.id, {
-          status: "failed",
-          failedAt: now(),
-          failureReason:
-            error instanceof Error
-              ? error.message
-              : "Transfer could not be initiated",
-        });
-        await db.update("transactions", ledgerEntry.id, {
-          status: "reversed",
-          reversedAt: now(),
-        });
-        throw error;
-      }
+      await db.create("notifications", {
+        id: id("notification"),
+        userId: req.user!.id,
+        type: "payout_processed",
+        title: "Payout request received",
+        body: "Vendraza will review this request and pay your bank account manually.",
+        href: "/vendor/payouts",
+        read: false,
+        createdAt: now(),
+      });
+      created(res, payout);
     }),
   );
   router.get(
@@ -754,16 +732,14 @@ function answerVendorAI(
             : "in total";
     return vendorAIResult(
       `You have ${periodPayouts.length} ${periodPayouts.length === 1 ? "payout" : "payouts"} ${label}, worth ${formatNaira(total)}.`,
-      periodPayouts
-        .slice(0, 8)
-        .map((payout) => ({
-          id: String(payout.id),
-          type: "payout",
-          title: formatNaira(Number(payout.amount)),
-          subtitle: humanize(String(payout.status)),
-          meta: formatBusinessDate(String(payout.requestedAt)),
-          href: "/vendor/payouts",
-        })),
+      periodPayouts.slice(0, 8).map((payout) => ({
+        id: String(payout.id),
+        type: "payout",
+        title: formatNaira(Number(payout.amount)),
+        subtitle: humanize(String(payout.status)),
+        meta: formatBusinessDate(String(payout.requestedAt)),
+        href: "/vendor/payouts",
+      })),
       [
         { label: "Payouts", value: String(periodPayouts.length) },
         { label: "Amount", value: formatNaira(total) },
@@ -955,16 +931,14 @@ function answerVendorAI(
         : wantsLatest
           ? "You do not have any orders yet."
           : `You do not have any ${wantsOpen ? "open " : ""}orders right now.`,
-      relevant
-        .slice(0, 8)
-        .map((order) => ({
-          id: String(order.id),
-          type: "order",
-          title: String(order.orderNumber),
-          subtitle: `${order.customerName ?? "Customer"} · ${formatNaira(Number(order.total))}`,
-          meta: `${humanize(String(order.status))} · ${formatBusinessDate(String(order.placedAt))}`,
-          href: `/vendor/orders/${order.id}`,
-        })),
+      relevant.slice(0, 8).map((order) => ({
+        id: String(order.id),
+        type: "order",
+        title: String(order.orderNumber),
+        subtitle: `${order.customerName ?? "Customer"} · ${formatNaira(Number(order.total))}`,
+        meta: `${humanize(String(order.status))} · ${formatBusinessDate(String(order.placedAt))}`,
+        href: `/vendor/orders/${order.id}`,
+      })),
       [
         {
           label: /today|week|month/.test(query) ? "Period orders" : "Orders",

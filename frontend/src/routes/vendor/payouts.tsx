@@ -71,7 +71,7 @@ function VendorPayoutsPage() {
     try {
       await requestPayout(balance.available, bank);
       queryClient.invalidateQueries({ queryKey: ["vendor-payouts"] });
-      toast.success("Payout sent to Paystack for processing");
+      toast.success("Payout request sent for manual review");
       queryClient.invalidateQueries({ queryKey: ["vendor-balance"] });
       queryClient.invalidateQueries({ queryKey: ["vendor-transactions"] });
     } catch (error) {
@@ -237,7 +237,8 @@ function VendorPayoutsPage() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Paystack will confirm the account name before these details are saved.
+              Your bank details are verified before they are saved. Vendraza will pay approved
+              withdrawals manually for now.
             </p>
             <div className="flex gap-2">
               <button
@@ -336,8 +337,8 @@ function VendorPayoutsPage() {
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Paid orders remain pending until the customer confirms delivery. Paystack sends verified
-          payouts to the saved bank account and reports the final status here.
+          Paid orders remain pending until the customer confirms delivery. For now, Vendraza reviews
+          payout requests manually and marks them paid after sending the bank transfer.
         </p>
       </div>
     </div>

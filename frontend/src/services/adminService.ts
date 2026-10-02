@@ -73,6 +73,11 @@ export const updateStoreVerification = (storeId: string, verified: boolean) =>
   });
 export const getAdminOrders = () => api<Order[]>("/admin/orders");
 export const getAdminPayouts = () => api<AdminPayout[]>("/admin/payouts");
+export const updateAdminPayout = (payoutId: string, status: "paid" | "failed", note?: string) =>
+  api<AdminPayout>(`/admin/payouts/${encodeURIComponent(payoutId)}`, {
+    method: "PATCH",
+    ...json({ status, note }),
+  });
 export const getAdminFinance = () => api<AdminFinance>("/admin/finance");
 export const createPlatformWithdrawal = (amount: number, note: string) =>
   api<Transaction>("/admin/platform-withdrawals", { method: "POST", ...json({ amount, note }) });
