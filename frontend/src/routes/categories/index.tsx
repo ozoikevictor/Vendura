@@ -7,6 +7,7 @@ import { getCategories } from "@/services/categoryService";
 import { categories as fallbackCategories } from "@/data/categories";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 import { getCategoryVisual } from "@/utils/categoryVisuals";
+import type { Category } from "@/types";
 
 export const Route = createFileRoute("/categories/")({
   head: () => ({
@@ -23,13 +24,7 @@ export const Route = createFileRoute("/categories/")({
 
 function CategoriesPage() {
   const { data: apiCategories } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
-  const catalogCategories = (apiCategories ?? fallbackCategories).map((category) => ({
-    ...fallbackCategories.find((fallback) => fallback.slug === category.slug),
-    ...category,
-    imageUrl:
-      category.imageUrl ??
-      fallbackCategories.find((fallback) => fallback.slug === category.slug)?.imageUrl,
-  }));
+  const catalogCategories = mergeCategoryList(apiCategories);
 
   return (
     <div className="flex min-h-screen flex-col lagoon-wash">
@@ -87,4 +82,23 @@ function CategoriesPage() {
       <SiteFooter />
     </div>
   );
+}
+
+function mergeCategoryList(apiCategories: Category[] | undefined) {
+  const apiBySlug = new Map((apiCategories ?? []).map((category) => [category.slug, category]));
+  const fallbackSlugs = new Set(fallbackCategories.map((category) => category.slug));
+  const apiOnlyCategories = (apiCategories ?? []).filter(
+    (category) => !fallbackSlugs.has(category.slug),
+  );
+
+  return [...fallbackCategories, ...apiOnlyCategories].map((fallback) => {
+    const api = apiBySlug.get(fallback.slug);
+    return {
+      ...fallback,
+      ...api,
+      imageUrl: api?.imageUrl ?? fallback.imageUrl,
+      productCount: api?.productCount ?? 0,
+      subcategories: api?.subcategories?.length ? api.subcategories : fallback.subcategories,
+    };
+  });
 }

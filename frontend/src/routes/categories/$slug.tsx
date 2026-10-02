@@ -25,9 +25,12 @@ const audienceFilters: Array<{ id: AudienceFilter; label: string }> = [
 ];
 
 export const Route = createFileRoute("/categories/$slug")({
-  loader: async ({ params }) => ({
-    category: await fetchPublicApi<Category>(`/categories/${encodeURIComponent(params.slug)}`),
-  }),
+  loader: async ({ params }) => {
+    const category = await fetchPublicApi<Category>(
+      `/categories/${encodeURIComponent(params.slug)}`,
+    ).catch(() => categories.find((item) => item.slug === params.slug));
+    return { category };
+  },
   head: ({ params, loaderData }) => {
     const cat = loaderData?.category ?? categories.find((c) => c.slug === params.slug);
     const title = cat ? `${cat.name} Marketplace | Vendraza` : "Shop by Category | Vendraza";
@@ -68,15 +71,19 @@ function CategoryDetailPage() {
     queryKey: ["category", slug],
     queryFn: () => getCategoryBySlug(slug),
   });
-  const displayCategory = category
-    ? {
-        ...categories.find((fallback) => fallback.slug === category.slug),
-        ...category,
-        imageUrl:
-          category.imageUrl ??
-          categories.find((fallback) => fallback.slug === category.slug)?.imageUrl,
-      }
-    : undefined;
+  const fallbackCategory = categories.find((fallback) => fallback.slug === slug);
+  const displayCategory =
+    (category ?? fallbackCategory)
+      ? {
+          ...fallbackCategory,
+          ...category,
+          imageUrl: category?.imageUrl ?? fallbackCategory?.imageUrl,
+          productCount: category?.productCount ?? 0,
+          subcategories: category?.subcategories?.length
+            ? category.subcategories
+            : (fallbackCategory?.subcategories ?? []),
+        }
+      : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["category-products", slug, subSlug, audience],

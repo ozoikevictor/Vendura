@@ -57,9 +57,15 @@ export const catalogRoutes = (db: Database) => {
   router.get(
     "/categories/:categorySlug/subcategories/:subcategorySlug",
     asyncRoute(async (req, res) => {
-      const category = await db.findOne<Entity>("categories", {
-        slug: req.params.categorySlug,
-      });
+      const categorySource =
+        (await db.findOne<Entity>("categories", {
+          slug: req.params.categorySlug,
+        })) ??
+        categoryDefaults.find(
+          (value) => value.slug === req.params.categorySlug,
+        );
+      if (!categorySource) throw new ApiError(404, "Subcategory not found");
+      const category = enrichCategory(categorySource);
       const item = (category?.subcategories as Entity[] | undefined)?.find(
         (value) => value.slug === req.params.subcategorySlug,
       );
@@ -160,7 +166,9 @@ export const catalogRoutes = (db: Database) => {
       let items = (await db.list<Entity>("products")).filter(isLiveProduct);
       const categories =
         query.categorySlug || query.subcategorySlug
-          ? await db.list<Entity>("categories")
+          ? mergeDefaultCategories(await db.list<Entity>("categories")).map(
+              enrichCategory,
+            )
           : [];
       if (query.q) {
         const q = query.q.toLowerCase();
@@ -529,8 +537,8 @@ function isLiveProduct(product: Entity) {
   return product.status === "active" && Number(product.stock) > 0;
 }
 
-const image = (query: string) =>
-  `https://source.unsplash.com/900x675/?${encodeURIComponent(query)}`;
+const image = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 
 const sub = (categorySlug: string, names: string[]) =>
   names.map((name) => ({
@@ -546,10 +554,10 @@ const categoryVisuals: Record<
   string,
   { imageUrl: string; subcategories?: Entity[] }
 > = {
-  "phones-electronics": { imageUrl: image("smartphones electronics gadgets") },
-  computers: { imageUrl: image("laptop computer desk") },
+  "phones-electronics": { imageUrl: image("photo-1511707171634-5f897ff02aa9") },
+  computers: { imageUrl: image("photo-1496181133206-80ce9b88a853") },
   fashion: {
-    imageUrl: image("fashion clothing rack"),
+    imageUrl: image("photo-1483985988355-763728e1935b"),
     subcategories: sub("fashion", [
       "Men's Fashion",
       "Women's Fashion",
@@ -560,7 +568,7 @@ const categoryVisuals: Record<
     ]),
   },
   shoes: {
-    imageUrl: image("shoes sneakers sandals"),
+    imageUrl: image("photo-1549298916-b41d501d3772"),
     subcategories: sub("shoes", [
       "Men's Shoes",
       "Women's Shoes",
@@ -571,28 +579,30 @@ const categoryVisuals: Record<
       "Slippers & Sandals",
     ]),
   },
-  "beauty-hair": { imageUrl: image("beauty skincare hair products") },
-  "jewelry-accessories": { imageUrl: image("jewelry accessories watches") },
-  watches: { imageUrl: image("luxury wrist watches") },
-  perfumes: { imageUrl: image("perfume bottles fragrance") },
-  "home-furniture": { imageUrl: image("modern sofa furniture living room") },
-  "kitchen-equipment": { imageUrl: image("kitchen appliances cookware") },
-  "building-materials": { imageUrl: image("building materials tiles cement") },
-  "plumbing-materials": { imageUrl: image("plumbing pipes faucets tools") },
-  automotive: { imageUrl: image("car accessories automotive") },
+  "beauty-hair": { imageUrl: image("photo-1596462502278-27bfdc403348") },
+  "jewelry-accessories": {
+    imageUrl: image("photo-1515562141207-7a88fb7ce338"),
+  },
+  watches: { imageUrl: image("photo-1523275335684-37898b6baf30") },
+  perfumes: { imageUrl: image("photo-1541643600914-78b084683601") },
+  "home-furniture": { imageUrl: image("photo-1555041469-a586c61ea9bc") },
+  "kitchen-equipment": { imageUrl: image("photo-1556909114-f6e7ad7d3136") },
+  "building-materials": { imageUrl: image("photo-1503387762-592deb58ef4e") },
+  "plumbing-materials": { imageUrl: image("photo-1585704032915-c3400ca199e7") },
+  automotive: { imageUrl: image("photo-1503376780353-7e6692767b70") },
   "engine-oil-car-accessories": {
-    imageUrl: image("engine oil car accessories"),
+    imageUrl: image("photo-1487754180451-c456f719a1fc"),
   },
-  books: { imageUrl: image("books bookstore shelf") },
-  groceries: { imageUrl: image("groceries food market") },
-  sports: { imageUrl: image("sports fitness equipment") },
-  "baby-products": { imageUrl: image("baby products toys stroller") },
-  "office-supplies": { imageUrl: image("office supplies stationery") },
-  tools: { imageUrl: image("hardware tools") },
+  books: { imageUrl: image("photo-1495446815901-a7297e633e8d") },
+  groceries: { imageUrl: image("photo-1542838132-92c53300491e") },
+  sports: { imageUrl: image("photo-1517649763962-0c623066013b") },
+  "baby-products": { imageUrl: image("photo-1515488042361-ee00e0ddd4e4") },
+  "office-supplies": { imageUrl: image("photo-1497366754035-f200968a6e72") },
+  tools: { imageUrl: image("photo-1504148455328-c376907d081c") },
   appliances: {
-    imageUrl: image("home appliances refrigerator washing machine"),
+    imageUrl: image("photo-1570222094114-d054a817e56b"),
   },
-  other: { imageUrl: image("marketplace products assorted") },
+  other: { imageUrl: image("photo-1556742049-0cfed4f6a45d") },
 };
 
 const categoryDefaults: Entity[] = [

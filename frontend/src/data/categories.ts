@@ -10,8 +10,33 @@ const sub = (categorySlug: string, names: string[]) =>
     name,
   }));
 
+const images: Record<string, string> = {
+  "smartphones electronics gadgets": "photo-1511707171634-5f897ff02aa9",
+  "laptop computer desk": "photo-1496181133206-80ce9b88a853",
+  "fashion clothing rack": "photo-1483985988355-763728e1935b",
+  "shoes sneakers sandals": "photo-1549298916-b41d501d3772",
+  "beauty skincare hair products": "photo-1596462502278-27bfdc403348",
+  "jewelry accessories watches": "photo-1515562141207-7a88fb7ce338",
+  "luxury wrist watches": "photo-1523275335684-37898b6baf30",
+  "perfume bottles fragrance": "photo-1541643600914-78b084683601",
+  "modern sofa furniture living room": "photo-1555041469-a586c61ea9bc",
+  "kitchen appliances cookware": "photo-1556909114-f6e7ad7d3136",
+  "building materials tiles cement": "photo-1503387762-592deb58ef4e",
+  "plumbing pipes faucets tools": "photo-1585704032915-c3400ca199e7",
+  "car accessories automotive": "photo-1503376780353-7e6692767b70",
+  "engine oil car accessories": "photo-1487754180451-c456f719a1fc",
+  "books bookstore shelf": "photo-1495446815901-a7297e633e8d",
+  "groceries food market": "photo-1542838132-92c53300491e",
+  "sports fitness equipment": "photo-1517649763962-0c623066013b",
+  "baby products toys stroller": "photo-1515488042361-ee00e0ddd4e4",
+  "office supplies stationery": "photo-1497366754035-f200968a6e72",
+  "hardware tools": "photo-1504148455328-c376907d081c",
+  "home appliances refrigerator washing machine": "photo-1570222094114-d054a817e56b",
+  "marketplace products assorted": "photo-1556742049-0cfed4f6a45d",
+};
+
 const image = (query: string) =>
-  `https://source.unsplash.com/900x675/?${encodeURIComponent(query)}`;
+  `https://images.unsplash.com/${images[query] ?? images["marketplace products assorted"]}?auto=format&fit=crop&w=900&q=80`;
 
 export const categories: Category[] = [
   {
@@ -20,7 +45,7 @@ export const categories: Category[] = [
     name: "Phones & Electronics",
     icon: "Smartphone",
     imageUrl: image("smartphones electronics gadgets"),
-    productCount: 12400,
+    productCount: 0,
     subcategories: sub("phones-electronics", ["Phones", "Laptops", "TVs", "Audio", "Accessories"]),
   },
   {
@@ -29,7 +54,7 @@ export const categories: Category[] = [
     name: "Computers",
     icon: "Laptop",
     imageUrl: image("laptop computer desk"),
-    productCount: 4300,
+    productCount: 0,
     subcategories: sub("computers", ["Laptops", "Desktops", "Monitors", "Printers", "Storage"]),
   },
   {
@@ -38,7 +63,7 @@ export const categories: Category[] = [
     name: "Fashion",
     icon: "Shirt",
     imageUrl: image("fashion clothing rack"),
-    productCount: 38900,
+    productCount: 0,
     subcategories: sub("fashion", [
       "Men's Fashion",
       "Women's Fashion",
@@ -54,7 +79,7 @@ export const categories: Category[] = [
     name: "Shoes",
     icon: "Footprints",
     imageUrl: image("shoes sneakers sandals"),
-    productCount: 9800,
+    productCount: 0,
     subcategories: sub("shoes", [
       "Men's Shoes",
       "Women's Shoes",
@@ -71,7 +96,7 @@ export const categories: Category[] = [
     name: "Beauty & Hair",
     icon: "Sparkles",
     imageUrl: image("beauty skincare hair products"),
-    productCount: 9200,
+    productCount: 0,
     subcategories: sub("beauty-hair", [
       "Hair Care",
       "Skin Care",
@@ -86,7 +111,7 @@ export const categories: Category[] = [
     name: "Jewelry & Accessories",
     icon: "Gem",
     imageUrl: image("jewelry accessories watches"),
-    productCount: 5100,
+    productCount: 0,
     subcategories: sub("jewelry-accessories", [
       "Earrings",
       "Necklaces",
@@ -101,7 +126,7 @@ export const categories: Category[] = [
     name: "Watches",
     icon: "Watch",
     imageUrl: image("luxury wrist watches"),
-    productCount: 3100,
+    productCount: 0,
     subcategories: sub("watches", ["Men's Watches", "Women's Watches", "Smart Watches", "Straps"]),
   },
   {
@@ -110,7 +135,7 @@ export const categories: Category[] = [
     name: "Perfumes",
     icon: "SprayCan",
     imageUrl: image("perfume bottles fragrance"),
-    productCount: 2700,
+    productCount: 0,
     subcategories: sub("perfumes", ["Men", "Women", "Unisex", "Oils"]),
   },
   {
@@ -119,7 +144,7 @@ export const categories: Category[] = [
     name: "Home & Furniture",
     icon: "Sofa",
     imageUrl: image("modern sofa furniture living room"),
-    productCount: 21700,
+    productCount: 0,
     subcategories: sub("home-furniture", [
       "Living Room",
       "Bedroom",
@@ -134,7 +159,7 @@ export const categories: Category[] = [
     name: "Kitchen Equipment",
     icon: "CookingPot",
     imageUrl: image("kitchen appliances cookware"),
-    productCount: 6400,
+    productCount: 0,
     subcategories: sub("kitchen-equipment", [
       "Cookware",
       "Small Appliances",
@@ -148,7 +173,7 @@ export const categories: Category[] = [
     name: "Building Materials",
     icon: "BrickWall",
     imageUrl: image("building materials tiles cement"),
-    productCount: 3800,
+    productCount: 0,
     subcategories: sub("building-materials", ["Cement", "Roofing", "Tiles", "Paint", "Steel"]),
   },
   {
@@ -157,7 +182,7 @@ export const categories: Category[] = [
     name: "Plumbing Materials",
     icon: "Droplets",
     imageUrl: image("plumbing pipes faucets tools"),
-    productCount: 2200,
+    productCount: 0,
     subcategories: sub("plumbing-materials", [
       "Pipes",
       "Faucets",
@@ -172,7 +197,7 @@ export const categories: Category[] = [
     name: "Automotive",
     icon: "Car",
     imageUrl: image("car accessories automotive"),
-    productCount: 5600,
+    productCount: 0,
     subcategories: sub("automotive", ["Tyres", "Batteries", "Spare Parts", "Car Care"]),
   },
   {
@@ -181,7 +206,7 @@ export const categories: Category[] = [
     name: "Engine Oil & Car Accessories",
     icon: "Fuel",
     imageUrl: image("engine oil car accessories"),
-    productCount: 1900,
+    productCount: 0,
     subcategories: sub("engine-oil-car-accessories", [
       "Engine Oil",
       "Filters",
@@ -195,7 +220,7 @@ export const categories: Category[] = [
     name: "Books",
     icon: "BookOpen",
     imageUrl: image("books bookstore shelf"),
-    productCount: 7200,
+    productCount: 0,
     subcategories: sub("books", ["Fiction", "Business", "Education", "Children"]),
   },
   {
@@ -204,7 +229,7 @@ export const categories: Category[] = [
     name: "Groceries",
     icon: "ShoppingBasket",
     imageUrl: image("groceries food market"),
-    productCount: 8800,
+    productCount: 0,
     subcategories: sub("groceries", ["Rice & Grains", "Oils", "Beverages", "Snacks", "Spices"]),
   },
   {
@@ -213,7 +238,7 @@ export const categories: Category[] = [
     name: "Sports",
     icon: "Dumbbell",
     imageUrl: image("sports fitness equipment"),
-    productCount: 2600,
+    productCount: 0,
     subcategories: sub("sports", ["Football", "Fitness", "Outdoor", "Apparel"]),
   },
   {
@@ -222,7 +247,7 @@ export const categories: Category[] = [
     name: "Baby Products",
     icon: "Baby",
     imageUrl: image("baby products toys stroller"),
-    productCount: 3400,
+    productCount: 0,
     subcategories: sub("baby-products", ["Strollers", "Feeding", "Diapers", "Toys"]),
   },
   {
@@ -231,7 +256,7 @@ export const categories: Category[] = [
     name: "Office Supplies",
     icon: "Briefcase",
     imageUrl: image("office supplies stationery"),
-    productCount: 2900,
+    productCount: 0,
     subcategories: sub("office-supplies", ["Furniture", "Stationery", "Printing", "Storage"]),
   },
   {
@@ -240,7 +265,7 @@ export const categories: Category[] = [
     name: "Tools",
     icon: "Wrench",
     imageUrl: image("hardware tools"),
-    productCount: 2100,
+    productCount: 0,
     subcategories: sub("tools", ["Power Tools", "Hand Tools", "Measuring", "Safety"]),
   },
   {
@@ -249,7 +274,7 @@ export const categories: Category[] = [
     name: "Appliances",
     icon: "Refrigerator",
     imageUrl: image("home appliances refrigerator washing machine"),
-    productCount: 4700,
+    productCount: 0,
     subcategories: sub("appliances", [
       "Refrigerators",
       "Washing Machines",
@@ -263,7 +288,7 @@ export const categories: Category[] = [
     name: "Other",
     icon: "Package",
     imageUrl: image("marketplace products assorted"),
-    productCount: 1200,
+    productCount: 0,
     subcategories: sub("other", ["Miscellaneous"]),
   },
 ];

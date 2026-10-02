@@ -17,17 +17,17 @@ const visuals: Record<string, CategoryVisual> = {
   },
   computers: {
     code: "PC",
-    imageUrl: img("photo-1517336714731-489689fd1ca8"),
+    imageUrl: img("photo-1496181133206-80ce9b88a853"),
     fallback,
   },
   fashion: {
     code: "FS",
-    imageUrl: img("photo-1445205170230-053b83016050"),
+    imageUrl: img("photo-1483985988355-763728e1935b"),
     fallback,
   },
   shoes: {
     code: "SH",
-    imageUrl: img("photo-1542291026-7eec264c27ff"),
+    imageUrl: img("photo-1549298916-b41d501d3772"),
     fallback,
   },
   "beauty-hair": {
@@ -42,7 +42,7 @@ const visuals: Record<string, CategoryVisual> = {
   },
   watches: {
     code: "WA",
-    imageUrl: img("photo-1524592094714-0f0654e20314"),
+    imageUrl: img("photo-1523275335684-37898b6baf30"),
     fallback,
   },
   perfumes: {
@@ -57,7 +57,7 @@ const visuals: Record<string, CategoryVisual> = {
   },
   "kitchen-equipment": {
     code: "KT",
-    imageUrl: img("photo-1556911220-bff31c812dba"),
+    imageUrl: img("photo-1556909114-f6e7ad7d3136"),
     fallback,
   },
   "building-materials": {
@@ -97,7 +97,7 @@ const visuals: Record<string, CategoryVisual> = {
   },
   "baby-products": {
     code: "BB",
-    imageUrl: img("photo-1519689680058-324335c77eba"),
+    imageUrl: img("photo-1515488042361-ee00e0ddd4e4"),
     fallback,
   },
   "office-supplies": {
@@ -107,12 +107,12 @@ const visuals: Record<string, CategoryVisual> = {
   },
   tools: {
     code: "TL",
-    imageUrl: img("photo-1530124566582-a618bc2615dc"),
+    imageUrl: img("photo-1504148455328-c376907d081c"),
     fallback,
   },
   appliances: {
     code: "AP",
-    imageUrl: img("photo-1586208958839-06c17cacdf08"),
+    imageUrl: img("photo-1570222094114-d054a817e56b"),
     fallback,
   },
 };
