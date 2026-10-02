@@ -273,8 +273,8 @@ function StorePage() {
       <MarketplaceHeader />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-primary/10 bg-card shadow-frost">
-          <div className="relative h-64 overflow-hidden bg-emerald-950 sm:h-80 lg:h-[23rem]">
+        <section className="relative">
+          <div className="relative h-56 overflow-hidden rounded-[2rem] bg-emerald-950 shadow-frost sm:h-72 lg:h-[21rem]">
             {store.bannerUrl && !bannerFailed ? (
               <img
                 src={store.bannerUrl}
@@ -292,61 +292,10 @@ function StorePage() {
                 Trusted Store
               </div>
             )}
-            <div className="absolute right-5 top-5 flex items-center gap-2 sm:right-7 sm:top-7">
-              <button
-                type="button"
-                onClick={toggleFollow}
-                className={cn(
-                  "grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/90 text-emerald-950 shadow-lg backdrop-blur transition hover:-translate-y-0.5",
-                  followed && "bg-emerald-700 text-white",
-                )}
-                aria-label={followed ? "Unfollow store" : "Follow store"}
-              >
-                <Heart className={cn("h-5 w-5", followed && "fill-current")} />
-              </button>
-              <button
-                type="button"
-                onClick={shareStore}
-                className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/90 text-emerald-950 shadow-lg backdrop-blur transition hover:-translate-y-0.5"
-                aria-label="Share store"
-              >
-                <Share2 className="h-5 w-5" />
-              </button>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setMoreOpen((current) => !current)}
-                  className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/90 text-emerald-950 shadow-lg backdrop-blur transition hover:-translate-y-0.5"
-                  aria-label="More store actions"
-                >
-                  <MoreHorizontal className="h-5 w-5" />
-                </button>
-                {moreOpen && (
-                  <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-card p-1 text-sm shadow-frost">
-                    <button
-                      type="button"
-                      onClick={copyStoreLink}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-accent"
-                    >
-                      <Copy className="h-4 w-4" /> Copy Store Link
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMoreOpen(false);
-                        toast.info("Thanks. Store reporting will open from support soon.");
-                      }}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-muted-foreground hover:bg-accent hover:text-foreground"
-                    >
-                      <Flag className="h-4 w-4" /> Report Store
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <div className="pointer-events-none absolute -bottom-16 left-[-8%] h-32 w-[116%] rounded-[50%] bg-background" />
           </div>
 
-          <div className="relative px-5 pb-6 pt-0 sm:px-7 lg:px-9">
+          <div className="relative px-1 pb-2 pt-0 sm:px-2 lg:px-3">
             <div className="-mt-16 flex flex-col gap-4 sm:-mt-20 sm:flex-row sm:items-end">
               <StoreAvatar
                 storeName={store.name}
@@ -356,27 +305,85 @@ function StorePage() {
                 onLogoFailed={() => setLogoFailed(true)}
               />
               <div className="min-w-0 flex-1 pt-1 sm:pb-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-                    {store.name}
-                  </h1>
-                  {store.verified && <VerifiedBadge />}
-                </div>
-                {store.tagline && (
-                  <p className="mt-1 text-sm font-medium text-muted-foreground">{store.tagline}</p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                  <RatingStars rating={store.rating} size={14} showValue />
-                  <span>{store.reviewCount} reviews</span>
-                  <span>{store.productCount} products</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="h-4 w-4 text-primary" /> {displayedFollowers.toLocaleString()}{" "}
-                    followers
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-primary" /> {store.location.city},{" "}
-                    {store.location.state}
-                  </span>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+                        {store.name}
+                      </h1>
+                      {store.verified && <VerifiedBadge />}
+                    </div>
+                    {store.tagline && (
+                      <p className="mt-1 text-sm font-medium text-muted-foreground">
+                        {store.tagline}
+                      </p>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                      <RatingStars rating={store.rating} size={14} showValue />
+                      <span>{store.reviewCount} reviews</span>
+                      <span>{store.productCount} products</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="h-4 w-4 text-primary" />{" "}
+                        {displayedFollowers.toLocaleString()} followers
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-4 w-4 text-primary" /> {store.location.city},{" "}
+                        {store.location.state}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={toggleFollow}
+                      className={cn(
+                        "grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:-translate-y-0.5 hover:border-primary/30",
+                        followed && "border-primary bg-primary text-primary-foreground",
+                      )}
+                      aria-label={followed ? "Unfollow store" : "Follow store"}
+                    >
+                      <Heart className={cn("h-5 w-5", followed && "fill-current")} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={shareStore}
+                      className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:-translate-y-0.5 hover:border-primary/30"
+                      aria-label="Share store"
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setMoreOpen((current) => !current)}
+                        className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground shadow-card transition hover:-translate-y-0.5 hover:border-primary/30"
+                        aria-label="More store actions"
+                      >
+                        <MoreHorizontal className="h-5 w-5" />
+                      </button>
+                      {moreOpen && (
+                        <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-card p-1 text-sm shadow-frost">
+                          <button
+                            type="button"
+                            onClick={copyStoreLink}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left hover:bg-accent"
+                          >
+                            <Copy className="h-4 w-4" /> Copy Store Link
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMoreOpen(false);
+                              toast.info("Thanks. Store reporting will open from support soon.");
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-muted-foreground hover:bg-accent hover:text-foreground"
+                          >
+                            <Flag className="h-4 w-4" /> Report Store
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
