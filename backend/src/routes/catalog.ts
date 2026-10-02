@@ -23,7 +23,7 @@ export const catalogRoutes = (db: Database) => {
       const activeProducts = products.filter(isLiveProduct);
       const productCounts = new Map<string, number>();
       for (const product of activeProducts) {
-        const categoryId = String(product.categoryId ?? "");
+        const categoryId = getCanonicalProductCategoryId(product);
         productCounts.set(categoryId, (productCounts.get(categoryId) ?? 0) + 1);
       }
       items = items.map((category) =>
@@ -48,7 +48,9 @@ export const catalogRoutes = (db: Database) => {
         categoryDefaults.find((category) => category.slug === req.params.slug);
       if (!item) throw new ApiError(404, "Category not found");
       const productCount = (await db.list<Entity>("products")).filter(
-        (product) => product.categoryId === item.id && isLiveProduct(product),
+        (product) =>
+          getCanonicalProductCategoryId(product) === item.id &&
+          isLiveProduct(product),
       ).length;
       res.set("Cache-Control", "no-cache, must-revalidate");
       ok(res, enrichCategory({ ...item, productCount }));
@@ -129,9 +131,11 @@ export const catalogRoutes = (db: Database) => {
         slug: req.params.slug,
       });
       if (!store) throw new ApiError(404, "Storefront not found");
-      const products = (await db.list<Entity>("products")).filter(
-        (product) => product.storeId === store.id && isLiveProduct(product),
-      );
+      const products = (await db.list<Entity>("products"))
+        .filter(
+          (product) => product.storeId === store.id && isLiveProduct(product),
+        )
+        .map(normalizeCatalogProduct);
       ok(res, { store: { ...store, productCount: products.length }, products });
     }),
   );
@@ -163,7 +167,9 @@ export const catalogRoutes = (db: Database) => {
           pageSize: z.coerce.number().int().min(1).max(100).default(24),
         })
         .parse(req.query);
-      let items = (await db.list<Entity>("products")).filter(isLiveProduct);
+      let items = (await db.list<Entity>("products"))
+        .filter(isLiveProduct)
+        .map(normalizeCatalogProduct);
       const categories =
         query.categorySlug || query.subcategorySlug
           ? mergeDefaultCategories(await db.list<Entity>("categories")).map(
@@ -232,6 +238,7 @@ export const catalogRoutes = (db: Database) => {
       const limit = Number(req.query.limit ?? 8);
       const products = (await db.list<Entity>("products"))
         .filter(isLiveProduct)
+        .map(normalizeCatalogProduct)
         .sort(
           (a, b) =>
             Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
@@ -246,7 +253,7 @@ export const catalogRoutes = (db: Database) => {
     asyncRoute(async (req, res) => {
       const item = await db.findOne("products", { slug: req.params.slug });
       if (!item) throw new ApiError(404, "Product not found");
-      ok(res, item);
+      ok(res, normalizeCatalogProduct(item));
     }),
   );
   router.get(
@@ -254,7 +261,7 @@ export const catalogRoutes = (db: Database) => {
     asyncRoute(async (req, res) => {
       const item = await db.get("products", String(req.params.id));
       if (!item) throw new ApiError(404, "Product not found");
-      ok(res, item);
+      ok(res, normalizeCatalogProduct(item));
     }),
   );
   router.get(
@@ -266,10 +273,11 @@ export const catalogRoutes = (db: Database) => {
       ok(
         res,
         all
+          .map(normalizeCatalogProduct)
           .filter(
             (product) =>
               product.id !== item.id &&
-              product.categoryId === item.categoryId &&
+              product.categoryId === getCanonicalProductCategoryId(item) &&
               isLiveProduct(product),
           )
           .slice(0, Number(req.query.limit ?? 4)),
@@ -507,6 +515,108 @@ async function enforceProductLimit(db: Database, req: AuthRequest) {
     );
 }
 
+function normalizeCatalogProduct(product: Entity): Entity {
+  const categoryId = getCanonicalProductCategoryId(product);
+  const subcategoryId = getCanonicalProductSubcategoryId(product, categoryId);
+  const audience = getCanonicalProductAudience(product, categoryId);
+  return {
+    ...product,
+    categoryId,
+    ...(subcategoryId ? { subcategoryId } : {}),
+    ...(audience ? { audience } : {}),
+  };
+}
+
+function getCanonicalProductCategoryId(product: Entity) {
+  const categoryId = String(product.categoryId ?? "");
+  const text = productSearchText(product);
+  if (categoryId === "cat-home-living" || categoryId === "cat-home") {
+    if (
+      /\b(blender|kettle|air fryer|refrigerator|freezer|fan|cooker|lantern|appliance)\b/.test(
+        text,
+      )
+    )
+      return "cat-appliances";
+    if (
+      /\b(kitchen|pan|pot|cutlery|spoon|plate|cookware|storage container|dinner)\b/.test(
+        text,
+      )
+    )
+      return "cat-kitchen";
+    return "cat-home";
+  }
+  if (categoryId === "cat-accessories") {
+    if (/\b(watch|wrist watch)\b/.test(text)) return "cat-watches";
+    if (/\b(earring|bracelet|necklace|jewelry|jewellery)\b/.test(text))
+      return "cat-jewelry";
+    return "cat-jewelry";
+  }
+  if (categoryId === "cat-plumbing-hardware") return "cat-plumbing";
+  if (categoryId === "cat-beauty-personal-care") return "cat-beauty";
+  return categoryId;
+}
+
+function getCanonicalProductSubcategoryId(product: Entity, categoryId: string) {
+  const current = String(product.subcategoryId ?? "");
+  if (current) return current;
+  const text = productSearchText(product);
+  if (categoryId === "cat-fashion") {
+    if (/\b(women|women's|dress|skirt|maxi|pleated)\b/.test(text))
+      return "fashion-women-s-fashion";
+    if (/\b(men|men's|senator|chino|trouser|shirt)\b/.test(text))
+      return "fashion-men-s-fashion";
+    if (/\b(unisex|t-shirt|tee)\b/.test(text)) return "fashion-unisex-fashion";
+    if (/\b(ankara|traditional)\b/.test(text))
+      return "fashion-traditional-wear";
+  }
+  if (categoryId === "cat-shoes") {
+    if (/\b(women|women's|heel|sandals?)\b/.test(text))
+      return "shoes-women-s-shoes";
+    if (/\b(men|men's|loafers?|trainers?)\b/.test(text))
+      return "shoes-men-s-shoes";
+    if (/\b(kids?|school)\b/.test(text)) return "shoes-kids-shoes";
+    if (/\b(sneakers?)\b/.test(text)) return "shoes-sneakers";
+    if (/\b(slides?|slippers?|sandals?)\b/.test(text))
+      return "shoes-slippers-sandals";
+  }
+  if (categoryId === "cat-home") {
+    if (/\b(chair|sofa)\b/.test(text)) return "home-furniture-living-room";
+    if (/\b(bedsheet|bed|towel)\b/.test(text)) return "home-furniture-bedroom";
+    if (/\b(lamp|decorative)\b/.test(text)) return "home-furniture-decor";
+    if (/\b(storage|basket|box)\b/.test(text)) return "home-furniture-storage";
+  }
+  if (categoryId === "cat-kitchen") return "kitchen-equipment-cookware";
+  if (categoryId === "cat-appliances") return "appliances-small-appliances";
+  return undefined;
+}
+
+function getCanonicalProductAudience(product: Entity, categoryId: string) {
+  const current = String(product.audience ?? "");
+  if (current) return current;
+  const text = productSearchText(product);
+  if (categoryId !== "cat-fashion" && categoryId !== "cat-shoes")
+    return undefined;
+  if (/\b(women|women's|dress|skirt|heel|sandals?)\b/.test(text))
+    return "women";
+  if (/\b(men|men's|senator|chino|loafers?|trainers?)\b/.test(text))
+    return "men";
+  if (/\b(kids?|school)\b/.test(text)) return "kids";
+  if (/\b(unisex|t-shirt|tee|sneakers?|slides?|slippers?)\b/.test(text))
+    return "unisex";
+  return undefined;
+}
+
+function productSearchText(product: Entity) {
+  return [
+    product.name,
+    product.description,
+    product.sku,
+    ...(((product.tags as string[] | undefined) ?? []) as string[]),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
 function mixProductsByStore(products: Entity[]) {
   const groups = new Map<string, Entity[]>();
   for (const product of products) {
@@ -651,13 +761,27 @@ const categoryDefaults: Entity[] = [
 
 function mergeDefaultCategories(categories: Entity[]) {
   const bySlug = new Map(
-    categories.map((category) => [String(category.slug), category]),
+    categories
+      .filter((category) => !isLegacyCategory(category))
+      .map((category) => [String(category.slug), category]),
   );
   for (const category of categoryDefaults) {
     if (!bySlug.has(String(category.slug)))
       bySlug.set(String(category.slug), category);
   }
   return [...bySlug.values()];
+}
+
+function isLegacyCategory(category: Entity) {
+  return (
+    ["cat-home-living", "cat-accessories"].includes(String(category.id)) ||
+    [
+      "home-living",
+      "bags-accessories",
+      "beauty-personal-care",
+      "plumbing-hardware",
+    ].includes(String(category.slug))
+  );
 }
 
 function enrichCategory(category: Entity) {

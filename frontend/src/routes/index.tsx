@@ -39,6 +39,7 @@ import { StoreCard } from "@/components/shared/StoreCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { getFeaturedProducts } from "@/services/productService";
 import { getFeaturedStores } from "@/services/storeService";
+import { getCategories } from "@/services/categoryService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
@@ -77,7 +78,21 @@ function Index() {
     queryFn: () => getFeaturedStores(3),
     staleTime: 120_000,
   });
+  const { data: liveCategories = [] } = useQuery({
+    queryKey: ["landing", "categories"],
+    queryFn: getCategories,
+    staleTime: 120_000,
+  });
   const storeById = new Map(featuredStores.map((store) => [store.id, store]));
+  const liveCategoriesBySlug = new Map(liveCategories.map((category) => [category.slug, category]));
+  const popularCategories = categories
+    .filter((category) => popularCategorySlugs.includes(category.slug))
+    .map((category) => ({
+      ...category,
+      ...(liveCategoriesBySlug.get(category.slug) ?? {}),
+      productCount:
+        liveCategoriesBySlug.get(category.slug)?.productCount ?? category.productCount ?? 0,
+    }));
 
   useEffect(() => {
     clearActiveStore();
@@ -282,7 +297,7 @@ function Index() {
             description="Shop across 22 categories from trusted Nigerian sellers."
             action={
               <Link
-                to="/explore"
+                to="/categories"
                 className="hidden text-sm font-semibold text-primary hover:underline sm:block"
               >
                 All categories →
@@ -290,26 +305,24 @@ function Index() {
             }
           />
           <div className="stagger-grid grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-            {categories
-              .filter((c) => popularCategorySlugs.includes(c.slug))
-              .map((c) => (
-                <Link
-                  key={c.id}
-                  to="/categories/$slug"
-                  params={{ slug: c.slug }}
-                  className="landing-card-lift group overflow-hidden rounded-xl border border-border bg-card p-2 text-center shadow-card transition-all hover:border-primary/30 hover:shadow-frost"
-                >
-                  <div className="aspect-[1.72/1] overflow-hidden rounded-lg border border-emerald-100/70 bg-[#eef8f1] transition-all group-hover:border-primary/25">
-                    <CategoryArtwork slug={c.slug} name={c.name} />
-                  </div>
-                  <span className="mt-2 block min-h-8 text-xs font-semibold leading-tight text-foreground">
-                    {c.name}
-                  </span>
-                  <span className="block text-[10px] text-muted-foreground">
-                    {c.productCount} {c.productCount === 1 ? "product" : "products"}
-                  </span>
-                </Link>
-              ))}
+            {popularCategories.map((c) => (
+              <Link
+                key={c.id}
+                to="/categories/$slug"
+                params={{ slug: c.slug }}
+                className="landing-card-lift group overflow-hidden rounded-xl border border-border bg-card p-2 text-center shadow-card transition-all hover:border-primary/30 hover:shadow-frost"
+              >
+                <div className="aspect-[1.72/1] overflow-hidden rounded-lg border border-emerald-100/70 bg-[#eef8f1] transition-all group-hover:border-primary/25">
+                  <CategoryArtwork slug={c.slug} name={c.name} />
+                </div>
+                <span className="mt-2 block min-h-8 text-xs font-semibold leading-tight text-foreground">
+                  {c.name}
+                </span>
+                <span className="block text-[10px] text-muted-foreground">
+                  {c.productCount} {c.productCount === 1 ? "product" : "products"}
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
       </ScrollReveal>
