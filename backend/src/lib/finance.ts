@@ -1,7 +1,8 @@
 import { id, now } from "./helpers.js";
 import type { Database, Entity } from "../types.js";
 
-export const PLATFORM_COMMISSION_RATE = 0.05;
+export const PLATFORM_FEE_RATE = 0.02;
+export const PLATFORM_FEE_CAP = 500;
 
 export function platformFinanceSummary(
   transactions: Entity[],
@@ -70,7 +71,13 @@ export async function recordPendingEarnings(db: Database, order: Entity) {
   const store = await db.get<Entity>("stores", String(order.storeId));
   if (!store?.ownerId) return;
   const gross = Number(order.subtotal);
-  const fee = Math.round(gross * PLATFORM_COMMISSION_RATE * 100) / 100;
+  const fee =
+    gross > 0
+      ? Math.min(
+          Math.round(gross * PLATFORM_FEE_RATE * 100) / 100,
+          PLATFORM_FEE_CAP,
+        )
+      : 0;
   const createdAt = now();
   const status =
     (order.escrow as Entity | undefined)?.status === "released"
@@ -126,7 +133,7 @@ export async function recordPendingEarnings(db: Database, order: Entity) {
       amount: -fee,
       status,
       reference: String(order.orderNumber),
-      description: `Vendraza commission (5%)`,
+      description: `Vendraza service fee (capped at ₦500)`,
       orderId: order.id,
       createdAt,
     });

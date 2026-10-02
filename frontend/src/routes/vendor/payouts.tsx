@@ -159,7 +159,7 @@ function VendorPayoutsPage() {
             </p>
           </div>
           <div className="min-w-0 rounded-xl border border-border bg-card p-4">
-            <div className="text-xs text-muted-foreground">Vendraza Fee (5%)</div>
+            <div className="text-xs text-muted-foreground">Vendraza Fee</div>
             <p className="mt-1 break-words text-lg font-bold text-foreground sm:text-xl">
               {formatNaira(balance.platformFees)}
             </p>
