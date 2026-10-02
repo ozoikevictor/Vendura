@@ -36,6 +36,7 @@ function VendorPayoutsPage() {
   const [bankForm, setBankForm] = useState({ bankCode: "", accountNumber: "" });
   const [savingBank, setSavingBank] = useState(false);
   const [requesting, setRequesting] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState("");
 
   const { data: balance } = useQuery({ queryKey: ["vendor-balance"], queryFn: getVendorBalance });
   const { data: txns } = useQuery({
@@ -70,11 +71,21 @@ function VendorPayoutsPage() {
       toast.error("No available balance yet");
       return;
     }
+    const amount = Number(payoutAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Enter the amount you want to request");
+      return;
+    }
+    if (amount > balance.available) {
+      toast.error("You cannot request more than your available balance");
+      return;
+    }
     setRequesting(true);
     try {
-      await requestPayout(balance.available, bank);
+      await requestPayout(amount, bank);
       queryClient.invalidateQueries({ queryKey: ["vendor-payouts"] });
       toast.success("Payout request sent for manual review");
+      setPayoutAmount("");
       queryClient.invalidateQueries({ queryKey: ["vendor-balance"] });
       queryClient.invalidateQueries({ queryKey: ["vendor-transactions"] });
     } catch (error) {
@@ -170,7 +181,7 @@ function VendorPayoutsPage() {
         </div>
 
         {/* Request payout + bank */}
-        <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4 lg:grid-cols-[1fr_18rem_auto_auto] lg:items-end">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-foreground">
               {bank ? `Bank: ${bank.bankName}` : "No bank account added"}
@@ -190,6 +201,21 @@ function VendorPayoutsPage() {
               )}
             </p>
           </div>
+          <label className="block text-sm font-medium text-foreground">
+            Amount to request
+            <input
+              type="number"
+              min="1"
+              max={balance.available}
+              value={payoutAmount}
+              onChange={(event) => setPayoutAmount(event.target.value)}
+              placeholder={formatNaira(balance.available)}
+              className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm"
+            />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Available: {formatNaira(balance.available)}
+            </span>
+          </label>
           <button
             onClick={() => {
               if (bank)
@@ -203,7 +229,12 @@ function VendorPayoutsPage() {
           <button
             onClick={handleRequestPayout}
             disabled={
-              requesting || Boolean(pendingPayout) || !bank?.verified || balance.available <= 0
+              requesting ||
+              Boolean(pendingPayout) ||
+              !bank?.verified ||
+              balance.available <= 0 ||
+              Number(payoutAmount) <= 0 ||
+              Number(payoutAmount) > balance.available
             }
             className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
           >
@@ -211,7 +242,7 @@ function VendorPayoutsPage() {
               ? "Requesting..."
               : pendingPayout
                 ? "Payout waiting for admin"
-                : `Request Payout (${formatNaira(balance.available)})`}
+                : `Request Payout${Number(payoutAmount) > 0 ? ` (${formatNaira(Number(payoutAmount))})` : ""}`}
           </button>
         </div>
 
