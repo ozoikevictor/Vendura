@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
@@ -41,15 +40,33 @@ function CategoriesPage() {
               key={c.id}
               to="/categories/$slug"
               params={{ slug: c.slug }}
-              className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-card transition-all hover:shadow-frost hover:border-primary/30"
+              className="group overflow-hidden rounded-xl border border-border bg-card shadow-card transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-frost"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <CategoryIcon name={c.icon} className="h-6 w-6" />
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                {c.imageUrl ? (
+                  <img
+                    src={c.imageUrl}
+                    alt={c.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-primary-soft" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-emerald-950/10 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3">
+                  <h3 className="text-sm font-bold text-white drop-shadow">{c.name}</h3>
+                  <p className="mt-0.5 text-xs font-medium text-white/85">
+                    {c.productCount} {c.productCount === 1 ? "product" : "products"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold text-foreground">{c.name}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {c.productCount} {c.productCount === 1 ? "product" : "products"}
+              <div className="flex min-h-16 items-center px-3 py-2">
+                <p className="line-clamp-2 text-xs text-muted-foreground">
+                  {c.subcategories
+                    .slice(0, 3)
+                    .map((sub) => sub.name)
+                    .join(" • ")}
                 </p>
               </div>
             </Link>

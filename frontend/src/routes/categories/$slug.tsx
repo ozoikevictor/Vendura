@@ -6,7 +6,6 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { CategoryIcon } from "@/components/shared/CategoryIcon";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
 import { getCategoryBySlug } from "@/services/categoryService";
@@ -14,6 +13,15 @@ import { categories } from "@/data/categories";
 import { getStores } from "@/services/storeService";
 import { breadcrumbJsonLd, canonicalLink, fetchPublicApi, seoMeta, jsonLdScript } from "@/lib/seo";
 import type { Category } from "@/types";
+
+type AudienceFilter = "men" | "women" | "unisex" | "kids";
+
+const audienceFilters: Array<{ id: AudienceFilter; label: string }> = [
+  { id: "men", label: "Men" },
+  { id: "women", label: "Women" },
+  { id: "unisex", label: "Unisex" },
+  { id: "kids", label: "Kids" },
+];
 
 export const Route = createFileRoute("/categories/$slug")({
   loader: async ({ params }) => ({
@@ -53,6 +61,7 @@ export const Route = createFileRoute("/categories/$slug")({
 function CategoryDetailPage() {
   const { slug } = Route.useParams();
   const [subSlug, setSubSlug] = useState<string | undefined>(undefined);
+  const [audience, setAudience] = useState<AudienceFilter | undefined>(undefined);
 
   const { data: category } = useQuery({
     queryKey: ["category", slug],
@@ -60,11 +69,12 @@ function CategoryDetailPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["category-products", slug, subSlug],
+    queryKey: ["category-products", slug, subSlug, audience],
     queryFn: () =>
       queryProducts({
         categorySlug: slug,
         ...(subSlug ? { subcategorySlug: subSlug } : {}),
+        ...(audience ? { audience } : {}),
         pageSize: 48,
       }),
   });
@@ -100,6 +110,9 @@ function CategoryDetailPage() {
 
   const products = data?.items ?? [];
   const total = data?.total ?? 0;
+  const showAudienceFilters = ["fashion", "shoes", "watches", "perfumes", "sports"].includes(
+    category.slug,
+  );
 
   return (
     <div className="flex min-h-screen flex-col lagoon-wash">
@@ -115,14 +128,29 @@ function CategoryDetailPage() {
           <span className="text-foreground">{category.name}</span>
         </div>
 
-        {/* Category header */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-soft text-primary">
-            <CategoryIcon name={category.icon} className="h-7 w-7" />
+        <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          <div className="relative h-44 overflow-hidden bg-emerald-950 sm:h-56">
+            {category.imageUrl ? (
+              <img
+                src={category.imageUrl}
+                alt={category.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-primary-soft" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-emerald-950/20 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-5">
+              <h1 className="font-display text-3xl font-bold text-white drop-shadow">
+                {category.name}
+              </h1>
+              <p className="mt-1 text-sm font-medium text-white/85">{total} products</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">{category.name}</h1>
-            <p className="text-sm text-muted-foreground">{total} products</p>
+          <div className="p-4">
+            <p className="text-sm text-muted-foreground">
+              Choose a subcategory to narrow what you want to shop.
+            </p>
           </div>
         </div>
 
@@ -142,6 +170,26 @@ function CategoryDetailPage() {
                 className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${subSlug === sub.slug ? "bg-primary text-primary-foreground" : "border border-border bg-card text-foreground hover:bg-accent"}`}
               >
                 {sub.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showAudienceFilters && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setAudience(undefined)}
+              className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${!audience ? "bg-foreground text-background" : "border border-border bg-card text-foreground hover:bg-accent"}`}
+            >
+              Everyone
+            </button>
+            {audienceFilters.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setAudience(item.id)}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${audience === item.id ? "bg-foreground text-background" : "border border-border bg-card text-foreground hover:bg-accent"}`}
+              >
+                {item.label}
               </button>
             ))}
           </div>

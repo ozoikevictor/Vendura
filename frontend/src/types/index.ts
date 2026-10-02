@@ -88,6 +88,7 @@ export interface Category {
   name: string;
   /** lucide icon name, resolved in the UI layer */
   icon: string;
+  imageUrl?: string;
   description?: string;
   productCount: number;
   subcategories: Subcategory[];
@@ -137,6 +138,7 @@ export interface Product {
   currency: "NGN";
   categoryId: ID;
   subcategoryId?: ID;
+  audience?: "men" | "women" | "unisex" | "kids";
   storeId: ID;
   sku: string;
   stock: number;
@@ -551,6 +553,7 @@ export interface ProductQuery {
   q?: string;
   categorySlug?: string;
   subcategorySlug?: string;
+  audience?: "men" | "women" | "unisex" | "kids";
   storeId?: ID;
   minPrice?: number;
   maxPrice?: number;

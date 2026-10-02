@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Save, Eye, ImagePlus, X, AlertCircle, Link as LinkIcon } from "lucide-react";
 import { createVendorProduct, uploadProductImage } from "@/services/productService";
 import { getCategories } from "@/services/categoryService";
@@ -18,6 +18,8 @@ type ProductForm = {
   stock: string;
   lowStockThreshold: string;
   categoryId: string;
+  subcategoryId: string;
+  audience: "" | "men" | "women" | "unisex" | "kids";
   negotiable: boolean;
 };
 
@@ -58,13 +60,27 @@ function NewProductPage() {
     stock: "",
     lowStockThreshold: "5",
     categoryId: "",
+    subcategoryId: "",
+    audience: "",
     negotiable: false,
   });
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === form.categoryId),
+    [categories, form.categoryId],
+  );
+  const showAudience = ["fashion", "shoes", "watches", "perfumes", "sports"].includes(
+    selectedCategory?.slug ?? "",
+  );
 
   const set =
     (k: keyof ProductForm) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-      setForm((f) => ({ ...f, [k]: e.target.value }));
+      const value = e.target.value;
+      setForm((f) => ({
+        ...f,
+        [k]: value,
+        ...(k === "categoryId" ? { subcategoryId: "", audience: "" } : {}),
+      }));
       setErrors((current) => ({ ...current, [k]: undefined }));
       setError("");
     };
@@ -141,6 +157,8 @@ function NewProductPage() {
         stock: Number(form.stock),
         lowStockThreshold: Number(form.lowStockThreshold),
         categoryId: form.categoryId,
+        ...(form.subcategoryId ? { subcategoryId: form.subcategoryId } : {}),
+        ...(form.audience ? { audience: form.audience } : {}),
         negotiable: form.negotiable,
         status,
         images: [image],
@@ -437,6 +455,51 @@ function NewProductPage() {
                 {errors.categoryId}
               </p>
             )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="subcat" className="mb-1 block text-sm font-medium text-foreground">
+                Subcategory
+              </label>
+              <select
+                id="subcat"
+                value={form.subcategoryId}
+                onChange={set("subcategoryId")}
+                disabled={!selectedCategory || selectedCategory.subcategories.length === 0}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="">
+                  {selectedCategory ? "Select subcategory" : "Select category first"}
+                </option>
+                {selectedCategory?.subcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="audience" className="mb-1 block text-sm font-medium text-foreground">
+                Audience
+              </label>
+              <select
+                id="audience"
+                value={form.audience}
+                onChange={set("audience")}
+                disabled={!showAudience}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="">{showAudience ? "Select audience" : "Not needed"}</option>
+                <option value="men">Men</option>
+                <option value="women">Women</option>
+                <option value="unisex">Unisex</option>
+                <option value="kids">Kids</option>
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Use this for fashion, shoes, watches, perfumes, and sportswear.
+              </p>
+            </div>
           </div>
 
           {/* Negotiation toggle */}
