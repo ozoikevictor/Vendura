@@ -68,6 +68,9 @@ function FinancePage() {
 
   if (finance.isLoading || payouts.isLoading || !finance.data) return <LoadingRows />;
   const { summary, ledger, bankAccount, recipientConfigured } = finance.data;
+  const pendingPayouts = (payouts.data ?? []).filter((payout) =>
+    ["pending", "processing"].includes(payout.status),
+  );
 
   return (
     <>
@@ -101,6 +104,84 @@ function FinancePage() {
           icon={<Clock className="h-5 w-5" />}
         />
       </div>
+
+      <section className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-display text-lg font-bold">Vendor payout requests</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pay these vendors from your bank app, then come back here to confirm the payment.
+            </p>
+          </div>
+          <div className="rounded-md bg-card px-3 py-2 text-sm font-semibold text-primary shadow-sm">
+            {pendingPayouts.length} waiting
+          </div>
+        </div>
+
+        <label className="mt-4 block text-sm font-medium">
+          Payment note
+          <input
+            value={payoutNote}
+            onChange={(event) => setPayoutNote(event.target.value)}
+            maxLength={300}
+            placeholder="Example: Paid by bank transfer, receipt saved"
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
+          />
+        </label>
+
+        {pendingPayouts.length > 0 ? (
+          <div className="mt-4 grid gap-3 xl:grid-cols-2">
+            {pendingPayouts.map((payout) => (
+              <div
+                key={payout.id}
+                className="rounded-lg border border-border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {payout.reference}
+                    </p>
+                    <h3 className="mt-1 font-display text-xl font-bold">
+                      {formatNaira(payout.amount)}
+                    </h3>
+                  </div>
+                  <Status value={payout.status} />
+                </div>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <PayoutDetail label="Store" value={payout.storeName} />
+                  <PayoutDetail label="Vendor" value={payout.vendorName} />
+                  <PayoutDetail label="Bank" value={payout.bankAccount.bankName} />
+                  <PayoutDetail label="Account name" value={payout.bankAccount.accountName} />
+                  <PayoutDetail label="Account number" value={payout.bankAccount.accountNumber} />
+                  <PayoutDetail label="Requested" value={formatDateTime(payout.requestedAt)} />
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    disabled={payoutAction.isPending}
+                    onClick={() => payoutAction.mutate({ payoutId: payout.id, status: "paid" })}
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                  >
+                    Mark as paid
+                  </button>
+                  <button
+                    type="button"
+                    disabled={payoutAction.isPending}
+                    onClick={() => payoutAction.mutate({ payoutId: payout.id, status: "failed" })}
+                    className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-50"
+                  >
+                    Decline and return balance
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 rounded-lg border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+            No vendor payout request is waiting right now.
+          </div>
+        )}
+      </section>
 
       <section className="mb-6 grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         <div className="rounded-lg border border-border bg-card p-5">
@@ -266,20 +347,7 @@ function FinancePage() {
         )}
       </TableShell>
 
-      <h2 className="mb-3 mt-8 font-display text-lg font-bold">Seller payout history</h2>
-      <div className="mb-3 rounded-lg border border-border bg-card p-4 text-sm">
-        <p className="font-semibold text-foreground">Manual seller payout note</p>
-        <p className="mt-1 text-muted-foreground">
-          Add a short note before marking a pending payout paid or declined.
-        </p>
-        <input
-          value={payoutNote}
-          onChange={(event) => setPayoutNote(event.target.value)}
-          maxLength={300}
-          placeholder="Example: Paid by bank transfer, receipt saved"
-          className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2"
-        />
-      </div>
+      <h2 className="mb-3 mt-8 font-display text-lg font-bold">All vendor payouts</h2>
       <TableShell>
         <table className="w-full min-w-[980px] text-sm">
           <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
@@ -302,7 +370,10 @@ function FinancePage() {
                   <p className="text-xs text-muted-foreground">{payout.vendorName}</p>
                 </td>
                 <td>
-                  {payout.bankAccount.bankName} · {payout.bankAccount.accountNumber.slice(-4)}
+                  <p className="font-semibold">{payout.bankAccount.bankName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {payout.bankAccount.accountName} · {payout.bankAccount.accountNumber}
+                  </p>
                 </td>
                 <td className="font-semibold">{formatNaira(payout.amount)}</td>
                 <td>
@@ -357,6 +428,15 @@ function FinanceRow({
     <div className="flex items-center justify-between gap-4 border-b border-border pb-3 last:border-0">
       <dt className={muted ? "text-muted-foreground" : "text-foreground"}>{label}</dt>
       <dd className="font-semibold">{formatNaira(value)}</dd>
+    </div>
+  );
+}
+
+function PayoutDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words font-semibold text-foreground">{value}</p>
     </div>
   );
 }
