@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Mail,
   Lock,
+  LoaderCircle,
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { useCartStore } from "@/store/cart";
@@ -44,6 +45,9 @@ function CheckoutPage() {
   const setAuth = useAuthStore((s) => s.set);
   const clearAuth = useAuthStore((s) => s.clear);
   const [loading, setLoading] = useState(false);
+  const [paymentStage, setPaymentStage] = useState<
+    "idle" | "placing_order" | "loading_paystack" | "redirecting"
+  >("idle");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ orderId: string; orderNumber: string } | null>(null);
   const [guestEmail, setGuestEmail] = useState("");
@@ -132,7 +136,9 @@ function CheckoutPage() {
       return;
     }
     setLoading(true);
+    setPaymentStage(form.paymentMethod === "card" ? "loading_paystack" : "placing_order");
     setError("");
+    let leavingForPayment = false;
     try {
       const savedAttempt =
         form.paymentMethod === "card"
@@ -146,12 +152,16 @@ function CheckoutPage() {
         savedAttempt?.fingerprint === cartFingerprint &&
         savedAttempt.orderIds?.length
       ) {
+        setPaymentStage("loading_paystack");
         const payment = await initializePaystackPayment(savedAttempt.orderIds);
         window.sessionStorage.setItem("vendura-pending-payment", payment.reference);
+        setPaymentStage("redirecting");
+        leavingForPayment = true;
         window.location.assign(payment.authorizationUrl);
         return;
       }
 
+      setPaymentStage("placing_order");
       const result = await placeOrder({
         items: items.map((i) => ({
           productId: i.productId,
@@ -184,8 +194,11 @@ function CheckoutPage() {
           paymentAttemptKey,
           JSON.stringify({ fingerprint: cartFingerprint, orderIds }),
         );
+        setPaymentStage("loading_paystack");
         const payment = await initializePaystackPayment(orderIds);
         window.sessionStorage.setItem("vendura-pending-payment", payment.reference);
+        setPaymentStage("redirecting");
+        leavingForPayment = true;
         window.location.assign(payment.authorizationUrl);
         return;
       }
@@ -198,7 +211,10 @@ function CheckoutPage() {
       setError(message);
       toast.error(message);
     } finally {
-      setLoading(false);
+      if (!leavingForPayment) {
+        setLoading(false);
+        setPaymentStage("idle");
+      }
     }
   }
 
@@ -382,6 +398,7 @@ function CheckoutPage() {
 
   return (
     <div className="min-h-screen lagoon-wash">
+      {paymentStage !== "idle" && <CheckoutLoadingOverlay stage={paymentStage} />}
       <MarketplaceHeader />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
@@ -701,4 +718,40 @@ function CheckoutPage() {
 function calculateDeliveryFee(subtotal: number, method: string) {
   if (method === "pickup" || subtotal >= 500000) return 0;
   return method === "express" ? 5000 : 2500;
+}
+
+function CheckoutLoadingOverlay({
+  stage,
+}: {
+  stage: "placing_order" | "loading_paystack" | "redirecting";
+}) {
+  const copy = {
+    placing_order: {
+      title: "Preparing your order",
+      body: "Please wait while we confirm your cart and delivery details.",
+    },
+    loading_paystack: {
+      title: "Loading Paystack",
+      body: "We are opening the secure payment method. Do not refresh this page.",
+    },
+    redirecting: {
+      title: "Opening payment page",
+      body: "You will be redirected to Paystack in a moment.",
+    },
+  }[stage];
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-2xl">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
+          <LoaderCircle className="h-7 w-7 animate-spin" />
+        </div>
+        <h2 className="mt-4 text-lg font-bold text-foreground">{copy.title}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{copy.body}</p>
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/2 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
+        </div>
+      </div>
+    </div>
+  );
 }
