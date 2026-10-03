@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Mail,
   Lock,
-  LoaderCircle,
 } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { useCartStore } from "@/store/cart";
@@ -27,6 +26,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { HumanCheck } from "@/components/shared/HumanCheck";
 import * as authService from "@/services/authService";
 import { noindexMeta } from "@/lib/seo";
+import { DataLoader } from "@/components/shared/DataLoader";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -741,16 +741,14 @@ function CheckoutLoadingOverlay({
   }[stage];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-2xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary">
-          <LoaderCircle className="h-7 w-7 animate-spin" />
-        </div>
-        <h2 className="mt-4 text-lg font-bold text-foreground">{copy.title}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{copy.body}</p>
-        <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-1/2 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-primary" />
-        </div>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/45 px-4"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="w-full max-w-xs rounded-xl border border-border bg-card/95 px-4 py-5 text-center shadow-lg">
+        <DataLoader label={copy.title} className="min-h-0" />
+        <p className="mt-2 text-xs text-muted-foreground">{copy.body}</p>
       </div>
     </div>
   );
