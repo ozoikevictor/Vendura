@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { ArrowRight, ShieldCheck, SlidersHorizontal, Store, Truck, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -64,7 +64,6 @@ function MarketplacePage() {
   const categoryTiles =
     stockedCategories.length > 0 ? stockedCategories.slice(0, 12) : catalogCategories.slice(0, 12);
   const products = data?.items ?? [];
-  const total = data?.total ?? 0;
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
   const storeById = useMemo(
     () => new Map(storeList.map((store) => [store.id, store])),
@@ -98,85 +97,7 @@ function MarketplacePage() {
         ref={contentRef}
         className="mx-auto w-full max-w-7xl flex-1 scroll-mt-4 px-4 py-6 sm:px-6 lg:px-8"
       >
-        <section className="overflow-hidden rounded-2xl bg-[#123524] text-white shadow-card">
-          <div className="grid gap-5 bg-[radial-gradient(circle_at_82%_20%,rgba(247,183,51,0.34),transparent_26%),linear-gradient(115deg,#123524,#0f8f46)] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-center">
-            <div className="min-w-0">
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-white/70">
-                Shop across Vendraza
-              </p>
-              <h1 className="mt-2 font-display text-4xl font-bold leading-none tracking-tight sm:text-5xl">
-                Marketplace
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/82 sm:text-base">
-                Browse real products from Nigerian vendors, compare categories, and discover fresh
-                deals in one trusted shopping space.
-              </p>
-
-              <div className="mt-5 grid grid-cols-3 gap-2 text-center sm:max-w-xl">
-                <div className="rounded-xl bg-white/12 px-3 py-3 backdrop-blur">
-                  <p className="font-display text-xl font-bold">{total}</p>
-                  <p className="text-[11px] font-medium text-white/70">Products</p>
-                </div>
-                <div className="rounded-xl bg-white/12 px-3 py-3 backdrop-blur">
-                  <p className="font-display text-xl font-bold">{storeList.length}</p>
-                  <p className="text-[11px] font-medium text-white/70">Vendors</p>
-                </div>
-                <div className="rounded-xl bg-white/12 px-3 py-3 backdrop-blur">
-                  <p className="font-display text-xl font-bold">{stockedCategories.length}</p>
-                  <p className="text-[11px] font-medium text-white/70">Categories</p>
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Link
-                  to="/categories"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f7b733] px-4 py-2.5 text-sm font-bold text-[#123524]"
-                >
-                  Browse categories <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  to="/stores"
-                  className="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2.5 text-sm font-bold text-white ring-1 ring-white/25"
-                >
-                  Visit stores
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid gap-3 rounded-2xl bg-white/10 p-3 backdrop-blur">
-              <div className="grid grid-cols-3 gap-2">
-                {categoryTiles.slice(0, 3).map((category) => (
-                  <Link
-                    key={category.id}
-                    to="/categories/$slug"
-                    params={{ slug: category.slug }}
-                    className="rounded-xl bg-white p-2 text-center text-[#123524] shadow-frost"
-                  >
-                    <div className="mx-auto h-14 w-full">
-                      <CategoryArtwork slug={category.slug} name={category.name} />
-                    </div>
-                    <span className="mt-1 block truncate text-[11px] font-bold">
-                      {category.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-[11px] font-semibold text-white/80">
-                <span className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-2 py-2">
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#d8f7df]" /> Trusted
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-2 py-2">
-                  <Truck className="h-3.5 w-3.5 text-[#d8f7df]" /> Delivery
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-2 py-2">
-                  <Store className="h-3.5 w-3.5 text-[#d8f7df]" /> Stores
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-6" aria-labelledby="marketplace-categories">
+        <section aria-labelledby="marketplace-categories">
           <div className="mb-3 flex items-center justify-between gap-4">
             <h2
               id="marketplace-categories"
@@ -188,18 +109,18 @@ function MarketplacePage() {
               View all categories
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {categoryTiles.map((category) => (
               <Link
                 key={category.id}
                 to="/categories/$slug"
                 params={{ slug: category.slug }}
-                className="group overflow-hidden rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary"
+                className="group overflow-hidden rounded-xl border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary"
               >
-                <div className="mx-auto h-14 max-w-24">
+                <div className="mx-auto h-16 max-w-28 sm:h-20">
                   <CategoryArtwork slug={category.slug} name={category.name} />
                 </div>
-                <p className="mt-2 line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary">
+                <p className="mt-2 line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary sm:text-base">
                   {category.name}
                 </p>
                 <p className="text-xs text-muted-foreground">{category.productCount} products</p>
