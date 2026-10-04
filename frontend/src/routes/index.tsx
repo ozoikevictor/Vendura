@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -31,6 +31,12 @@ import { getCategories } from "@/services/categoryService";
 import { getFeaturedProducts } from "@/services/productService";
 import { getFeaturedStores } from "@/services/storeService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
+import phone from "@/assets/products/phone.jpg";
+import earbuds from "@/assets/products/earbuds.jpg";
+import ankaraDress from "@/assets/products/ankara-dress.jpg";
+import sneakers from "@/assets/products/sneakers.jpg";
+import sofa from "@/assets/products/sofa.jpg";
+import blender from "@/assets/products/blender.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -46,6 +52,40 @@ export const Route = createFileRoute("/")({
 });
 
 const categoryIcons = [Smartphone, Shirt, Home, Sparkles, Hammer, Gem, ShoppingBag, Grid3X3];
+
+const advertSlides = [
+  {
+    eyebrow: "Today on Vendraza",
+    title: "Fresh deals from trusted sellers.",
+    description:
+      "Phones, fashion, home goods, beauty, building materials, and more from real vendors.",
+    button: "Shop deals",
+    to: "/marketplace" as const,
+    images: [phone, earbuds],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.36),transparent_28%),linear-gradient(105deg,rgba(18,53,36,0.98),rgba(18,130,60,0.92))]",
+  },
+  {
+    eyebrow: "New arrivals",
+    title: "Fresh products from active vendors.",
+    description: "Discover new listings, verified stores, and products customers can buy today.",
+    button: "Explore stores",
+    to: "/stores" as const,
+    images: [ankaraDress, sneakers],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(216,247,223,0.32),transparent_28%),linear-gradient(105deg,#0d4f2b,#123524)]",
+  },
+  {
+    eyebrow: "Browse faster",
+    title: "Find the right item faster.",
+    description: "Browse categories for phones, fashion, home, beauty, groceries, tools, and more.",
+    button: "Browse categories",
+    to: "/categories" as const,
+    images: [sofa, blender],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.3),transparent_28%),linear-gradient(105deg,#14532d,#0f766e)]",
+  },
+];
 
 function Index() {
   const clearActiveStore = useStorefrontStore((state) => state.clearActiveStore);
@@ -247,25 +287,48 @@ function Index() {
 }
 
 function LaunchStrip() {
+  const [activeAdvert, setActiveAdvert] = useState(0);
+  const advert = advertSlides[activeAdvert];
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveAdvert((current) => (current + 1) % advertSlides.length);
+    }, 4500);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
     <section className="overflow-hidden rounded-xl bg-[#123524] text-white shadow-card">
-      <div className="grid items-center gap-4 bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.36),transparent_28%),linear-gradient(105deg,rgba(18,53,36,0.98),rgba(18,130,60,0.92))] px-4 py-4 sm:grid-cols-[1fr_auto] sm:px-6">
-        <div>
+      <div
+        className={`grid min-h-44 items-center gap-6 px-5 py-5 transition-colors duration-500 sm:grid-cols-[minmax(0,1fr)_13rem_auto] sm:px-7 ${advert.theme}`}
+      >
+        <div className="min-w-0">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/70">
-            Vendraza launch deals
+            {advert.eyebrow}
           </p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Shop trusted Nigerian sellers.
+          <h1 className="mt-2 max-w-2xl font-display text-4xl font-bold leading-none tracking-tight">
+            {advert.title}
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-white/80">
-            Phones, fashion, home goods, beauty, building materials, and more from real vendors.
-          </p>
+          <p className="mt-3 max-w-2xl text-sm text-white/80">{advert.description}</p>
+          <div className="mt-3 flex gap-1.5">
+            {advertSlides.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                onClick={() => setActiveAdvert(index)}
+                className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-6 bg-white" : "w-2 bg-white/45"}`}
+                aria-label={`Show advert ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
+        <AdvertImage src={advert.images[0]} />
         <Link
-          to="/marketplace"
+          to={advert.to}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f7b733] px-5 py-3 text-sm font-bold text-[#123524] transition-transform hover:-translate-y-0.5"
         >
-          Shop deals <ArrowRight className="h-4 w-4" />
+          {advert.button} <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </section>
@@ -277,6 +340,8 @@ function MobileShoppingTop({
 }: {
   categories: Array<(typeof fallbackCategories)[number]>;
 }) {
+  const [activeAdvert, setActiveAdvert] = useState(0);
+  const advert = advertSlides[activeAdvert];
   const mobileDeals = [
     { label: "Best prices", icon: ShoppingBag },
     { label: "Bulk drops", icon: Store },
@@ -284,30 +349,46 @@ function MobileShoppingTop({
     { label: "Save more", icon: Gem },
   ];
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveAdvert((current) => (current + 1) % advertSlides.length);
+    }, 4500);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
     <div className="sm:hidden">
       <Link
-        to="/marketplace"
-        className="flex min-h-14 items-center justify-between overflow-hidden rounded-xl bg-[#123524] px-3 py-2 text-white shadow-card"
+        to={advert.to}
+        className={`flex min-h-14 items-center justify-between overflow-hidden rounded-xl px-3 py-2 text-white shadow-card transition-colors duration-500 ${advert.theme}`}
       >
-        <div>
+        <div className="min-w-0">
           <p className="font-display text-lg font-bold leading-none text-[#d8f7df]">
-            Vendraza Deals
+            {advert.eyebrow}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-white/75">
-            Trusted sellers • Fresh products
-          </p>
+          <p className="mt-1 line-clamp-1 text-[11px] font-medium text-white/75">{advert.title}</p>
+        </div>
+        <div className="flex -space-x-3">
+          {advert.images.map((src) => (
+            <span
+              key={src}
+              className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white shadow-sm"
+            >
+              <img src={src} alt="" className="h-[78%] w-[78%] object-contain" />
+            </span>
+          ))}
         </div>
         <span className="rounded-full bg-[#f7b733] px-3 py-1.5 text-xs font-bold text-[#123524]">
-          Shop now
+          {advert.button}
         </span>
       </Link>
 
-      <nav className="-mx-3 mt-3 flex gap-5 overflow-hidden border-y border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+      <nav className="-mx-3 mt-3 flex gap-5 overflow-x-auto border-y border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
         <Link to="/" className="border-b-2 border-primary pb-2 text-primary">
           Home
         </Link>
-        {categories.slice(0, 4).map((category) => (
+        {categories.slice(0, 10).map((category) => (
           <Link
             key={category.id}
             to="/categories/$slug"
@@ -323,31 +404,40 @@ function MobileShoppingTop({
         Call to order: 07080635700 | WhatsApp: 12347016542481
       </div>
 
-      <section className="mt-3 grid grid-cols-[minmax(0,1fr)_6.5rem] gap-3">
+      <section className="mt-3">
         <Link
-          to="/marketplace"
-          className="relative min-h-36 overflow-hidden rounded-xl bg-[#123524] p-4 text-white shadow-card"
+          to={advert.to}
+          className="relative grid min-h-44 grid-cols-[minmax(0,1fr)_7.25rem] items-center gap-3 overflow-hidden rounded-xl bg-[#123524] p-4 text-white shadow-card"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_83%_22%,rgba(247,183,51,0.3),transparent_28%),linear-gradient(135deg,rgba(18,53,36,0.98),rgba(18,130,60,0.88))]" />
-          <div className="relative">
+          <div className={`absolute inset-0 transition-colors duration-500 ${advert.theme}`} />
+          <div className="relative min-w-0">
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/65">
-              Shop smarter
+              {advert.eyebrow}
             </p>
-            <h1 className="mt-2 max-w-52 font-display text-3xl font-bold leading-none">
-              Deals from Nigerian sellers.
+            <h1 className="mt-2 max-w-52 font-display text-[1.7rem] font-bold leading-none">
+              {advert.title}
             </h1>
             <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-[#f7b733] px-3 py-2 text-xs font-bold text-[#123524]">
-              Start shopping <ArrowRight className="h-3 w-3" />
+              {advert.button} <ArrowRight className="h-3 w-3" />
             </span>
+            <div className="mt-3 flex gap-1.5">
+              {advertSlides.map((slide, index) => (
+                <button
+                  key={slide.title}
+                  type="button"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setActiveAdvert(index);
+                  }}
+                  className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-6 bg-white" : "w-2 bg-white/45"}`}
+                  aria-label={`Show advert ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
-        </Link>
-
-        <Link
-          to="/categories"
-          className="grid min-h-36 place-items-center rounded-xl bg-[#e8f7ed] p-3 text-center text-primary shadow-card"
-        >
-          <Sparkles className="h-9 w-9" />
-          <span className="text-xs font-bold leading-tight">Launch deals</span>
+          <span className="relative block aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-frost">
+            <img src={advert.images[0]} alt="" className="h-full w-full object-cover" />
+          </span>
         </Link>
       </section>
 
@@ -367,11 +457,19 @@ function MobileShoppingTop({
   );
 }
 
+function AdvertImage({ src }: { src: string }) {
+  return (
+    <div className="hidden aspect-square w-full max-w-52 overflow-hidden rounded-2xl bg-white shadow-frost sm:block">
+      <img src={src} alt="" className="h-full w-full object-cover" />
+    </div>
+  );
+}
+
 function CategoryRail({ categories }: { categories: Array<(typeof fallbackCategories)[number]> }) {
   return (
     <nav
       aria-label="Popular categories"
-      className="mt-3 hidden gap-2 overflow-hidden rounded-xl border border-border bg-card px-3 py-2 shadow-card sm:flex"
+      className="mt-3 hidden gap-2 overflow-x-auto rounded-xl border border-border bg-card px-3 py-2 shadow-card sm:flex"
     >
       <Link
         to="/categories"
