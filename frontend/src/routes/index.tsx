@@ -37,6 +37,12 @@ import ankaraDress from "@/assets/products/ankara-dress.jpg";
 import sneakers from "@/assets/products/sneakers.jpg";
 import sofa from "@/assets/products/sofa.jpg";
 import blender from "@/assets/products/blender.jpg";
+import watch from "@/assets/products/watch.jpg";
+import perfume from "@/assets/products/perfume.jpg";
+import rice from "@/assets/products/rice.jpg";
+import drill from "@/assets/products/drill.jpg";
+import tv from "@/assets/products/tv.jpg";
+import laptop from "@/assets/products/laptop.jpg";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -55,35 +61,65 @@ const categoryIcons = [Smartphone, Shirt, Home, Sparkles, Hammer, Gem, ShoppingB
 
 const advertSlides = [
   {
-    eyebrow: "Today on Vendraza",
-    title: "Fresh deals from trusted sellers.",
-    description:
-      "Phones, fashion, home goods, beauty, building materials, and more from real vendors.",
-    button: "Shop deals",
+    eyebrow: "Phone deals",
+    title: "Smartphones and earbuds for daily life.",
+    description: "Find phones, audio gadgets, chargers, and mobile accessories from local sellers.",
+    button: "Shop phones",
     to: "/marketplace" as const,
     images: [phone, earbuds],
     theme:
       "bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.36),transparent_28%),linear-gradient(105deg,rgba(18,53,36,0.98),rgba(18,130,60,0.92))]",
   },
   {
-    eyebrow: "New arrivals",
-    title: "Fresh products from active vendors.",
-    description: "Discover new listings, verified stores, and products customers can buy today.",
-    button: "Explore stores",
-    to: "/stores" as const,
+    eyebrow: "Fashion finds",
+    title: "Fresh outfits, shoes, and style picks.",
+    description: "Shop clothing, sneakers, watches, and accessories for men and women.",
+    button: "Shop fashion",
+    to: "/categories/fashion" as const,
     images: [ankaraDress, sneakers],
     theme:
       "bg-[radial-gradient(circle_at_82%_35%,rgba(216,247,223,0.32),transparent_28%),linear-gradient(105deg,#0d4f2b,#123524)]",
   },
   {
-    eyebrow: "Browse faster",
-    title: "Find the right item faster.",
-    description: "Browse categories for phones, fashion, home, beauty, groceries, tools, and more.",
-    button: "Browse categories",
-    to: "/categories" as const,
+    eyebrow: "Home upgrades",
+    title: "Make your home easier to run.",
+    description: "Browse furniture, kitchen appliances, home goods, and everyday essentials.",
+    button: "Shop home",
+    to: "/categories/home-furniture" as const,
     images: [sofa, blender],
     theme:
       "bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.3),transparent_28%),linear-gradient(105deg,#14532d,#0f766e)]",
+  },
+  {
+    eyebrow: "Electronics week",
+    title: "TVs, laptops, and gadgets that work hard.",
+    description: "Upgrade your workspace, entertainment setup, or school tools with electronics.",
+    button: "Shop electronics",
+    to: "/categories/phones-electronics" as const,
+    images: [tv, laptop],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(216,247,223,0.28),transparent_28%),linear-gradient(105deg,#0b3b2a,#047857)]",
+  },
+  {
+    eyebrow: "Beauty and gifts",
+    title: "Perfumes, watches, and finishing touches.",
+    description: "Pick personal-care items and accessories for yourself or someone special.",
+    button: "Shop beauty",
+    to: "/categories/health-beauty" as const,
+    images: [perfume, watch],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(247,183,51,0.34),transparent_28%),linear-gradient(105deg,#123524,#166534)]",
+  },
+  {
+    eyebrow: "Everyday essentials",
+    title: "Groceries and tools for real daily needs.",
+    description:
+      "Stock the kitchen, fix what matters, and get practical items from nearby sellers.",
+    button: "Shop essentials",
+    to: "/categories" as const,
+    images: [rice, drill],
+    theme:
+      "bg-[radial-gradient(circle_at_82%_35%,rgba(216,247,223,0.3),transparent_28%),linear-gradient(105deg,#14532d,#0f766e)]",
   },
 ];
 
@@ -288,7 +324,6 @@ function Index() {
 
 function LaunchStrip() {
   const [activeAdvert, setActiveAdvert] = useState(0);
-  const advert = advertSlides[activeAdvert];
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -299,37 +334,45 @@ function LaunchStrip() {
   }, []);
 
   return (
-    <section className="overflow-hidden rounded-xl bg-[#123524] text-white shadow-card">
+    <section className="relative overflow-hidden rounded-xl bg-[#123524] text-white shadow-card">
       <div
-        className={`grid min-h-44 items-center gap-6 px-5 py-5 transition-colors duration-500 sm:grid-cols-[minmax(0,1fr)_13rem_auto] sm:px-7 ${advert.theme}`}
+        className="flex transition-transform duration-700 ease-out"
+        style={{ transform: `translateX(-${activeAdvert * 100}%)` }}
       >
-        <div className="min-w-0">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/70">
-            {advert.eyebrow}
-          </p>
-          <h1 className="mt-2 max-w-2xl font-display text-4xl font-bold leading-none tracking-tight">
-            {advert.title}
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm text-white/80">{advert.description}</p>
-          <div className="mt-3 flex gap-1.5">
-            {advertSlides.map((slide, index) => (
-              <button
-                key={slide.title}
-                type="button"
-                onClick={() => setActiveAdvert(index)}
-                className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-6 bg-white" : "w-2 bg-white/45"}`}
-                aria-label={`Show advert ${index + 1}`}
-              />
-            ))}
+        {advertSlides.map((slide) => (
+          <div
+            key={slide.title}
+            className={`grid min-h-48 min-w-full items-center gap-6 px-5 py-5 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:px-7 ${slide.theme}`}
+          >
+            <div className="min-w-0">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/70">
+                {slide.eyebrow}
+              </p>
+              <h1 className="mt-2 max-w-2xl font-display text-4xl font-bold leading-none tracking-tight">
+                {slide.title}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm text-white/80">{slide.description}</p>
+            </div>
+            <AdvertImage src={slide.images[0]} />
+            <Link
+              to={slide.to}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f7b733] px-5 py-3 text-sm font-bold text-[#123524] transition-transform hover:-translate-y-0.5"
+            >
+              {slide.button} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-        </div>
-        <AdvertImage src={advert.images[0]} />
-        <Link
-          to={advert.to}
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f7b733] px-5 py-3 text-sm font-bold text-[#123524] transition-transform hover:-translate-y-0.5"
-        >
-          {advert.button} <ArrowRight className="h-4 w-4" />
-        </Link>
+        ))}
+      </div>
+      <div className="absolute bottom-4 left-5 flex gap-1.5 sm:left-7">
+        {advertSlides.map((slide, index) => (
+          <button
+            key={slide.title}
+            type="button"
+            onClick={() => setActiveAdvert(index)}
+            className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-7 bg-white" : "w-2 bg-white/45"}`}
+            aria-label={`Show advert ${index + 1}`}
+          />
+        ))}
       </div>
     </section>
   );
@@ -418,41 +461,46 @@ function MobileShoppingTop({
         Call to order: 07080635700 | WhatsApp: 12347016542481
       </div>
 
-      <section className="mt-3">
-        <Link
-          to={advert.to}
-          className="relative grid min-h-44 grid-cols-[minmax(0,1fr)_7.25rem] items-center gap-3 overflow-hidden rounded-xl bg-[#123524] p-4 text-white shadow-card"
+      <section className="relative mt-3 overflow-hidden rounded-xl bg-[#123524] text-white shadow-card">
+        <div
+          className="flex transition-transform duration-700 ease-out"
+          style={{ transform: `translateX(-${activeAdvert * 100}%)` }}
         >
-          <div className={`absolute inset-0 transition-colors duration-500 ${advert.theme}`} />
-          <div className="relative min-w-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/65">
-              {advert.eyebrow}
-            </p>
-            <h1 className="mt-2 max-w-52 font-display text-[1.7rem] font-bold leading-none">
-              {advert.title}
-            </h1>
-            <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-[#f7b733] px-3 py-2 text-xs font-bold text-[#123524]">
-              {advert.button} <ArrowRight className="h-3 w-3" />
-            </span>
-            <div className="mt-3 flex gap-1.5">
-              {advertSlides.map((slide, index) => (
-                <button
-                  key={slide.title}
-                  type="button"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    setActiveAdvert(index);
-                  }}
-                  className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-6 bg-white" : "w-2 bg-white/45"}`}
-                  aria-label={`Show advert ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-          <span className="relative block aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-frost">
-            <img src={advert.images[0]} alt="" className="h-full w-full object-cover" />
-          </span>
-        </Link>
+          {advertSlides.map((slide) => (
+            <Link
+              key={slide.title}
+              to={slide.to}
+              className="relative grid min-h-44 min-w-full grid-cols-[minmax(0,1fr)_7.25rem] items-center gap-3 overflow-hidden p-4"
+            >
+              <div className={`absolute inset-0 ${slide.theme}`} />
+              <div className="relative min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/65">
+                  {slide.eyebrow}
+                </p>
+                <h1 className="mt-2 max-w-52 font-display text-[1.7rem] font-bold leading-none">
+                  {slide.title}
+                </h1>
+                <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-[#f7b733] px-3 py-2 text-xs font-bold text-[#123524]">
+                  {slide.button} <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+              <span className="relative block aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-frost">
+                <img src={slide.images[0]} alt="" className="h-full w-full object-cover" />
+              </span>
+            </Link>
+          ))}
+        </div>
+        <div className="absolute bottom-3 left-4 flex gap-1.5">
+          {advertSlides.map((slide, index) => (
+            <button
+              key={slide.title}
+              type="button"
+              onClick={() => setActiveAdvert(index)}
+              className={`h-1.5 rounded-full transition-all ${index === activeAdvert ? "w-6 bg-white" : "w-2 bg-white/45"}`}
+              aria-label={`Show advert ${index + 1}`}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="mt-3 grid grid-cols-4 gap-2 rounded-xl bg-card p-3 shadow-card">
