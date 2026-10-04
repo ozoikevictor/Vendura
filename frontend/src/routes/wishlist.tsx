@@ -21,7 +21,10 @@ export const Route = createFileRoute("/wishlist")({
 });
 
 function WishlistPage() {
-  const wishlist = useWishlistStore();
+  const ids = useWishlistStore((state) => state.ids);
+  const hasWishlistItem = useWishlistStore((state) => state.has);
+  const setWishlistIds = useWishlistStore((state) => state.setIds);
+  const clearLocalWishlist = useWishlistStore((state) => state.clear);
   const user = useAuthStore((state) => state.user);
   const [clearing, setClearing] = useState(false);
   const { data: savedWishlistIds } = useQuery({
@@ -35,21 +38,21 @@ function WishlistPage() {
   });
   const { data: stores = [] } = useQuery({ queryKey: ["stores"], queryFn: getStores });
   const storeById = useMemo(() => new Map(stores.map((store) => [store.id, store])), [stores]);
-  const items = (productResult?.items ?? []).filter((product) => wishlist.has(product.id));
+  const items = (productResult?.items ?? []).filter((product) => hasWishlistItem(product.id));
 
   useEffect(() => {
-    if (savedWishlistIds) wishlist.setIds(savedWishlistIds);
-  }, [savedWishlistIds, wishlist]);
+    if (savedWishlistIds) setWishlistIds(savedWishlistIds);
+  }, [savedWishlistIds, setWishlistIds]);
 
   async function clearWishlist() {
     if (!user) {
-      wishlist.clear();
+      clearLocalWishlist();
       return;
     }
     setClearing(true);
     try {
       const ids = await clearWishlistItems();
-      wishlist.setIds(ids);
+      setWishlistIds(ids);
       toast.success("Wishlist cleared");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not clear wishlist");
@@ -67,7 +70,7 @@ function WishlistPage() {
     </Link>
   );
 
-  if (items.length === 0) {
+  if (ids.length === 0 || items.length === 0) {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />

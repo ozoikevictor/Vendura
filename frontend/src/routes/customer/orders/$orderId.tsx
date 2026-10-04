@@ -191,7 +191,7 @@ function OrderDetailPage() {
               <div>
                 <dt className="text-muted-foreground">Delivery method</dt>
                 <dd className="font-medium">
-                  {order.shipment.deliveryMethod.replaceAll("_", " ")}
+                  {(order.shipment.deliveryMethod ?? "delivery").replaceAll("_", " ")}
                 </dd>
               </div>
               {order.shipment.carrierName && (
