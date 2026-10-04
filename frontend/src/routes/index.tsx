@@ -288,7 +288,6 @@ function Index() {
 
 function LaunchStrip() {
   const [activeAdvert, setActiveAdvert] = useState(0);
-  const [activeNavItem, setActiveNavItem] = useState("home");
   const advert = advertSlides[activeAdvert];
 
   useEffect(() => {
@@ -342,6 +341,7 @@ function MobileShoppingTop({
   categories: Array<(typeof fallbackCategories)[number]>;
 }) {
   const [activeAdvert, setActiveAdvert] = useState(0);
+  const [activeNavItem, setActiveNavItem] = useState("home");
   const advert = advertSlides[activeAdvert];
   const mobileDeals = [
     { label: "Best prices", icon: ShoppingBag },
