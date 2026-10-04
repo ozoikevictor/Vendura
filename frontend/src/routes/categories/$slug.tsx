@@ -145,20 +145,18 @@ function CategoryDetailPage() {
           <span className="text-foreground">{displayCategory.name}</span>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_1.1fr] sm:items-center sm:p-5">
-            <div className="mx-auto h-24 w-full max-w-44 sm:h-32">
-              <CategoryArtwork slug={displayCategory.slug} name={displayCategory.name} />
-            </div>
-            <div>
-              <h1 className="font-display text-3xl font-bold text-foreground">
-                {displayCategory.name}
-              </h1>
-              <p className="mt-1 text-sm font-medium text-muted-foreground">{total} products</p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Choose a subcategory to narrow what you want to shop.
-              </p>
-            </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-center">
+          <div className="h-24 w-full max-w-44 sm:h-32">
+            <CategoryArtwork slug={displayCategory.slug} name={displayCategory.name} />
+          </div>
+          <div>
+            <h1 className="font-display text-3xl font-bold text-foreground">
+              {displayCategory.name}
+            </h1>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">{total} products</p>
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+              Choose a subcategory to narrow what you want to shop.
+            </p>
           </div>
         </div>
 

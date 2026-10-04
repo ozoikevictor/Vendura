@@ -128,25 +128,27 @@ function MarketplacePage() {
               View all categories
             </Link>
           </div>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 sm:gap-3">
-            {categoryTiles.map((category) => (
-              <Link
-                key={category.id}
-                to="/categories/$slug"
-                params={{ slug: category.slug }}
-                className="group overflow-hidden rounded-xl border border-border bg-card p-2 text-center shadow-card transition-colors hover:border-primary sm:p-3"
-              >
-                <div className="mx-auto h-10 max-w-14 sm:h-20 sm:max-w-28">
-                  <CategoryArtwork slug={category.slug} name={category.name} />
-                </div>
-                <p className="mt-1 line-clamp-2 min-h-8 text-[10px] font-semibold leading-tight text-foreground group-hover:text-primary sm:mt-2 sm:min-h-0 sm:text-base">
-                  {category.name}
-                </p>
-                <p className="hidden text-xs text-muted-foreground sm:block">
-                  {category.productCount} products
-                </p>
-              </Link>
-            ))}
+          <div className="rounded-2xl border border-border bg-card p-3 shadow-card sm:p-5">
+            <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-6 lg:grid-cols-6">
+              {categoryTiles.map((category) => (
+                <Link
+                  key={category.id}
+                  to="/categories/$slug"
+                  params={{ slug: category.slug }}
+                  className="group text-center"
+                >
+                  <div className="mx-auto h-10 max-w-14 sm:h-20 sm:max-w-28">
+                    <CategoryArtwork slug={category.slug} name={category.name} />
+                  </div>
+                  <p className="mt-1 line-clamp-2 min-h-8 text-[10px] font-semibold leading-tight text-foreground group-hover:text-primary sm:mt-2 sm:min-h-0 sm:text-base">
+                    {category.name}
+                  </p>
+                  <p className="hidden text-xs text-muted-foreground sm:block">
+                    {category.productCount} products
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 

@@ -37,18 +37,18 @@ function CategoriesPage() {
           description="Shop across categories from trusted Nigerian sellers."
         />
 
-        <div className="mt-6 rounded-lg border border-border bg-card p-3 shadow-card sm:p-4">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
+          <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 lg:grid-cols-6">
             {catalogCategories.map((c) => (
               <Link key={c.id} to="/categories/$slug" params={{ slug: c.slug }} className="group">
                 <article className="text-center transition-transform duration-200 group-hover:-translate-y-0.5">
-                  <div className="mx-auto h-16 w-full max-w-28 transition-transform duration-200 group-hover:scale-105 sm:h-20">
+                  <div className="mx-auto h-12 w-full max-w-20 transition-transform duration-200 group-hover:scale-105 sm:h-20 sm:max-w-28">
                     <CategoryArtwork slug={c.slug} name={c.name} />
                   </div>
-                  <h3 className="mt-2 line-clamp-2 min-h-10 px-1 text-sm font-semibold leading-tight text-foreground sm:text-base">
+                  <h3 className="mt-2 line-clamp-2 min-h-8 px-1 text-[11px] font-semibold leading-tight text-foreground sm:min-h-10 sm:text-base">
                     {c.name}
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="hidden text-xs text-muted-foreground sm:block">
                     {c.productCount} {c.productCount === 1 ? "product" : "products"}
                   </p>
                 </article>
