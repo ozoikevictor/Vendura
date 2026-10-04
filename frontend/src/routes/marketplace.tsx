@@ -64,6 +64,7 @@ function MarketplacePage() {
   const categoryTiles =
     stockedCategories.length > 0 ? stockedCategories.slice(0, 12) : catalogCategories.slice(0, 12);
   const products = data?.items ?? [];
+  const total = data?.total ?? 0;
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
   const storeById = useMemo(
     () => new Map(storeList.map((store) => [store.id, store])),
@@ -97,6 +98,24 @@ function MarketplacePage() {
         ref={contentRef}
         className="mx-auto w-full max-w-7xl flex-1 scroll-mt-4 px-4 py-6 sm:px-6 lg:px-8"
       >
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
+              Shop across Vendraza
+            </p>
+            <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              Marketplace
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {total} products from {storeList.length} independent{" "}
+              {storeList.length === 1 ? "vendor" : "vendors"}.
+            </p>
+          </div>
+          <Link to="/stores" className="text-sm font-semibold text-primary hover:underline">
+            Explore stores
+          </Link>
+        </div>
+
         <section aria-labelledby="marketplace-categories">
           <div className="mb-3 flex items-center justify-between gap-4">
             <h2
@@ -109,21 +128,23 @@ function MarketplacePage() {
               View all categories
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-4 sm:gap-3">
             {categoryTiles.map((category) => (
               <Link
                 key={category.id}
                 to="/categories/$slug"
                 params={{ slug: category.slug }}
-                className="group overflow-hidden rounded-xl border border-border bg-card p-3 text-center shadow-card transition-colors hover:border-primary"
+                className="group overflow-hidden rounded-xl border border-border bg-card p-2 text-center shadow-card transition-colors hover:border-primary sm:p-3"
               >
-                <div className="mx-auto h-16 max-w-28 sm:h-20">
+                <div className="mx-auto h-10 max-w-14 sm:h-20 sm:max-w-28">
                   <CategoryArtwork slug={category.slug} name={category.name} />
                 </div>
-                <p className="mt-2 line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary sm:text-base">
+                <p className="mt-1 line-clamp-2 min-h-8 text-[10px] font-semibold leading-tight text-foreground group-hover:text-primary sm:mt-2 sm:min-h-0 sm:text-base">
                   {category.name}
                 </p>
-                <p className="text-xs text-muted-foreground">{category.productCount} products</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">
+                  {category.productCount} products
+                </p>
               </Link>
             ))}
           </div>
