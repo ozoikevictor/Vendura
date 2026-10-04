@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, ShoppingBasket } from "lucide-react";
+import { Heart, ImageOff, ShoppingBasket } from "lucide-react";
 import type { Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlist";
@@ -63,7 +63,7 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
       <Link
         to="/product/$slug"
         params={{ slug: product.slug }}
-        className="relative block aspect-square overflow-hidden bg-muted"
+        className="relative block aspect-[4/3] overflow-hidden bg-muted"
       >
         {!imageFailed && product.images[0] ? (
           <img
@@ -77,8 +77,9 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
             )}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted px-5 text-center text-xs font-medium text-muted-foreground">
-            Image unavailable
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-accent px-4 text-center text-xs font-medium text-muted-foreground">
+            <ImageOff className="h-5 w-5 text-primary/65" aria-hidden="true" />
+            <span>Image unavailable</span>
           </div>
         )}
         {/* Badges */}
@@ -111,7 +112,7 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
           e.preventDefault();
           void handleWishlistToggle();
         }}
-        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md shadow-sm transition-colors hover:bg-card"
+        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md shadow-sm transition-colors hover:bg-card focus-visible:outline-primary"
       >
         <Heart
           className={cn(
@@ -138,7 +139,7 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
         <Link
           to="/product/$slug"
           params={{ slug: product.slug }}
-          className="line-clamp-2 text-sm font-medium text-foreground hover:text-primary"
+          className="line-clamp-2 min-h-10 text-sm font-medium leading-5 text-foreground hover:text-primary"
         >
           {product.name}
         </Link>
@@ -151,7 +152,7 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
         )}
 
         {/* Price + basket */}
-        <div className="mt-auto flex items-end justify-between pt-1">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
           <PriceTag
             price={product.price}
             {...(product.oldPrice ? { oldPrice: product.oldPrice } : {})}
@@ -170,7 +171,7 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
               addToCart(product, 1);
               toast.success("Added to cart");
             }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-primary"
           >
             <ShoppingBasket className="h-4 w-4" />
           </button>

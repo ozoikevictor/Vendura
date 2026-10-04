@@ -31,6 +31,8 @@ import { getCategories } from "@/services/categoryService";
 import { getFeaturedProducts } from "@/services/productService";
 import { getFeaturedStores } from "@/services/storeService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
+import { discountPercent } from "@/utils/format";
+import type { Category, Product, Store as StoreModel } from "@/types";
 import phone from "@/assets/products/phone.jpg";
 import earbuds from "@/assets/products/earbuds.jpg";
 import ankaraDress from "@/assets/products/ankara-dress.jpg";
@@ -156,6 +158,26 @@ function Index() {
       : categorySource.slice(0, Math.min(categorySource.length, 12));
   const sideCategories = visibleCategories.slice(0, 8);
   const storeById = new Map(featuredStores.map((store) => [store.id, store]));
+  const categoryById = new Map(categorySource.map((category) => [category.id, category]));
+  const latestProducts = featuredProducts.slice(0, 10);
+  const fashionProducts = filterProductsByCategory(featuredProducts, categoryById, [
+    "fashion",
+    "shoes",
+    "watches",
+  ]);
+  const beautyProducts = filterProductsByCategory(featuredProducts, categoryById, [
+    "beauty",
+    "health",
+    "perfumes",
+  ]);
+  const homeProducts = filterProductsByCategory(featuredProducts, categoryById, [
+    "home",
+    "furniture",
+    "appliances",
+  ]);
+  const dealProducts = featuredProducts.filter(
+    (product) => discountPercent(product.price, product.oldPrice) != null,
+  );
 
   useEffect(() => {
     clearActiveStore();
@@ -178,26 +200,16 @@ function Index() {
           <HomeSidePanels />
         </section>
 
-        <section className="mt-4 rounded-xl border border-border bg-card p-4 shadow-card">
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Browse</p>
-              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
-                Shop by category
-              </h2>
-            </div>
-            <Link to="/categories" className="text-sm font-semibold text-primary hover:underline">
-              View all
-            </Link>
-          </div>
+        <section className="mt-4 overflow-hidden rounded-2xl border border-border bg-accent shadow-card">
+          <SectionTitleStrip eyebrow="Browse" title="Shop by category" to="/categories" />
           {categoriesLoading && liveCategories.length === 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 lg:grid-cols-6">
               {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="h-32 animate-pulse rounded-xl bg-muted" />
+                <div key={index} className="h-32 animate-pulse rounded-xl bg-card" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            <div className="grid grid-cols-3 gap-x-3 gap-y-5 p-4 sm:grid-cols-4 lg:grid-cols-6">
               {visibleCategories.slice(0, 12).map((category) => (
                 <Link
                   key={category.id}
@@ -208,10 +220,10 @@ function Index() {
                   <div className="mx-auto h-16 w-full max-w-28 transition-transform duration-200 group-hover:scale-105 sm:h-20">
                     <CategoryArtwork slug={category.slug} name={category.name} />
                   </div>
-                  <span className="mt-2 block text-sm font-semibold leading-tight text-foreground group-hover:text-primary">
+                  <span className="mt-2 block text-[11px] font-semibold leading-tight text-foreground group-hover:text-primary sm:text-sm">
                     {category.name}
                   </span>
-                  <span className="block text-xs text-muted-foreground">
+                  <span className="hidden text-xs text-muted-foreground sm:block">
                     {category.productCount ?? 0}{" "}
                     {(category.productCount ?? 0) === 1 ? "product" : "products"}
                   </span>
@@ -221,36 +233,65 @@ function Index() {
           )}
         </section>
 
-        <section className="mt-4 rounded-xl border border-border bg-card p-4 shadow-card">
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-                Live marketplace
-              </p>
-              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
-                Today's picks
-              </h2>
+        {productsLoading ? (
+          <section className="mt-4 overflow-hidden rounded-2xl border border-border bg-accent shadow-card">
+            <SectionTitleStrip
+              eyebrow="Live marketplace"
+              title="Latest arrivals"
+              to="/marketplace"
+            />
+            <div className="p-4">
+              <ProductGridSkeleton count={10} />
             </div>
-            <Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">
-              See more
-            </Link>
-          </div>
-          {productsLoading ? (
-            <ProductGridSkeleton count={10} />
-          ) : featuredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-              {featuredProducts.map((product) => {
-                const store = storeById.get(product.storeId);
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
-                  />
-                );
-              })}
-            </div>
-          ) : (
+          </section>
+        ) : featuredProducts.length > 0 ? (
+          <>
+            <ShoppingCollection
+              eyebrow="Live marketplace"
+              title="Latest arrivals"
+              products={latestProducts}
+              storeById={storeById}
+              to="/marketplace"
+            />
+            <ShoppingCollection
+              eyebrow="Deals"
+              title="Real discounts"
+              products={dealProducts}
+              storeById={storeById}
+              to="/marketplace"
+              dark
+            />
+            <ShoppingCollection
+              eyebrow="Style"
+              title="Explore fashion"
+              products={fashionProducts}
+              storeById={storeById}
+              to="/categories/fashion"
+              muted
+            />
+            <ShoppingCollection
+              eyebrow="Care"
+              title="Beauty & hair"
+              products={beautyProducts}
+              storeById={storeById}
+              to="/categories/health-beauty"
+            />
+            <ShoppingCollection
+              eyebrow="Home"
+              title="Home essentials"
+              products={homeProducts}
+              storeById={storeById}
+              to="/categories/home-furniture"
+              muted
+            />
+          </>
+        ) : (
+          <section className="mt-4 overflow-hidden rounded-2xl border border-border bg-accent shadow-card">
+            <SectionTitleStrip
+              eyebrow="Live marketplace"
+              title="Latest arrivals"
+              to="/marketplace"
+            />
             <EmptyState
               title="No products yet"
               description="Products from vendors will appear here as soon as they are available."
@@ -263,8 +304,8 @@ function Index() {
                 </Link>
               }
             />
-          )}
-        </section>
+          </section>
+        )}
 
         <section className="mt-4 rounded-xl border border-border bg-card p-4 shadow-card">
           <div className="mb-4 flex items-end justify-between gap-4">
@@ -525,6 +566,114 @@ function AdvertImage({ src }: { src: string }) {
       <img src={src} alt="" className="h-full w-full object-cover" />
     </div>
   );
+}
+
+function ShoppingCollection({
+  eyebrow,
+  title,
+  products,
+  storeById,
+  to,
+  dark = false,
+  muted = false,
+}: {
+  eyebrow: string;
+  title: string;
+  products: Product[];
+  storeById: Map<string, StoreModel>;
+  to:
+    | "/marketplace"
+    | "/categories/fashion"
+    | "/categories/health-beauty"
+    | "/categories/home-furniture";
+  dark?: boolean;
+  muted?: boolean;
+}) {
+  if (products.length === 0) return null;
+
+  return (
+    <section
+      className={`mt-4 overflow-hidden rounded-2xl border border-border shadow-card ${
+        muted ? "bg-secondary" : "bg-accent"
+      }`}
+    >
+      <SectionTitleStrip eyebrow={eyebrow} title={title} to={to} dark={dark} />
+      <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 sm:gap-4 sm:p-4 lg:grid-cols-5">
+        {products.slice(0, 10).map((product) => {
+          const store = storeById.get(product.storeId);
+          return (
+            <ProductCard
+              key={product.id}
+              product={product}
+              {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SectionTitleStrip({
+  eyebrow,
+  title,
+  to,
+  dark = false,
+}: {
+  eyebrow: string;
+  title: string;
+  to:
+    | "/marketplace"
+    | "/categories"
+    | "/categories/fashion"
+    | "/categories/health-beauty"
+    | "/categories/home-furniture";
+  dark?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 px-4 py-3 ${
+        dark
+          ? "bg-secondary-foreground text-primary-foreground"
+          : "bg-primary text-primary-foreground"
+      }`}
+    >
+      <div className="min-w-0">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-75">{eyebrow}</p>
+        <h2 className="line-clamp-1 font-display text-xl font-bold tracking-tight sm:text-2xl">
+          {title}
+        </h2>
+      </div>
+      <Link
+        to={to}
+        className="shrink-0 rounded-full bg-warning px-3 py-1.5 text-xs font-bold text-warning-foreground hover:bg-warning/90"
+      >
+        See all
+      </Link>
+    </div>
+  );
+}
+
+function filterProductsByCategory(
+  products: Product[],
+  categoryById: Map<string, Category>,
+  keywords: string[],
+) {
+  return products.filter((product) => {
+    const category = categoryById.get(product.categoryId);
+    const text = [
+      category?.slug,
+      category?.name,
+      product.name,
+      product.description,
+      ...(product.tags ?? []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return keywords.some((keyword) => text.includes(keyword));
+  });
 }
 
 function CategoryRail({ categories }: { categories: Array<(typeof fallbackCategories)[number]> }) {

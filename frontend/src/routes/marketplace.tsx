@@ -116,19 +116,25 @@ function MarketplacePage() {
           </Link>
         </div>
 
-        <section aria-labelledby="marketplace-categories">
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <h2
-              id="marketplace-categories"
-              className="font-display text-lg font-bold text-foreground"
+        <section
+          aria-labelledby="marketplace-categories"
+          className="overflow-hidden rounded-2xl border border-border bg-accent shadow-card"
+        >
+          <div className="flex items-center justify-between gap-4 bg-primary px-4 py-3 text-primary-foreground">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-75">Browse</p>
+              <h2 id="marketplace-categories" className="font-display text-xl font-bold">
+                Shop by category
+              </h2>
+            </div>
+            <Link
+              to="/categories"
+              className="shrink-0 rounded-full bg-warning px-3 py-1.5 text-xs font-bold text-warning-foreground hover:bg-warning/90"
             >
-              Shop by category
-            </h2>
-            <Link to="/categories" className="text-sm font-semibold text-primary hover:underline">
-              View all categories
+              View all
             </Link>
           </div>
-          <div className="rounded-2xl border border-border bg-card p-3 shadow-card sm:p-5">
+          <div className="p-3 sm:p-5">
             <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-6 lg:grid-cols-6">
               {categoryTiles.map((category) => (
                 <Link
@@ -152,7 +158,7 @@ function MarketplacePage() {
           </div>
         </section>
 
-        <div className="mt-8 flex flex-col gap-6 lg:flex-row">
+        <div className="mt-6 flex flex-col gap-6 lg:flex-row">
           {/* Sidebar filters */}
           <aside
             className={`${showFilters ? "fixed inset-0 z-50 overflow-y-auto bg-background lg:static lg:z-auto lg:w-64 lg:shrink-0" : "hidden lg:block"}`}
@@ -248,9 +254,20 @@ function MarketplacePage() {
           </aside>
 
           {/* Products */}
-          <div className="flex-1">
+          <section className="flex-1 overflow-hidden rounded-2xl border border-border bg-accent shadow-card">
+            <div className="flex items-center justify-between gap-3 bg-secondary-foreground px-4 py-3 text-primary-foreground">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] opacity-75">
+                  Products
+                </p>
+                <h2 className="font-display text-xl font-bold">Marketplace results</h2>
+              </div>
+              <span className="hidden text-xs font-medium opacity-80 sm:inline">
+                {total} {total === 1 ? "product" : "products"}
+              </span>
+            </div>
             {/* Sort bar */}
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
               <button
                 onClick={() => setShowFilters(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground lg:hidden"
@@ -275,61 +292,63 @@ function MarketplacePage() {
             </div>
 
             {/* Grid */}
-            {isLoading ? (
-              <ProductGridSkeleton count={12} />
-            ) : products.length === 0 ? (
-              <EmptyState
-                title="No products found"
-                description="Vendor products will appear here as sellers publish them."
-                action={
-                  <Link
-                    to="/marketplace"
-                    className="text-sm font-semibold text-primary hover:underline"
-                  >
-                    Clear filters
-                  </Link>
-                }
-              />
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                  {products.map((p) => {
-                    const store = storeById.get(p.storeId);
-                    return (
-                      <ProductCard
-                        key={p.id}
-                        product={p}
-                        {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
-                      />
-                    );
-                  })}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => changePage((query.page ?? 1) - 1)}
-                      disabled={(query.page ?? 1) <= 1}
-                      className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground disabled:opacity-40 hover:bg-accent"
+            <div className="px-3 pb-4 sm:px-4">
+              {isLoading ? (
+                <ProductGridSkeleton count={12} />
+              ) : products.length === 0 ? (
+                <EmptyState
+                  title="No products found"
+                  description="Vendor products will appear here as sellers publish them."
+                  action={
+                    <Link
+                      to="/marketplace"
+                      className="text-sm font-semibold text-primary hover:underline"
                     >
-                      Previous
-                    </button>
-                    <span className="text-sm text-muted-foreground">
-                      Page {query.page ?? 1} of {totalPages}
-                    </span>
-                    <button
-                      onClick={() => changePage((query.page ?? 1) + 1)}
-                      disabled={(query.page ?? 1) >= totalPages}
-                      className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground disabled:opacity-40 hover:bg-accent"
-                    >
-                      Next
-                    </button>
+                      Clear filters
+                    </Link>
+                  }
+                />
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                    {products.map((p) => {
+                      const store = storeById.get(p.storeId);
+                      return (
+                        <ProductCard
+                          key={p.id}
+                          product={p}
+                          {...(store ? { storeName: store.name, storeSlug: store.slug } : {})}
+                        />
+                      );
+                    })}
                   </div>
-                )}
-              </>
-            )}
-          </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => changePage((query.page ?? 1) - 1)}
+                        disabled={(query.page ?? 1) <= 1}
+                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground disabled:opacity-40 hover:bg-accent"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm text-muted-foreground">
+                        Page {query.page ?? 1} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => changePage((query.page ?? 1) + 1)}
+                        disabled={(query.page ?? 1) >= totalPages}
+                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground disabled:opacity-40 hover:bg-accent"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
         </div>
       </main>
 
