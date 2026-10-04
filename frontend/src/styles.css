@@ -121,25 +121,25 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  --background: oklch(0.985 0.006 150);
-  --foreground: oklch(0.22 0.025 160);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.025 160);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.025 160);
+  --background: #f6f7f8;
+  --foreground: #17211b;
+  --card: #ffffff;
+  --card-foreground: #17211b;
+  --popover: #ffffff;
+  --popover-foreground: #17211b;
 
-  --primary: oklch(0.55 0.14 152);
-  --primary-foreground: oklch(0.97 0.03 150);
-  --primary-soft: oklch(0.55 0.14 152 / 0.12);
+  --primary: #12823c;
+  --primary-foreground: #ffffff;
+  --primary-soft: rgb(18 130 60 / 0.1);
 
-  --secondary: oklch(0.965 0.01 150);
-  --secondary-foreground: oklch(0.28 0.04 155);
-  --muted: oklch(0.955 0.008 150);
-  --muted-foreground: oklch(0.5 0.025 155);
-  --accent: oklch(0.955 0.012 150);
-  --accent-foreground: oklch(0.28 0.04 155);
+  --secondary: #f0f4f1;
+  --secondary-foreground: #123524;
+  --muted: #f1f4f2;
+  --muted-foreground: #647067;
+  --accent: #eef5f0;
+  --accent-foreground: #123524;
 
   --clay: oklch(0.68 0.18 35);
   --clay-foreground: oklch(0.99 0 0);
@@ -157,13 +157,13 @@
   --destructive-foreground: oklch(0.99 0 0);
   --destructive-soft: oklch(0.6 0.22 25 / 0.12);
 
-  --border: oklch(0.22 0.025 160 / 0.09);
-  --input: oklch(0.22 0.025 160 / 0.12);
-  --ring: oklch(0.55 0.14 152 / 0.5);
+  --border: #e4e9e5;
+  --input: #d9e0db;
+  --ring: rgb(18 130 60 / 0.45);
 
-  --glass: oklch(1 0 0 / 0.55);
-  --glass-strong: oklch(1 0 0 / 0.78);
-  --surface: oklch(1 0 0 / 0.6);
+  --glass: rgb(255 255 255 / 0.72);
+  --glass-strong: rgb(255 255 255 / 0.9);
+  --surface: rgb(255 255 255 / 0.72);
 
   --chart-1: oklch(0.55 0.14 152);
   --chart-2: oklch(0.68 0.18 35);
@@ -171,14 +171,14 @@
   --chart-4: oklch(0.78 0.16 75);
   --chart-5: oklch(0.62 0.12 160);
 
-  --sidebar: oklch(1 0 0 / 0.7);
-  --sidebar-foreground: oklch(0.22 0.025 160);
-  --sidebar-primary: oklch(0.55 0.14 152);
-  --sidebar-primary-foreground: oklch(0.97 0.03 150);
-  --sidebar-accent: oklch(0.55 0.14 152 / 0.1);
-  --sidebar-accent-foreground: oklch(0.28 0.04 155);
-  --sidebar-border: oklch(0.22 0.025 160 / 0.08);
-  --sidebar-ring: oklch(0.55 0.14 152 / 0.5);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #17211b;
+  --sidebar-primary: #12823c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(18 130 60 / 0.1);
+  --sidebar-accent-foreground: #123524;
+  --sidebar-border: #e4e9e5;
+  --sidebar-ring: rgb(18 130 60 / 0.45);
 }
 
 @layer base {
@@ -252,24 +252,17 @@
 @utility panel {
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
 }
 
 /* Page-wide paper wash behind marketplace content */
 @utility lagoon-wash {
-  background:
-    radial-gradient(110% 72% at 10% 0%, oklch(0.9 0.035 150 / 0.36), transparent 58%),
-    radial-gradient(88% 64% at 92% 8%, oklch(0.82 0.05 152 / 0.18), transparent 58%),
-    radial-gradient(78% 60% at 72% 100%, oklch(0.9 0.03 150 / 0.24), transparent 62%),
-    linear-gradient(180deg, oklch(0.992 0.004 145), oklch(0.975 0.008 150));
+  background: #f6f7f8;
 }
 
 @utility lagoon-wash-soft {
-  background:
-    radial-gradient(100% 60% at 10% 0%, oklch(0.91 0.025 150 / 0.2), transparent 55%),
-    radial-gradient(70% 50% at 95% 10%, oklch(0.82 0.04 152 / 0.1), transparent 55%),
-    linear-gradient(180deg, oklch(0.994 0.003 145), oklch(0.982 0.006 150));
+  background: #f6f7f8;
 }
 
 @utility eyebrow {
@@ -353,7 +346,7 @@
 }
 
 .hero-stage {
-  background: #08120e;
+  background: #123524;
 }
 
 .hero-slide.is-active {
@@ -459,7 +452,7 @@
 
 @media (max-width: 639px) {
   .hero-stage {
-    min-height: min(46rem, 100svh);
+    min-height: 24rem;
   }
 
   .hero-media,
@@ -485,10 +478,10 @@
   }
 
   .hero-content-shell {
-    min-height: min(46rem, 100svh);
+    min-height: 24rem;
     align-items: flex-end;
-    padding-top: 7.5rem;
-    padding-bottom: 5.75rem;
+    padding-top: 2rem;
+    padding-bottom: 3.25rem;
   }
 
   .hero-sequence {
@@ -504,8 +497,8 @@
 
   .hero-headline {
     min-height: 0;
-    font-size: clamp(2.55rem, 12vw, 3.25rem);
-    line-height: 0.96;
+    font-size: clamp(2rem, 10vw, 2.6rem);
+    line-height: 1;
   }
 
   .copy-float {

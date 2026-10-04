@@ -6,7 +6,8 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { DataLoader } from "@/components/shared/DataLoader";
+import { ProductGridSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import type { ProductQuery } from "@/types";
@@ -58,6 +59,11 @@ function MarketplacePage() {
     placeholderData: (previous) => previous,
   });
   const catalogCategories = categories ?? [];
+  const stockedCategories = catalogCategories.filter(
+    (category) => Number(category.productCount ?? 0) > 0,
+  );
+  const categoryTiles =
+    stockedCategories.length > 0 ? stockedCategories.slice(0, 12) : catalogCategories.slice(0, 12);
   const products = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
@@ -112,17 +118,20 @@ function MarketplacePage() {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-            {catalogCategories.slice(0, 12).map((category) => (
+            {categoryTiles.map((category) => (
               <Link
                 key={category.id}
                 to="/categories/$slug"
                 params={{ slug: category.slug }}
-                className="min-h-20 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary hover:bg-primary-soft"
+                className="group overflow-hidden rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary"
               >
-                <p className="text-sm font-semibold text-foreground">{category.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {category.productCount} products
+                <div className="aspect-[1.7/1] overflow-hidden rounded-md bg-[#eef8f1]">
+                  <CategoryArtwork slug={category.slug} name={category.name} />
+                </div>
+                <p className="mt-2 line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary">
+                  {category.name}
                 </p>
+                <p className="text-xs text-muted-foreground">{category.productCount} products</p>
               </Link>
             ))}
           </div>
@@ -252,7 +261,7 @@ function MarketplacePage() {
 
             {/* Grid */}
             {isLoading ? (
-              <DataLoader label="Loading marketplace products" className="min-h-80" />
+              <ProductGridSkeleton count={12} />
             ) : products.length === 0 ? (
               <EmptyState
                 title="No products found"

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Heart, ShoppingBasket } from "lucide-react";
 import type { Product } from "@/types";
 import { cn } from "@/lib/utils";
@@ -23,10 +23,13 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
   const wishlist = useWishlistStore();
   const user = useAuthStore((state) => state.user);
   const addToCart = useCartStore((s) => s.addByProductId);
+  const navigate = useNavigate();
   const isWishlisted = wishlist.has(product.id);
   const outOfStock = product.stock === 0;
   const discount = discountPercent(product.price, product.oldPrice);
   const [imageFailed, setImageFailed] = useState(false);
+  const hasReviews = product.reviewCount > 0;
+  const requiresSelection = product.variantOptions.length > 0 || product.variants.length > 0;
 
   async function handleWishlistToggle() {
     if (!user) {
@@ -141,7 +144,11 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
         </Link>
 
         {/* Rating */}
-        <RatingStars rating={product.rating} size={12} showValue count={product.reviewCount} />
+        {hasReviews ? (
+          <RatingStars rating={product.rating} size={12} showValue count={product.reviewCount} />
+        ) : (
+          <p className="text-xs text-muted-foreground">No reviews yet</p>
+        )}
 
         {/* Price + basket */}
         <div className="mt-auto flex items-end justify-between pt-1">
@@ -152,10 +159,14 @@ export function ProductCard({ product, storeName, storeSlug, className }: Produc
           />
           <button
             type="button"
-            aria-label="Add to cart"
+            aria-label={requiresSelection ? "Choose options" : "Add to cart"}
             disabled={outOfStock}
             onClick={(e) => {
               e.preventDefault();
+              if (requiresSelection) {
+                void navigate({ to: "/product/$slug", params: { slug: product.slug } });
+                return;
+              }
               addToCart(product, 1);
               toast.success("Added to cart");
             }}

@@ -10,22 +10,16 @@ import {
   MessageSquare,
   BarChart3,
   ShoppingBasket,
-  CheckCircle2,
-  UserPlus,
-  PackagePlus,
-  Share2,
   Link as LinkIcon,
   LogIn,
   Pause,
   Play,
 } from "lucide-react";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
 import { categories, popularCategorySlugs } from "@/data/categories";
-import { plans } from "@/data/finance";
-import { formatNaira } from "@/utils/format";
 import heroGroceries from "@/assets/hero-groceries.jpg";
 import heroFashion from "@/assets/hero-fashion.jpg";
 import heroElectronics from "@/assets/hero-electronics.jpg";
@@ -37,6 +31,7 @@ import { ScrollReveal } from "@/components/shared/ScrollReveal";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { StoreCard } from "@/components/shared/StoreCard";
 import { DataLoader } from "@/components/shared/DataLoader";
+import { ProductGridSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { getFeaturedProducts } from "@/services/productService";
 import { getFeaturedStores } from "@/services/storeService";
 import { getCategories } from "@/services/categoryService";
@@ -110,10 +105,10 @@ function Index() {
 
   return (
     <div className="min-h-screen lagoon-wash">
-      <PublicHeader />
+      <MarketplaceHeader publicMode />
 
       {/* Hero cover and introduction */}
-      <section className="hero-stage relative isolate min-h-[36rem] overflow-hidden sm:min-h-[42rem] lg:min-h-[46rem]">
+      <section className="hero-stage relative isolate min-h-[22rem] overflow-hidden sm:min-h-[24rem] lg:min-h-[25rem]">
         <div className="hero-media absolute inset-0 -z-20" aria-live="off">
           {heroSlides.map((slide, index) => (
             <img
@@ -128,19 +123,19 @@ function Index() {
           ))}
         </div>
         <div className="hero-image-overlay absolute inset-0 -z-10" />
-        <div className="hero-content-shell mx-auto flex min-h-[36rem] max-w-7xl items-start justify-end px-4 py-12 sm:min-h-[42rem] sm:px-6 sm:py-16 lg:min-h-[46rem] lg:px-8 lg:py-20">
-          <div className="hero-sequence w-full max-w-xl text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)] sm:mt-4 lg:mt-8">
-            <p className="mb-4 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
+        <div className="hero-content-shell mx-auto flex min-h-[22rem] max-w-7xl items-center justify-start px-4 py-8 sm:min-h-[24rem] sm:px-6 lg:min-h-[25rem] lg:px-8">
+          <div className="hero-sequence w-full max-w-lg text-left text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.45)]">
+            <p className="mb-3 font-mono text-xs uppercase tracking-[0.22em] text-white/85">
               Nigeria's Multi-Vendor Marketplace
             </p>
-            <h1 className="hero-headline font-display text-4xl font-bold tracking-tight sm:min-h-[7rem] sm:text-5xl lg:min-h-[8rem] lg:text-6xl">
-              Sell Smarter. <span className="text-[#b7e3c4]">Shop Anywhere.</span>
+            <h1 className="hero-headline font-display text-4xl font-bold tracking-tight sm:text-5xl">
+              Shop Nigerian sellers in one trusted marketplace.
             </h1>
-            <p className="copy-float mt-3 max-w-lg text-base leading-7 text-white/90 sm:mt-5 sm:text-lg">
-              From phones to fashion, building materials to home essentials, buy from trusted
-              vendors across Nigeria or start your own store in minutes.
+            <p className="copy-float mt-3 max-w-md text-sm leading-6 text-white/90 sm:text-base">
+              Find phones, fashion, home goods, beauty products, and building materials from
+              independent vendors across Nigeria.
             </p>
-            <div className="hero-actions mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
+            <div className="hero-actions mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 to="/marketplace"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:bg-primary/90 hover:shadow-frost sm:w-auto"
@@ -149,21 +144,20 @@ function Index() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                to="/register"
+                to="/categories"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/60 bg-white/95 px-6 py-3 text-sm font-semibold text-foreground shadow-card transition-all hover:bg-white sm:w-auto"
               >
-                <UserPlus className="h-4 w-4" />
-                Create a customer account
+                Browse categories
               </Link>
               <Link
                 to="/vendor-register"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/60 bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/50 bg-black/20 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-black/30 sm:w-auto"
               >
                 <Store className="h-4 w-4" />
                 Start selling
               </Link>
             </div>
-            <div className="hero-trust mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/85 sm:mt-9">
+            <div className="hero-trust mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/85 sm:text-sm">
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-[#b7e3c4]" /> Verified vendors
               </span>
@@ -176,7 +170,7 @@ function Index() {
             </div>
           </div>
         </div>
-        <div className="hero-controls absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-3 py-2 backdrop-blur-sm">
+        <div className="hero-controls absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/30 px-3 py-2 backdrop-blur-sm">
           {heroSlides.map((slide, index) => (
             <button
               key={slide.src}
@@ -204,7 +198,7 @@ function Index() {
       {/* Live marketplace preview */}
       <ScrollReveal>
         <section className="border-b border-border bg-background">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <SectionHeader
               eyebrow="Live marketplace"
               title="Products Available Now"
@@ -219,7 +213,9 @@ function Index() {
               }
             />
             {productsLoading ? (
-              <DataLoader label="Loading marketplace products" className="min-h-64" />
+              <div className="mt-7">
+                <ProductGridSkeleton count={8} />
+              </div>
             ) : featuredProducts.length > 0 ? (
               <div className="stagger-grid mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                 {featuredProducts.map((product) => {
@@ -261,7 +257,7 @@ function Index() {
 
       <ScrollReveal>
         <section className="bg-card">
-          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
             <SectionHeader
               eyebrow="Shop by seller"
               title="Featured Stores"
@@ -276,7 +272,7 @@ function Index() {
               }
             />
             {storesLoading ? (
-              <DataLoader label="Loading stores" className="min-h-48" />
+              <DataLoader label="Loading stores" className="min-h-40" />
             ) : featuredStores.length > 0 ? (
               <div className="stagger-grid mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {featuredStores.map((store) => (
@@ -290,7 +286,7 @@ function Index() {
 
       {/* Popular Categories */}
       <ScrollReveal>
-        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <SectionHeader
             eyebrow="Browse"
             title="Popular Categories"
@@ -327,70 +323,10 @@ function Index() {
         </section>
       </ScrollReveal>
 
-      {/* Seller Account Steps */}
-      <ScrollReveal>
-        <section className="border-y border-border bg-card">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <SectionHeader
-              eyebrow="Start selling"
-              title="Create Your Seller Account"
-              description="Go from registration to a shareable online store in four clear steps."
-              className="justify-center text-center [&_div]:items-center"
-            />
-            <div className="stagger-grid mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  icon: UserPlus,
-                  title: "Create your account",
-                  desc: "Enter your personal and business details to open a secure seller account.",
-                },
-                {
-                  icon: Store,
-                  title: "Set up your store",
-                  desc: "Add your store name, description, location, logo, and delivery information.",
-                },
-                {
-                  icon: PackagePlus,
-                  title: "Add your products",
-                  desc: "Upload product photos, prices, stock, categories, and negotiation settings.",
-                },
-                {
-                  icon: Share2,
-                  title: "Share and sell",
-                  desc: "Copy your unique storefront link and send it to customers anywhere.",
-                },
-              ].map((step, index) => (
-                <div
-                  key={step.title}
-                  className="relative rounded-xl border border-border bg-background p-5 shadow-card transition-transform duration-300 hover:-translate-y-1"
-                >
-                  <span className="absolute right-4 top-4 font-mono text-2xl font-bold text-primary/20">
-                    0{index + 1}
-                  </span>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                    <step.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-4 font-semibold text-foreground">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 text-center">
-              <Link
-                to="/vendor-register"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Create seller account <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
       {/* How Vendraza Works */}
       <ScrollReveal>
         <section className="bg-card border-y border-border">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <SectionHeader
               eyebrow="How it works"
               title="How Customers Shop"
@@ -439,7 +375,7 @@ function Index() {
       {/* Why Sell With Vendraza */}
       <ScrollReveal>
         <section className="bg-primary text-primary-foreground">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-2">
               <div>
                 <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary-foreground/70">
@@ -498,7 +434,7 @@ function Index() {
       {/* Trust and Protection */}
       <ScrollReveal>
         <section className="border-y border-border bg-background">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <SectionHeader
               eyebrow="Built for trust"
               title="Protection at Every Step"
@@ -535,51 +471,6 @@ function Index() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* Pricing Preview */}
-      <ScrollReveal>
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <SectionHeader
-            eyebrow="Pricing"
-            title="Plans for Every Seller"
-            description="Add your first 5 products free. Upgrade only when you need more listings."
-            className="justify-center text-center [&_div]:items-center"
-          />
-          <div className="stagger-grid mt-8 grid gap-4 md:grid-cols-3">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative rounded-2xl border p-6 ${plan.highlighted ? "border-primary bg-card shadow-frost" : "border-border bg-card shadow-card"}`}
-              >
-                {plan.highlighted && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                    Most Popular
-                  </span>
-                )}
-                <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
-                <p className="mt-2 text-3xl font-bold text-foreground">
-                  {formatNaira(plan.priceMonthly)}
-                  <span className="text-base font-normal text-muted-foreground">/mo</span>
-                </p>
-                <ul className="mt-4 space-y-2">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to="/vendor-register"
-                  className={`mt-6 block rounded-lg py-2.5 text-center text-sm font-semibold transition-colors ${plan.highlighted ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border text-foreground hover:bg-accent"}`}
-                >
-                  Get Started
-                </Link>
-              </div>
-            ))}
           </div>
         </section>
       </ScrollReveal>
