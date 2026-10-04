@@ -129,7 +129,7 @@ function Index() {
                   params={{ slug: category.slug }}
                   className="group text-center"
                 >
-                  <div className="aspect-[1.65/1] overflow-hidden rounded-xl border border-emerald-100/70 bg-[#eef8f1] transition-all group-hover:border-primary/30 group-hover:shadow-card">
+                  <div className="mx-auto h-16 w-full max-w-28 transition-transform duration-200 group-hover:scale-105 sm:h-20">
                     <CategoryArtwork slug={category.slug} name={category.name} />
                   </div>
                   <span className="mt-2 block text-sm font-semibold leading-tight text-foreground group-hover:text-primary">

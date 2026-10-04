@@ -125,7 +125,7 @@ function MarketplacePage() {
                 params={{ slug: category.slug }}
                 className="group overflow-hidden rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary"
               >
-                <div className="aspect-[1.7/1] overflow-hidden rounded-md bg-[#eef8f1]">
+                <div className="mx-auto h-14 max-w-24">
                   <CategoryArtwork slug={category.slug} name={category.name} />
                 </div>
                 <p className="mt-2 line-clamp-1 text-sm font-semibold text-foreground group-hover:text-primary">

@@ -147,7 +147,7 @@ function CategoryDetailPage() {
 
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
           <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_1.1fr] sm:items-center sm:p-5">
-            <div className="aspect-[2/1.05] overflow-hidden border border-emerald-100/70 bg-[#eef8f1]">
+            <div className="mx-auto h-24 w-full max-w-44 sm:h-32">
               <CategoryArtwork slug={displayCategory.slug} name={displayCategory.name} />
             </div>
             <div>

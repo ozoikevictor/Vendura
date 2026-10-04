@@ -42,7 +42,7 @@ function CategoriesPage() {
             {catalogCategories.map((c) => (
               <Link key={c.id} to="/categories/$slug" params={{ slug: c.slug }} className="group">
                 <article className="text-center transition-transform duration-200 group-hover:-translate-y-0.5">
-                  <div className="aspect-[1.72/1] overflow-hidden border border-emerald-100/70 bg-[#eef8f1] transition-all group-hover:border-primary/25 group-hover:shadow-sm">
+                  <div className="mx-auto h-16 w-full max-w-28 transition-transform duration-200 group-hover:scale-105 sm:h-20">
                     <CategoryArtwork slug={c.slug} name={c.name} />
                   </div>
                   <h3 className="mt-2 line-clamp-2 min-h-10 px-1 text-sm font-semibold leading-tight text-foreground sm:text-base">
