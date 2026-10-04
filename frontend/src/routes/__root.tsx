@@ -129,7 +129,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/vendraza-icon.svg", type: "image/svg+xml" },
     ],
     scripts: [jsonLdScript([organizationJsonLd(), websiteJsonLd()])],
   }),

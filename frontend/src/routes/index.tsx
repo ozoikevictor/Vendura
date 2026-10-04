@@ -288,6 +288,7 @@ function Index() {
 
 function LaunchStrip() {
   const [activeAdvert, setActiveAdvert] = useState(0);
+  const [activeNavItem, setActiveNavItem] = useState("home");
   const advert = advertSlides[activeAdvert];
 
   useEffect(() => {
@@ -385,7 +386,15 @@ function MobileShoppingTop({
       </Link>
 
       <nav className="-mx-3 mt-3 flex gap-5 overflow-x-auto border-y border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
-        <Link to="/" className="border-b-2 border-primary pb-2 text-primary">
+        <Link
+          to="/"
+          onClick={() => setActiveNavItem("home")}
+          className={`shrink-0 pb-2 transition-colors ${
+            activeNavItem === "home"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground"
+          }`}
+        >
           Home
         </Link>
         {categories.slice(0, 10).map((category) => (
@@ -393,7 +402,12 @@ function MobileShoppingTop({
             key={category.id}
             to="/categories/$slug"
             params={{ slug: category.slug }}
-            className="shrink-0 pb-2"
+            onClick={() => setActiveNavItem(category.slug)}
+            className={`shrink-0 pb-2 transition-colors ${
+              activeNavItem === category.slug
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground"
+            }`}
           >
             {category.name}
           </Link>
