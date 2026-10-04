@@ -89,11 +89,14 @@ function Index() {
     <div className="min-h-screen lagoon-wash">
       <MarketplaceHeader publicMode />
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <LaunchStrip />
+      <main className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+        <MobileShoppingTop categories={visibleCategories} />
+        <div className="hidden sm:block">
+          <LaunchStrip />
+        </div>
         <CategoryRail categories={visibleCategories} />
 
-        <section className="mt-4 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)_16rem]">
+        <section className="mt-4 hidden gap-4 sm:grid lg:grid-cols-[15rem_minmax(0,1fr)_16rem]">
           <CategoryMenu categories={sideCategories} />
           <ShoppingHero />
           <HomeSidePanels />
@@ -269,11 +272,106 @@ function LaunchStrip() {
   );
 }
 
+function MobileShoppingTop({
+  categories,
+}: {
+  categories: Array<(typeof fallbackCategories)[number]>;
+}) {
+  const mobileDeals = [
+    { label: "Best prices", icon: ShoppingBag },
+    { label: "Bulk drops", icon: Store },
+    { label: "Fresh stores", icon: Sparkles },
+    { label: "Save more", icon: Gem },
+  ];
+
+  return (
+    <div className="sm:hidden">
+      <Link
+        to="/marketplace"
+        className="flex min-h-14 items-center justify-between overflow-hidden rounded-xl bg-[#123524] px-3 py-2 text-white shadow-card"
+      >
+        <div>
+          <p className="font-display text-lg font-bold leading-none text-[#d8f7df]">
+            Vendraza Deals
+          </p>
+          <p className="mt-1 text-[11px] font-medium text-white/75">
+            Trusted sellers • Fresh products
+          </p>
+        </div>
+        <span className="rounded-full bg-[#f7b733] px-3 py-1.5 text-xs font-bold text-[#123524]">
+          Shop now
+        </span>
+      </Link>
+
+      <nav className="-mx-3 mt-3 flex gap-5 overflow-hidden border-y border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+        <Link to="/" className="border-b-2 border-primary pb-2 text-primary">
+          Home
+        </Link>
+        {categories.slice(0, 4).map((category) => (
+          <Link
+            key={category.id}
+            to="/categories/$slug"
+            params={{ slug: category.slug }}
+            className="shrink-0 pb-2"
+          >
+            {category.name}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="-mx-3 bg-[#123524] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/85">
+        Call to order: 07080635700 | WhatsApp: 12347016542481
+      </div>
+
+      <section className="mt-3 grid grid-cols-[minmax(0,1fr)_6.5rem] gap-3">
+        <Link
+          to="/marketplace"
+          className="relative min-h-36 overflow-hidden rounded-xl bg-[#123524] p-4 text-white shadow-card"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_83%_22%,rgba(247,183,51,0.3),transparent_28%),linear-gradient(135deg,rgba(18,53,36,0.98),rgba(18,130,60,0.88))]" />
+          <div className="relative">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/65">
+              Shop smarter
+            </p>
+            <h1 className="mt-2 max-w-52 font-display text-3xl font-bold leading-none">
+              Deals from Nigerian sellers.
+            </h1>
+            <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-[#f7b733] px-3 py-2 text-xs font-bold text-[#123524]">
+              Start shopping <ArrowRight className="h-3 w-3" />
+            </span>
+          </div>
+        </Link>
+
+        <Link
+          to="/categories"
+          className="grid min-h-36 place-items-center rounded-xl bg-[#e8f7ed] p-3 text-center text-primary shadow-card"
+        >
+          <Sparkles className="h-9 w-9" />
+          <span className="text-xs font-bold leading-tight">Launch deals</span>
+        </Link>
+      </section>
+
+      <section className="mt-3 grid grid-cols-4 gap-2 rounded-xl bg-card p-3 shadow-card">
+        {mobileDeals.map((deal) => (
+          <Link key={deal.label} to="/marketplace" className="text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-xl bg-[#eef8f1] text-primary">
+              <deal.icon className="h-6 w-6" />
+            </div>
+            <span className="mt-1 block text-[11px] font-semibold leading-tight text-foreground">
+              {deal.label}
+            </span>
+          </Link>
+        ))}
+      </section>
+    </div>
+  );
+}
+
 function CategoryRail({ categories }: { categories: Array<(typeof fallbackCategories)[number]> }) {
   return (
     <nav
       aria-label="Popular categories"
-      className="mt-3 flex gap-2 overflow-hidden rounded-xl border border-border bg-card px-3 py-2 shadow-card"
+      className="mt-3 hidden gap-2 overflow-hidden rounded-xl border border-border bg-card px-3 py-2 shadow-card sm:flex"
     >
       <Link
         to="/categories"
