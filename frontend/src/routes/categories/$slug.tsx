@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
 import { getCategoryBySlug } from "@/services/categoryService";
@@ -150,9 +151,12 @@ function CategoryDetailPage() {
             <CategoryArtwork slug={displayCategory.slug} name={displayCategory.name} />
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-foreground">
-              {displayCategory.name}
-            </h1>
+            <div className="flex min-w-0 items-start gap-2">
+              <BackLink fallback="/categories" className="mt-1" />
+              <h1 className="font-display text-3xl font-bold text-foreground">
+                {displayCategory.name}
+              </h1>
+            </div>
             <p className="mt-1 text-sm font-medium text-muted-foreground">{total} products</p>
             <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
               Choose a subcategory to narrow what you want to shop.

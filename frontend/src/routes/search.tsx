@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { queryProducts } from "@/services/productService";
 import { getStores } from "@/services/storeService";
@@ -54,14 +55,23 @@ function SearchPage() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/marketplace" className="hover:text-primary">Marketplace</Link>
+            <Link to="/marketplace" className="hover:text-primary">
+              Marketplace
+            </Link>
             <span>/</span>
             <span className="text-foreground">Search</span>
           </div>
-          <h1 className="mt-2 font-display text-2xl font-bold text-foreground">
-            {q ? `Results for "${q}"` : "Search"}
-          </h1>
-          {q && <p className="mt-1 text-sm text-muted-foreground">{total} {total === 1 ? "result" : "results"} found</p>}
+          <div className="mt-2 flex min-w-0 items-start gap-2">
+            <BackLink fallback="/marketplace" />
+            <h1 className="font-display text-2xl font-bold text-foreground">
+              {q ? `Results for "${q}"` : "Search"}
+            </h1>
+          </div>
+          {q && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {total} {total === 1 ? "result" : "results"} found
+            </p>
+          )}
         </div>
 
         {/* Sort bar */}
@@ -96,7 +106,14 @@ function SearchPage() {
           <EmptyState
             title={`No results for "${q}"`}
             description="Try a different search term or browse the marketplace."
-            action={<Link to="/marketplace" className="text-sm font-semibold text-primary hover:underline">Browse marketplace</Link>}
+            action={
+              <Link
+                to="/marketplace"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Browse marketplace
+              </Link>
+            }
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">

@@ -3,6 +3,7 @@ import { Heart, ShoppingBasket } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { BackLink } from "@/components/shared/BackLink";
 import { useWishlistStore } from "@/store/wishlist";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -74,12 +75,18 @@ function WishlistPage() {
     return (
       <div className="min-h-screen lagoon-wash">
         <MarketplaceHeader />
-        <EmptyState
-          icon={<Heart className="h-7 w-7" />}
-          title="Your wishlist is empty"
-          description="Tap the heart on any product to save it here."
-          action={browseAction}
-        />
+        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mb-4 flex min-w-0 items-start gap-2">
+            <BackLink fallback="/marketplace" className="mt-1" />
+            <h1 className="font-display text-2xl font-bold text-foreground">Wishlist</h1>
+          </div>
+          <EmptyState
+            icon={<Heart className="h-7 w-7" />}
+            title="Your wishlist is empty"
+            description="Tap the heart on any product to save it here."
+            action={browseAction}
+          />
+        </main>
       </div>
     );
   }
@@ -89,7 +96,10 @@ function WishlistPage() {
       <MarketplaceHeader />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-foreground">Wishlist</h1>
+          <div className="flex min-w-0 items-start gap-2">
+            <BackLink fallback="/marketplace" className="mt-1" />
+            <h1 className="font-display text-2xl font-bold text-foreground">Wishlist</h1>
+          </div>
           <button
             onClick={() => void clearWishlist()}
             disabled={clearing}

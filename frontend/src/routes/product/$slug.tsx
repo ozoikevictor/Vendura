@@ -21,6 +21,7 @@ import { RatingStars } from "@/components/shared/RatingStars";
 import { PriceTag } from "@/components/shared/PriceTag";
 import { QuantityStepper } from "@/components/shared/QuantityStepper";
 import { DataLoader } from "@/components/shared/DataLoader";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { getProductBySlug, getProductReviews, getRelatedProducts } from "@/services/productService";
 import { getStoreById } from "@/services/storeService";
@@ -298,9 +299,12 @@ function ProductDetailPage() {
               </Link>
             )}
 
-            <h1 className="mt-1.5 font-display text-xl font-bold text-foreground sm:text-2xl">
-              {product.name}
-            </h1>
+            <div className="mt-1.5 flex min-w-0 items-start gap-2">
+              <BackLink fallback={openedFromAI ? "/customer/ai" : "/marketplace"} />
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">
+                {product.name}
+              </h1>
+            </div>
 
             <div className="mt-2 flex items-center gap-3">
               <RatingStars

@@ -26,6 +26,7 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RatingStars } from "@/components/shared/RatingStars";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { getStoreBySlug } from "@/services/storeService";
 import { getProductsByStore } from "@/services/productService";
@@ -342,9 +343,12 @@ function StorePage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
-                        {store.name}
-                      </h1>
+                      <div className="flex min-w-0 items-start gap-2">
+                        <BackLink fallback="/stores" className="mt-1" />
+                        <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+                          {store.name}
+                        </h1>
+                      </div>
                       {store.verified && <VerifiedBadge />}
                     </div>
                     {store.tagline && (

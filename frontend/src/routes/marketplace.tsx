@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ProductGridSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import type { ProductQuery } from "@/types";
@@ -99,17 +100,20 @@ function MarketplacePage() {
         className="mx-auto w-full max-w-7xl flex-1 scroll-mt-4 px-4 py-6 sm:px-6 lg:px-8"
       >
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-              Shop across Vendraza
-            </p>
-            <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Marketplace
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {total} products from {storeList.length} independent{" "}
-              {storeList.length === 1 ? "vendor" : "vendors"}.
-            </p>
+          <div className="flex min-w-0 items-start gap-2">
+            <BackLink fallback="/" className="mt-6" />
+            <div className="min-w-0">
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
+                Shop across Vendraza
+              </p>
+              <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Marketplace
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {total} products from {storeList.length} independent{" "}
+                {storeList.length === 1 ? "vendor" : "vendors"}.
+              </p>
+            </div>
           </div>
           <Link to="/stores" className="text-sm font-semibold text-primary hover:underline">
             Explore stores

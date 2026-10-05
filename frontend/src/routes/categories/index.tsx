@@ -3,6 +3,7 @@ import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { CategoryArtwork } from "@/components/shared/CategoryArtwork";
+import { BackLink } from "@/components/shared/BackLink";
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "@/services/categoryService";
 import { categories as fallbackCategories } from "@/data/categories";
@@ -35,6 +36,7 @@ function CategoriesPage() {
           eyebrow="Browse"
           title="All Categories"
           description="Shop across categories from trusted Nigerian sellers."
+          leading={<BackLink fallback="/marketplace" className="mt-1" />}
         />
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">

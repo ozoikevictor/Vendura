@@ -8,6 +8,7 @@ import { StoreCard } from "@/components/shared/StoreCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { DataLoader } from "@/components/shared/DataLoader";
+import { BackLink } from "@/components/shared/BackLink";
 import { getStores } from "@/services/storeService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 
@@ -50,6 +51,7 @@ function StoresPage() {
           eyebrow="Vendors"
           title="Stores"
           description="Choose a seller and shop directly from their storefront."
+          leading={<BackLink fallback="/marketplace" className="mt-1" />}
         />
 
         <div className="mt-5 max-w-xl">
