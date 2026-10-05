@@ -1,8 +1,20 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Store, X, Home, LayoutGrid, Heart, ShoppingBasket,
-  Package, MessageSquare, User, LogIn, Store as StoreIcon, Bell, LogOut, Sparkles,
+  Store,
+  X,
+  Home,
+  LayoutGrid,
+  Heart,
+  ShoppingBasket,
+  Package,
+  MessageSquare,
+  User,
+  LogIn,
+  Store as StoreIcon,
+  Bell,
+  LogOut,
+  Sparkles,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
@@ -133,13 +145,17 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <Link {...(activeStoreSlug ? { to: "/store/$storeSlug" as const, params: { storeSlug: activeStoreSlug } } : { to: homeTarget })} onClick={close} className="flex items-center gap-2">
+          <Link
+            {...(activeStoreSlug
+              ? { to: "/store/$storeSlug" as const, params: { storeSlug: activeStoreSlug } }
+              : { to: homeTarget })}
+            onClick={close}
+            className="flex items-center gap-2"
+          >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Store className="h-4 w-4" />
             </div>
-            <span className="font-display text-lg font-bold tracking-tight">
-              Vendraza
-            </span>
+            <span className="font-display text-lg font-bold tracking-tight">Vendraza</span>
           </Link>
           <button
             type="button"
@@ -167,97 +183,245 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
           {/* Quick links */}
           <nav className="space-y-1">
             {activeStoreSlug ? (
-              <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+              <Link
+                to="/store/$storeSlug"
+                params={{ storeSlug: activeStoreSlug }}
+                onClick={close}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+              >
                 <Home className="h-4 w-4" /> Store Home
               </Link>
             ) : (
-              <DrawerLink to={isCustomerStoreHome ? "/marketplace" : "/"} onClick={close} icon={<Home className="h-4 w-4" />}>
+              <DrawerLink
+                to={isCustomerStoreHome ? "/marketplace" : "/"}
+                onClick={close}
+                icon={<Home className="h-4 w-4" />}
+              >
                 {isCustomerStoreHome ? "Store Home" : "Home"}
               </DrawerLink>
             )}
-            {activeStoreSlug ? <>
-              <Link to="/store/$storeSlug" params={{ storeSlug: activeStoreSlug }} hash="store-products" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
-                <LayoutGrid className="h-4 w-4" /> Marketplace
-              </Link>
-              <Link to="/categories" onClick={close} className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
-                <Package className="h-4 w-4" /> Categories
-              </Link>
-            </> : <>
-              <DrawerLink to={publicMode ? "/explore" : "/marketplace"} onClick={close} icon={<LayoutGrid className="h-4 w-4" />}>Marketplace</DrawerLink>
-              {!publicMode && <DrawerLink to="/stores" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Stores</DrawerLink>}
-              <DrawerLink to={publicMode ? "/explore" : "/categories"} onClick={close} icon={<Package className="h-4 w-4" />}>Categories</DrawerLink>
-            </>}
-            {!publicMode && <>
-              <DrawerLink to="/cart" onClick={close} icon={<ShoppingBasket className="h-4 w-4" />} badge={cartCount}>
-                Cart
-              </DrawerLink>
-              <DrawerLink to="/wishlist" onClick={close} icon={<Heart className="h-4 w-4" />} badge={wishlistCount}>
-                Wishlist
-              </DrawerLink>
-              {isCustomer && <DrawerLink to="/customer/orders" onClick={close} icon={<Package className="h-4 w-4" />}>
-                  My Orders
-                </DrawerLink>}
-              {isCustomer && <DrawerLink to="/customer/ai" onClick={close} icon={<Sparkles className="h-4 w-4" />}>AI Assistant</DrawerLink>}
-              {user?.role === "customer" && <DrawerLink to="/customer/notifications" onClick={close} icon={<Bell className="h-4 w-4" />}>Notifications</DrawerLink>}
-              {isCustomer && <DrawerLink to="/messages" onClick={close} icon={<MessageSquare className="h-4 w-4" />}>
-                  Messages
-                </DrawerLink>}
-            </>}
+            {activeStoreSlug ? (
+              <>
+                <Link
+                  to="/store/$storeSlug"
+                  params={{ storeSlug: activeStoreSlug }}
+                  hash="store-products"
+                  onClick={close}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <LayoutGrid className="h-4 w-4" /> Marketplace
+                </Link>
+                <Link
+                  to="/categories"
+                  onClick={close}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+                >
+                  <Package className="h-4 w-4" /> Categories
+                </Link>
+              </>
+            ) : (
+              <>
+                <DrawerLink
+                  to={publicMode ? "/explore" : "/marketplace"}
+                  onClick={close}
+                  icon={<LayoutGrid className="h-4 w-4" />}
+                >
+                  Marketplace
+                </DrawerLink>
+                {!publicMode && (
+                  <DrawerLink to="/stores" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>
+                    Stores
+                  </DrawerLink>
+                )}
+                <DrawerLink
+                  to={publicMode ? "/explore" : "/categories"}
+                  onClick={close}
+                  icon={<Package className="h-4 w-4" />}
+                >
+                  Categories
+                </DrawerLink>
+                <DrawerLink
+                  to="/vendor-register"
+                  onClick={close}
+                  icon={<StoreIcon className="h-4 w-4" />}
+                >
+                  Create seller account
+                </DrawerLink>
+              </>
+            )}
+            {!publicMode && (
+              <>
+                <DrawerLink
+                  to="/cart"
+                  onClick={close}
+                  icon={<ShoppingBasket className="h-4 w-4" />}
+                  badge={cartCount}
+                >
+                  Cart
+                </DrawerLink>
+                <DrawerLink
+                  to="/wishlist"
+                  onClick={close}
+                  icon={<Heart className="h-4 w-4" />}
+                  badge={wishlistCount}
+                >
+                  Wishlist
+                </DrawerLink>
+                {isCustomer && (
+                  <DrawerLink
+                    to="/customer/orders"
+                    onClick={close}
+                    icon={<Package className="h-4 w-4" />}
+                  >
+                    My Orders
+                  </DrawerLink>
+                )}
+                {isCustomer && (
+                  <DrawerLink
+                    to="/customer/ai"
+                    onClick={close}
+                    icon={<Sparkles className="h-4 w-4" />}
+                  >
+                    AI Assistant
+                  </DrawerLink>
+                )}
+                {user?.role === "customer" && (
+                  <DrawerLink
+                    to="/customer/notifications"
+                    onClick={close}
+                    icon={<Bell className="h-4 w-4" />}
+                  >
+                    Notifications
+                  </DrawerLink>
+                )}
+                {isCustomer && (
+                  <DrawerLink
+                    to="/messages"
+                    onClick={close}
+                    icon={<MessageSquare className="h-4 w-4" />}
+                  >
+                    Messages
+                  </DrawerLink>
+                )}
+              </>
+            )}
           </nav>
 
           {/* Categories */}
-          {!publicMode && <div className="mt-6">
-            <p className="eyebrow mb-2">Categories</p>
-            <div className="space-y-0.5">
-              {categories.slice(0, 12).map((c) => (
+          {!publicMode && (
+            <div className="mt-6">
+              <p className="eyebrow mb-2">Categories</p>
+              <div className="space-y-0.5">
+                {categories.slice(0, 12).map((c) => (
+                  <Link
+                    key={c.id}
+                    to="/categories/$slug"
+                    params={{ slug: c.slug }}
+                    onClick={close}
+                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
                 <Link
-                  key={c.id}
-                  to="/categories/$slug"
-                  params={{ slug: c.slug }}
+                  to="/categories"
                   onClick={close}
-                  className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="block rounded-md px-3 py-1.5 text-sm font-medium text-primary hover:bg-accent"
                 >
-                  {c.name}
+                  View all →
                 </Link>
-              ))}
-              <Link
-                to="/categories"
-                onClick={close}
-                className="block rounded-md px-3 py-1.5 text-sm font-medium text-primary hover:bg-accent"
-              >
-                View all →
-              </Link>
+              </div>
             </div>
-          </div>}
+          )}
 
           {/* Account */}
           <div className="mt-6 border-t border-border pt-4">
             <p className="eyebrow mb-2">Account</p>
             <div className="space-y-1">
-              {isCustomer ? <>
-                <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
-                      {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" /> : user.fullName.split(" ").map((part) => part[0]).join("").slice(0, 2)}
-                    </span>
-                    <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
+              {isCustomer ? (
+                <>
+                  <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                        {user.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          user.fullName
+                            .split(" ")
+                            .map((part) => part[0])
+                            .join("")
+                            .slice(0, 2)
+                        )}
+                      </span>
+                      <p className="text-sm font-semibold text-foreground">{user.fullName}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Customer account</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Customer account</p>
-                </div>
-                <DrawerLink to="/profile" onClick={close} icon={<User className="h-4 w-4" />}>Profile</DrawerLink>
-                <button type="button" onClick={handleLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-60"><LogOut className="h-4 w-4" />{loggingOut ? "Logging out..." : "Log out"}</button>
-              </> : isSellerPreview ? <>
-                <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
-                  <p className="text-sm font-semibold text-foreground">Storefront preview</p>
-                  <p className="text-xs text-muted-foreground">Customers use their own account here.</p>
-                </div>
-                <DrawerLink to="/vendor" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>Vendor Dashboard</DrawerLink>
-                <button type="button" onClick={handleCustomerLogin} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"><LogIn className="h-4 w-4" />{loggingOut ? "Switching..." : "Customer login"}</button>
-                <button type="button" onClick={handleCustomerRegistration} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"><User className="h-4 w-4" />Create customer account</button>
-              </> : <>
-                <button type="button" onClick={handleCustomerLogin} className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"><LogIn className="h-4 w-4" />Customer login</button>
-                <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>Create customer account</DrawerLink>
-              </>}
+                  <DrawerLink to="/profile" onClick={close} icon={<User className="h-4 w-4" />}>
+                    Profile
+                  </DrawerLink>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive-soft disabled:opacity-60"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {loggingOut ? "Logging out..." : "Log out"}
+                  </button>
+                </>
+              ) : isSellerPreview ? (
+                <>
+                  <div className="mb-2 rounded-lg bg-accent/50 px-3 py-2">
+                    <p className="text-sm font-semibold text-foreground">Storefront preview</p>
+                    <p className="text-xs text-muted-foreground">
+                      Customers use their own account here.
+                    </p>
+                  </div>
+                  <DrawerLink to="/vendor" onClick={close} icon={<StoreIcon className="h-4 w-4" />}>
+                    Vendor Dashboard
+                  </DrawerLink>
+                  <button
+                    type="button"
+                    onClick={handleCustomerLogin}
+                    disabled={loggingOut}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    {loggingOut ? "Switching..." : "Customer login"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCustomerRegistration}
+                    disabled={loggingOut}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"
+                  >
+                    <User className="h-4 w-4" />
+                    Create customer account
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCustomerLogin}
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Customer login
+                  </button>
+                  <DrawerLink to="/register" onClick={close} icon={<User className="h-4 w-4" />}>
+                    Create customer account
+                  </DrawerLink>
+                  <DrawerLink
+                    to="/vendor-register"
+                    onClick={close}
+                    icon={<StoreIcon className="h-4 w-4" />}
+                  >
+                    Create seller account
+                  </DrawerLink>
+                </>
+              )}
             </div>
           </div>
         </div>

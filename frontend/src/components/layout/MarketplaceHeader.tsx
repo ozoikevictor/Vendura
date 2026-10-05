@@ -209,12 +209,28 @@ export function MarketplaceHeader({
                 >
                   Categories
                 </Link>
+                <Link
+                  to="/vendor-register"
+                  className="rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-accent"
+                >
+                  Sell
+                </Link>
               </>
             )}
           </nav>
 
           {/* Actions */}
           <div className="ml-auto flex items-center gap-1">
+            {!isCustomer && !isSellerPreview && (
+              <Link
+                to="/vendor-register"
+                className="hidden items-center gap-1.5 rounded-full bg-warning px-3 py-2 text-sm font-bold text-warning-foreground transition-colors hover:bg-warning/90 sm:inline-flex"
+              >
+                <Store className="h-4 w-4" />
+                Start selling
+              </Link>
+            )}
+
             {/* Wishlist */}
             <Link
               to="/wishlist"
@@ -401,6 +417,9 @@ export function MarketplaceHeader({
                       </button>
                       <MenuItem to="/register" icon={<User className="h-4 w-4" />}>
                         Create account
+                      </MenuItem>
+                      <MenuItem to="/vendor-register" icon={<Store className="h-4 w-4" />}>
+                        Create seller account
                       </MenuItem>
                     </>
                   )}
