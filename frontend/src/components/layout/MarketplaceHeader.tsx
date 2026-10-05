@@ -209,12 +209,6 @@ export function MarketplaceHeader({
                 >
                   Categories
                 </Link>
-                <Link
-                  to="/vendor-register"
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-accent"
-                >
-                  Sell
-                </Link>
               </>
             )}
           </nav>
