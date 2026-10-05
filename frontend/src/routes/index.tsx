@@ -339,6 +339,8 @@ function Index() {
           )}
         </section>
 
+        <SellerSignupCallout />
+
         <section className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-4 shadow-card sm:grid-cols-2 lg:grid-cols-4">
           {[
             { to: "/help/how-to", icon: ShoppingBag, label: "How to order" },
@@ -431,7 +433,7 @@ function MobileShoppingTop({
     { label: "Best prices", icon: ShoppingBag },
     { label: "Bulk drops", icon: Store },
     { label: "Fresh stores", icon: Sparkles },
-    { label: "Save more", icon: Gem },
+    { label: "Start selling", icon: Store, to: "/vendor-register" as const },
   ];
 
   useEffect(() => {
@@ -546,7 +548,7 @@ function MobileShoppingTop({
 
       <section className="mt-3 grid grid-cols-4 gap-2 rounded-xl bg-card p-3 shadow-card">
         {mobileDeals.map((deal) => (
-          <Link key={deal.label} to="/marketplace" className="text-center">
+          <Link key={deal.label} to={deal.to ?? "/marketplace"} className="text-center">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-xl bg-[#eef8f1] text-primary">
               <deal.icon className="h-6 w-6" />
             </div>
@@ -565,6 +567,41 @@ function AdvertImage({ src }: { src: string }) {
     <div className="hidden aspect-square w-full max-w-52 overflow-hidden rounded-2xl bg-white shadow-frost sm:block">
       <img src={src} alt="" className="h-full w-full object-cover" />
     </div>
+  );
+}
+
+function SellerSignupCallout() {
+  return (
+    <section className="mt-4 overflow-hidden rounded-2xl border border-primary/20 bg-primary text-primary-foreground shadow-card">
+      <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
+        <div className="min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70">
+            Sell on Vendraza
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+            Create a seller account and open your online store.
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-primary-foreground/80">
+            Add your products, share your storefront link, receive orders, and manage payouts from
+            your seller dashboard.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 sm:w-56">
+          <Link
+            to="/vendor-register"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-warning px-5 py-3 text-sm font-bold text-warning-foreground transition-transform hover:-translate-y-0.5"
+          >
+            Create seller account <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center rounded-full border border-primary-foreground/30 bg-white/10 px-5 py-3 text-sm font-bold text-primary-foreground backdrop-blur transition-colors hover:bg-white/15"
+          >
+            Seller login
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
