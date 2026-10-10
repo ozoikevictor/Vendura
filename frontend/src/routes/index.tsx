@@ -29,10 +29,11 @@ import { categories as fallbackCategories, popularCategorySlugs } from "@/data/c
 import { useStorefrontStore } from "@/store/storefront";
 import { getCategories } from "@/services/categoryService";
 import { getFeaturedProducts } from "@/services/productService";
-import { getFeaturedStores } from "@/services/storeService";
+import { getFeaturedStores, getStores } from "@/services/storeService";
+import { getPlans } from "@/services/vendorService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
-import { discountPercent } from "@/utils/format";
-import type { Category, Product, Store as StoreModel } from "@/types";
+import { discountPercent, formatNaira } from "@/utils/format";
+import type { Category, Product, Store as StoreModel, SubscriptionPlan } from "@/types";
 import phone from "@/assets/products/phone.jpg";
 import earbuds from "@/assets/products/earbuds.jpg";
 import ankaraDress from "@/assets/products/ankara-dress.jpg";
@@ -142,6 +143,11 @@ function Index() {
     queryKey: ["landing", "featured-stores"],
     queryFn: () => getFeaturedStores(3),
     staleTime: 120_000,
+  });
+  const { data: sellerPlans = [], isLoading: plansLoading } = useQuery({
+    queryKey: ["landing", "seller-plans"],
+    queryFn: getPlans,
+    staleTime: 300_000,
   });
 
   const categorySource = liveCategories.length > 0 ? liveCategories : fallbackCategories;
@@ -339,12 +345,12 @@ function Index() {
           )}
         </section>
 
-        <SellerSignupCallout />
+        <SellerSignupCallout plans={sellerPlans} loading={plansLoading} />
 
         <section className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-4 shadow-card sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { to: "/help/how-to", icon: ShoppingBag, label: "How to order" },
-            { to: "/cart", icon: CreditCard, label: "Payment help" },
+            { to: "/help", icon: ShoppingBag, label: "How to order" },
+            { to: "/help", icon: CreditCard, label: "Payment help" },
             { to: "/customer/orders", icon: Truck, label: "Track order" },
             { to: "/vendor-register", icon: Store, label: "Start selling" },
           ].map((item) => (
@@ -421,6 +427,70 @@ function LaunchStrip() {
   );
 }
 
+function VendorContactTicker() {
+  const { data: stores = [] } = useQuery({
+    queryKey: ["landing", "vendor-contacts"],
+    queryFn: getStores,
+    staleTime: 120_000,
+  });
+  const contacts = stores.filter((store) => store.contact?.phone || store.contact?.whatsapp);
+
+  if (!contacts.length) return null;
+
+  return (
+    <div
+      aria-label="Order directly from our sellers"
+      className="vendor-contact-ticker -mx-3 overflow-hidden bg-primary px-3 py-2 text-[11px] font-semibold text-primary-foreground"
+    >
+      <div
+        className="vendor-contact-track flex w-max"
+        style={{ animationDuration: `${Math.max(20, contacts.length * 8)}s` }}
+      >
+        {[0, 1].map((copy) => (
+          <div
+            key={copy}
+            aria-hidden={copy === 1 ? true : undefined}
+            className="flex shrink-0 items-center"
+          >
+            {contacts.map((store) => (
+              <span key={store.id} className="inline-flex shrink-0 items-center gap-3 pr-10">
+                <Link
+                  to="/store/$slug"
+                  params={{ slug: store.slug }}
+                  tabIndex={copy === 1 ? -1 : undefined}
+                  className="underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2"
+                >
+                  {store.name}
+                </Link>
+                {store.contact.phone && (
+                  <a
+                    href={`tel:${store.contact.phone.replace(/[^+\d]/g, "")}`}
+                    tabIndex={copy === 1 ? -1 : undefined}
+                    className="underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2"
+                  >
+                    Call to order: {store.contact.phone}
+                  </a>
+                )}
+                {store.contact.whatsapp && (
+                  <a
+                    href={`https://wa.me/${store.contact.whatsapp.replace(/\D/g, "").replace(/^0/, "234")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={copy === 1 ? -1 : undefined}
+                    className="underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2"
+                  >
+                    WhatsApp: {store.contact.whatsapp}
+                  </a>
+                )}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function MobileShoppingTop({
   categories,
 }: {
@@ -460,9 +530,9 @@ function MobileShoppingTop({
           {advert.images.map((src) => (
             <span
               key={src}
-              className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white shadow-sm"
+              className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-sm"
             >
-              <img src={src} alt="" className="h-[78%] w-[78%] object-contain" />
+              <img src={src} alt="" className="absolute inset-0 block h-full w-full object-cover" />
             </span>
           ))}
         </div>
@@ -500,9 +570,7 @@ function MobileShoppingTop({
         ))}
       </nav>
 
-      <div className="-mx-3 bg-[#123524] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/85">
-        Call to order: 07080635700 | WhatsApp: 12347016542481
-      </div>
+      <VendorContactTicker />
 
       <section className="relative mt-3 overflow-hidden rounded-xl bg-[#123524] text-white shadow-card">
         <div
@@ -527,8 +595,12 @@ function MobileShoppingTop({
                   {slide.button} <ArrowRight className="h-3 w-3" />
                 </span>
               </div>
-              <span className="relative block aspect-square w-full overflow-hidden rounded-2xl bg-white shadow-frost">
-                <img src={slide.images[0]} alt="" className="h-full w-full object-cover" />
+              <span className="relative block aspect-square w-full overflow-hidden rounded-2xl shadow-frost">
+                <img
+                  src={slide.images[0]}
+                  alt=""
+                  className="absolute inset-0 block h-full w-full object-cover"
+                />
               </span>
             </Link>
           ))}
@@ -570,35 +642,71 @@ function AdvertImage({ src }: { src: string }) {
   );
 }
 
-function SellerSignupCallout() {
+function SellerSignupCallout({ plans, loading }: { plans: SubscriptionPlan[]; loading: boolean }) {
   return (
     <section className="mt-4 overflow-hidden rounded-2xl border border-primary/20 bg-primary text-primary-foreground shadow-card">
-      <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
-        <div className="min-w-0">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70">
-            Sell on Vendraza
-          </p>
-          <h2 className="mt-2 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
-            Create a seller account and open your online store.
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-primary-foreground/80">
-            Add your products, share your storefront link, receive orders, and manage payouts from
-            your seller dashboard.
-          </p>
+      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:items-stretch lg:p-6">
+        <div className="flex min-w-0 flex-col justify-between">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70">
+              Sell on Vendraza
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+              Create a seller account and grow with real store plans.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-primary-foreground/80">
+              Start with free product access, then upgrade inside your seller dashboard when your
+              store needs more listings, AI tools, and advanced selling features.
+            </p>
+          </div>
+          <div className="mt-5 flex flex-col gap-2 sm:max-w-md sm:flex-row">
+            <Link
+              to="/vendor-register"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-warning px-5 py-3 text-sm font-bold text-warning-foreground transition-transform hover:-translate-y-0.5"
+            >
+              Create seller account <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/vendor/subscription"
+              className="inline-flex items-center justify-center rounded-full border border-primary-foreground/30 bg-white/10 px-5 py-3 text-sm font-bold text-primary-foreground backdrop-blur transition-colors hover:bg-white/15"
+            >
+              Manage subscription
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-2 sm:w-56">
-          <Link
-            to="/vendor-register"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-warning px-5 py-3 text-sm font-bold text-warning-foreground transition-transform hover:-translate-y-0.5"
-          >
-            Create seller account <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center rounded-full border border-primary-foreground/30 bg-white/10 px-5 py-3 text-sm font-bold text-primary-foreground backdrop-blur transition-colors hover:bg-white/15"
-          >
-            Seller login
-          </Link>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {loading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-40 animate-pulse rounded-xl bg-white/12" />
+              ))
+            : plans.slice(0, 3).map((plan) => (
+                <div
+                  key={plan.id}
+                  className="rounded-xl border border-white/16 bg-white p-4 text-foreground shadow-sm"
+                >
+                  {plan.highlighted && (
+                    <span className="mb-2 inline-flex rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                      Popular
+                    </span>
+                  )}
+                  <h3 className="font-display text-lg font-bold">{plan.name}</h3>
+                  <p className="mt-1 text-2xl font-bold text-primary">
+                    {formatNaira(plan.priceMonthly)}
+                    <span className="text-xs font-medium text-muted-foreground">/mo</span>
+                  </p>
+                  <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                    {plan.productLimit ? `${plan.productLimit} products` : "Unlimited products"}
+                  </p>
+                  <ul className="mt-3 space-y-1.5">
+                    {plan.features.slice(0, 3).map((feature) => (
+                      <li key={feature} className="line-clamp-1 text-xs text-muted-foreground">
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
         </div>
       </div>
     </section>

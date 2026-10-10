@@ -580,3 +580,30 @@
     transform: none;
   }
 }
+@keyframes vendor-contact-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.vendor-contact-track {
+  animation: vendor-contact-scroll 30s linear infinite;
+}
+.vendor-contact-ticker:hover .vendor-contact-track,
+.vendor-contact-ticker:focus-within .vendor-contact-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vendor-contact-ticker {
+    overflow-x: auto;
+  }
+  .vendor-contact-track {
+    animation: none;
+  }
+  .vendor-contact-track > [aria-hidden="true"] {
+    display: none;
+  }
+}
