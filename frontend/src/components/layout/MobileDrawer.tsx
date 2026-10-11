@@ -170,7 +170,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto scrollbar-none px-4 py-4">
           {/* Search */}
-          <form onSubmit={handleSearch} className="mb-4">
+          <form onSubmit={handleSearch} className="hidden">
             <input
               type="search"
               value={searchValue}
@@ -189,7 +189,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 onClick={close}
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
               >
-                <Home className="h-4 w-4" /> Store Home
+                <Home className="h-4 w-4" /> Visit store
               </Link>
             ) : (
               <DrawerLink
@@ -197,7 +197,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 onClick={close}
                 icon={<Home className="h-4 w-4" />}
               >
-                {isCustomerStoreHome ? "Store Home" : "Home"}
+                {isCustomerStoreHome ? "Marketplace" : "Home"}
               </DrawerLink>
             )}
             {activeStoreSlug ? (
@@ -214,7 +214,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
                 <Link
                   to="/categories"
                   onClick={close}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+                  className="hidden"
                 >
                   <Package className="h-4 w-4" /> Categories
                 </Link>
@@ -309,7 +309,7 @@ export function MobileDrawer({ publicMode = false }: { publicMode?: boolean }) {
 
           {/* Categories */}
           {!publicMode && (
-            <div className="mt-6">
+            <div className="hidden">
               <p className="eyebrow mb-2">Categories</p>
               <div className="space-y-0.5">
                 {categories.slice(0, 12).map((c) => (
@@ -443,6 +443,7 @@ function DrawerLink({
   badge?: number;
   children: React.ReactNode;
 }) {
+  if (["/", "/categories", "/search", "/wishlist", "/cart", "/profile"].includes(to)) return null;
   return (
     <Link
       to={to}

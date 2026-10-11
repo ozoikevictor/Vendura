@@ -15,6 +15,7 @@ import {
   ChevronDown,
   LogOut,
   Sparkles,
+  Home,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui";
 import { useCartStore } from "@/store/cart";
@@ -229,7 +230,7 @@ export function MarketplaceHeader({
             <Link
               to="/wishlist"
               aria-label="Wishlist"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:flex"
             >
               <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
@@ -243,7 +244,7 @@ export function MarketplaceHeader({
             <Link
               to="/cart"
               aria-label="Cart"
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:flex"
             >
               <ShoppingBasket className="h-5 w-5" />
               {cartCount > 0 && (
@@ -295,7 +296,7 @@ export function MarketplaceHeader({
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent"
+                  className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-accent md:flex"
                 >
                   <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-xs font-semibold text-primary">
                     {isCustomer && user.avatarUrl ? (
@@ -445,6 +446,45 @@ export function MarketplaceHeader({
       <div className={cn(isCustomerAI ? "h-16" : "h-[7.25rem] md:h-16")} aria-hidden="true" />
 
       <MobileDrawer publicMode={publicMode} />
+      <nav
+        aria-label="Shopping navigation"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-sm md:hidden"
+      >
+        {(
+          [
+            { label: "Home", to: "/", icon: Home },
+            { label: "Categories", to: "/categories", icon: LayoutGrid },
+            { label: "Search", to: "/search", icon: Search },
+            { label: "Wishlist", to: "/wishlist", icon: Heart, count: wishlistCount },
+            { label: "Account", to: user ? "/profile" : "/login", icon: User },
+            { label: "Cart", to: "/cart", icon: ShoppingBasket, count: cartCount },
+          ] as const
+        ).map((item) => {
+          const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+          return (
+            <Link
+              key={item.label}
+              to={item.to}
+              aria-current={active ? "page" : undefined}
+              onClick={() => setDrawerOpen(false)}
+              className={cn(
+                "flex h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 text-[10px] font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring",
+                active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <span className="relative">
+                <item.icon className="h-5 w-5" />
+                {"count" in item && item.count > 0 && (
+                  <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
+                    {item.count > 99 ? "99+" : item.count}
+                  </span>
+                )}
+              </span>
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
     </>
   );
 }

@@ -607,3 +607,8 @@
     display: none;
   }
 }
+@media (max-width: 767px) {
+  body:has(nav[aria-label="Shopping navigation"]) {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
