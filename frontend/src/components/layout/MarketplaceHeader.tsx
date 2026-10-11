@@ -230,7 +230,7 @@ export function MarketplaceHeader({
             <Link
               to="/wishlist"
               aria-label="Wishlist"
-              className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:flex"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
@@ -244,7 +244,7 @@ export function MarketplaceHeader({
             <Link
               to="/cart"
               aria-label="Cart"
-              className="relative hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:flex"
+              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
             >
               <ShoppingBasket className="h-5 w-5" />
               {cartCount > 0 && (
