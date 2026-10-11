@@ -42,6 +42,7 @@ export function MarketplaceHeader({
   const setWishlistIds = useWishlistStore((s) => s.setIds);
   const { user, clear: clearAuth } = useAuthStore();
   const [searchValue, setSearchValue] = useState("");
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [loggingOut, setLoggingOut] = useState(false);
@@ -456,8 +457,8 @@ export function MarketplaceHeader({
             { label: "Categories", to: "/categories", icon: LayoutGrid },
             { label: "Search", to: "/search", icon: Search },
             { label: "Wishlist", to: "/wishlist", icon: Heart, count: wishlistCount },
-            { label: "Account", to: user ? "/profile" : "/login", icon: User },
             { label: "Cart", to: "/cart", icon: ShoppingBasket, count: cartCount },
+            { label: "Account", to: user ? "/profile" : "/login", icon: User },
           ] as const
         ).map((item) => {
           const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
@@ -473,7 +474,18 @@ export function MarketplaceHeader({
               )}
             >
               <span className="relative">
-                <item.icon className="h-5 w-5" />
+                {item.label === "Account" &&
+                user?.avatarUrl &&
+                user.avatarUrl !== failedAvatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt=""
+                    onError={() => setFailedAvatarUrl(user.avatarUrl ?? null)}
+                    className="h-5 w-5 rounded-full object-cover"
+                  />
+                ) : (
+                  <item.icon className="h-5 w-5" />
+                )}
                 {"count" in item && item.count > 0 && (
                   <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-[9px] text-primary-foreground">
                     {item.count > 99 ? "99+" : item.count}
