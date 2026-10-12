@@ -184,6 +184,16 @@ function OrderDetailPage() {
             }
           }}
         />
+        {order.deliveryQuoteId && (
+          <Link
+            to="/orders/$orderId/tracking"
+            params={{ orderId: order.id }}
+            className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            <Truck className="h-4 w-4" />
+            Track courier delivery
+          </Link>
+        )}
         {order.shipment && (
           <section className="mt-4 rounded-xl border border-border bg-card p-5">
             <h2 className="font-semibold">Your order has been shipped</h2>

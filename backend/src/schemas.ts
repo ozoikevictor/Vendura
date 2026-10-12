@@ -40,6 +40,8 @@ export const addressSchema = z.object({
   city: z.string().min(2),
   state: z.string().min(2),
   landmark: z.string().optional(),
+  instructions: z.string().trim().max(1000).optional(),
+  coordinates: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).optional(),
   isDefault: z.boolean().optional(),
 });
 export const productSchema = z.object({
@@ -65,6 +67,7 @@ export const productSchema = z.object({
   tags: z.array(z.string()).default([]),
 });
 export const orderSchema = z.object({
+  deliveryQuoteIds: z.record(z.string()).optional(),
   items: z
     .array(
       z.object({

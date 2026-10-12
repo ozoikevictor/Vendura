@@ -37,6 +37,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminDisputesRouteImport } from './routes/admin/disputes'
 import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
+import { Route as AdminLogisticsRouteImport } from './routes/admin/logistics'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminSecurityRouteImport } from './routes/admin/security'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -64,6 +65,7 @@ import { Route as CustomerAiOffersRouteImport } from './routes/customer/ai/offer
 import { Route as CustomerAiRequestsRouteImport } from './routes/customer/ai/requests'
 import { Route as CustomerOrdersIndexRouteImport } from './routes/customer/orders/index'
 import { Route as CustomerOrdersOrderIdRouteImport } from './routes/customer/orders/$orderId'
+import { Route as OrdersOrderIdTrackingRouteImport } from './routes/orders/$orderId/tracking'
 import { Route as VendorAiIndexRouteImport } from './routes/vendor/ai/index'
 import { Route as VendorAiAnalyticsRouteImport } from './routes/vendor/ai/analytics'
 import { Route as VendorAiOpportunitiesRouteImport } from './routes/vendor/ai/opportunities'
@@ -217,6 +219,11 @@ const AdminFinanceRoute = AdminFinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
+  id: '/logistics',
+  path: '/logistics',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -352,6 +359,11 @@ const CustomerOrdersOrderIdRoute = CustomerOrdersOrderIdRouteImport.update({
   path: '/customer/orders/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersOrderIdTrackingRoute = OrdersOrderIdTrackingRouteImport.update({
+  id: '/orders/$orderId/tracking',
+  path: '/orders/$orderId/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VendorAiIndexRoute = VendorAiIndexRouteImport.update({
   id: '/ai/',
   path: '/ai/',
@@ -442,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
@@ -468,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/customer/ai/offers': typeof CustomerAiOffersRoute
   '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/orders/$orderId/tracking': typeof OrdersOrderIdTrackingRoute
   '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
   '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
   '/vendor/ai/products': typeof VendorAiProductsRoute
@@ -509,6 +523,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
@@ -535,6 +550,7 @@ export interface FileRoutesByTo {
   '/customer/ai/offers': typeof CustomerAiOffersRoute
   '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/orders/$orderId/tracking': typeof OrdersOrderIdTrackingRoute
   '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
   '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
   '/vendor/ai/products': typeof VendorAiProductsRoute
@@ -579,6 +595,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/security': typeof AdminSecurityRoute
   '/admin/users': typeof AdminUsersRoute
@@ -605,6 +622,7 @@ export interface FileRoutesById {
   '/customer/ai/offers': typeof CustomerAiOffersRoute
   '/customer/ai/requests': typeof CustomerAiRequestsRoute
   '/customer/orders/$orderId': typeof CustomerOrdersOrderIdRoute
+  '/orders/$orderId/tracking': typeof OrdersOrderIdTrackingRoute
   '/vendor/ai/analytics': typeof VendorAiAnalyticsRoute
   '/vendor/ai/opportunities': typeof VendorAiOpportunitiesRoute
   '/vendor/ai/products': typeof VendorAiProductsRoute
@@ -650,6 +668,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/disputes'
     | '/admin/finance'
+    | '/admin/logistics'
     | '/admin/orders'
     | '/admin/security'
     | '/admin/users'
@@ -676,6 +695,7 @@ export interface FileRouteTypes {
     | '/customer/ai/offers'
     | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/orders/$orderId/tracking'
     | '/vendor/ai/analytics'
     | '/vendor/ai/opportunities'
     | '/vendor/ai/products'
@@ -717,6 +737,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/disputes'
     | '/admin/finance'
+    | '/admin/logistics'
     | '/admin/orders'
     | '/admin/security'
     | '/admin/users'
@@ -743,6 +764,7 @@ export interface FileRouteTypes {
     | '/customer/ai/offers'
     | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/orders/$orderId/tracking'
     | '/vendor/ai/analytics'
     | '/vendor/ai/opportunities'
     | '/vendor/ai/products'
@@ -786,6 +808,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/disputes'
     | '/admin/finance'
+    | '/admin/logistics'
     | '/admin/orders'
     | '/admin/security'
     | '/admin/users'
@@ -812,6 +835,7 @@ export interface FileRouteTypes {
     | '/customer/ai/offers'
     | '/customer/ai/requests'
     | '/customer/orders/$orderId'
+    | '/orders/$orderId/tracking'
     | '/vendor/ai/analytics'
     | '/vendor/ai/opportunities'
     | '/vendor/ai/products'
@@ -866,6 +890,7 @@ export interface RootRouteChildren {
   CustomerAiOffersRoute: typeof CustomerAiOffersRoute
   CustomerAiRequestsRoute: typeof CustomerAiRequestsRoute
   CustomerOrdersOrderIdRoute: typeof CustomerOrdersOrderIdRoute
+  OrdersOrderIdTrackingRoute: typeof OrdersOrderIdTrackingRoute
   CustomerAiIndexRoute: typeof CustomerAiIndexRoute
   CustomerOrdersIndexRoute: typeof CustomerOrdersIndexRoute
   CustomerAiDealsDealIdRoute: typeof CustomerAiDealsDealIdRoute
@@ -1069,6 +1094,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/logistics': {
+      id: '/admin/logistics'
+      path: '/logistics'
+      fullPath: '/admin/logistics'
+      preLoaderRoute: typeof AdminLogisticsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/orders': {
       id: '/admin/orders'
       path: '/orders'
@@ -1258,6 +1290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerOrdersOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders/$orderId/tracking': {
+      id: '/orders/$orderId/tracking'
+      path: '/orders/$orderId/tracking'
+      fullPath: '/orders/$orderId/tracking'
+      preLoaderRoute: typeof OrdersOrderIdTrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vendor/ai/': {
       id: '/vendor/ai/'
       path: '/ai'
@@ -1348,6 +1387,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminDisputesRoute: typeof AdminDisputesRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -1358,6 +1398,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminDisputesRoute: AdminDisputesRoute,
   AdminFinanceRoute: AdminFinanceRoute,
+  AdminLogisticsRoute: AdminLogisticsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminUsersRoute: AdminUsersRoute,
@@ -1457,6 +1498,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerAiOffersRoute: CustomerAiOffersRoute,
   CustomerAiRequestsRoute: CustomerAiRequestsRoute,
   CustomerOrdersOrderIdRoute: CustomerOrdersOrderIdRoute,
+  OrdersOrderIdTrackingRoute: OrdersOrderIdTrackingRoute,
   CustomerAiIndexRoute: CustomerAiIndexRoute,
   CustomerOrdersIndexRoute: CustomerOrdersIndexRoute,
   CustomerAiDealsDealIdRoute: CustomerAiDealsDealIdRoute,

@@ -2,6 +2,7 @@ import type { Order, ID, DeliveryAddress, PaymentMethod, EvidenceFile } from "@/
 import { api, json } from "./api";
 
 export interface PlaceOrderInput {
+  deliveryQuoteIds?: Record<string, string>;
   items: {
     productId: ID;
     variantId?: ID;

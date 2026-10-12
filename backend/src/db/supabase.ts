@@ -17,6 +17,7 @@ const TABLES = [
   "delivery_settings",
   "transactions",
   "payouts",
+  "logistics_records",
 ] as const;
 
 const collectionTable: Record<string, string> = {
@@ -45,6 +46,7 @@ const collectionTable: Record<string, string> = {
   adminActivity: "messages",
   refunds: "messages",
   sellerReports: "messages",
+  logistics: "logistics_records",
 };
 
 type EntityRow = { id: string; data: Entity };

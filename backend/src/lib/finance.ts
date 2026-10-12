@@ -102,6 +102,7 @@ export async function recordPendingEarnings(db: Database, order: Entity) {
     });
   }
   if (
+    !order.deliveryQuoteId &&
     Number(order.deliveryFee) > 0 &&
     !(await db.findOne<Entity>("transactions", {
       orderId: order.id,
@@ -119,6 +120,9 @@ export async function recordPendingEarnings(db: Database, order: Entity) {
       orderId: order.id,
       createdAt,
     });
+  }
+  if (order.deliveryQuoteId && Number(order.deliveryFee) > 0 && !(await db.findOne<Entity>("transactions", { orderId: order.id, type: "courier_delivery_fee" }))) {
+    await db.create("transactions", { id: id("transaction"), type: "courier_delivery_fee", amount: Number(order.deliveryFee), status: "reserved", reference: String(order.orderNumber), description: `Reserved courier fee for ${order.orderNumber}`, orderId: order.id, createdAt });
   }
   if (
     !(await db.findOne<Entity>("transactions", {
@@ -159,7 +163,7 @@ export async function reverseEarnings(db: Database, order: Entity) {
   const transactions = (await db.list<Entity>("transactions")).filter(
     (item) =>
       item.orderId === order.id &&
-      ["sale", "delivery", "fee"].includes(String(item.type)) &&
+      ["sale", "delivery", "fee", "courier_delivery_fee"].includes(String(item.type)) &&
       item.status !== "reversed",
   );
   for (const transaction of transactions) {

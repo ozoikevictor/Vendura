@@ -18,6 +18,7 @@ import { adminRoutes } from "./routes/admin.js";
 import { aiRoutes } from "./routes/ai.js";
 import { supportRoutes } from "./routes/support.js";
 import { uploadRoutes } from "./routes/uploads.js";
+import { logisticsRoutes } from "./routes/logistics.js";
 import type { AuthRequest, Entity } from "./types.js";
 
 export function createApp(db: Database) {
@@ -101,6 +102,7 @@ export function createApp(db: Database) {
   app.use("/api/users", userRoutes(db));
   app.use("/api", catalogRoutes(db));
   app.use("/api", orderRoutes(db));
+  app.use("/api", logisticsRoutes(db));
   app.use("/api", paymentRoutes(db));
   app.use("/api", messageRoutes(db));
   app.use("/api", notificationRoutes(db));

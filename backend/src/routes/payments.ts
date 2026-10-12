@@ -6,6 +6,7 @@ import { id, now, ok } from "../lib/helpers.js";
 import { recordPendingEarnings } from "../lib/finance.js";
 import { authenticate } from "../middleware/auth.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
+import { tryBookPaidDelivery } from "../lib/logistics.js";
 
 type PaystackResponse<T> = { status: boolean; message: string; data: T };
 type InitializedTransaction = { authorization_url: string; access_code: string; reference: string };
@@ -19,6 +20,7 @@ export const paymentRoutes = (db: Database) => {
     if (!config.PAYSTACK_SECRET_KEY) throw new ApiError(503, "Paystack is not configured yet. Add your test secret key to the backend environment.");
     const { orderIds } = z.object({ orderIds: z.array(z.string().min(1)).min(1) }).parse(req.body);
     const orders = await ownedPendingOrders(db, orderIds, req.user!.id);
+    if (config.PAYSTACK_SECRET_KEY.startsWith("sk_live_") && orders.some((order) => order.deliverySandbox)) throw new ApiError(409, "Sandbox delivery cannot be charged with live payments.");
     const user = await db.get<Entity>("users", req.user!.id);
     if (!user?.email) throw new ApiError(400, "Your account needs an email address before you can pay");
     const reference = `VENDURA-${Date.now()}-${id("pay").slice(-8)}`;
@@ -52,7 +54,7 @@ export const paymentRoutes = (db: Database) => {
     const paidAt = payment.paid_at ?? now();
     const updatedOrders: Entity[] = [];
     for (const order of orders) {
-      if (order.paymentStatus === "paid") { updatedOrders.push(order); continue; }
+      if (order.paymentStatus === "paid") { await tryBookPaidDelivery(db, order); updatedOrders.push(order); continue; }
       const updated = await db.update<Entity>("orders", order.id, {
         paymentStatus: "paid",
         status: "payment_confirmed",
@@ -62,6 +64,7 @@ export const paymentRoutes = (db: Database) => {
         timeline: [...order.timeline as unknown[], { status: "payment_confirmed", at: paidAt, note: "Payment verified by Paystack" }]
       });
       if (updated) updatedOrders.push(updated);
+      if (updated) await tryBookPaidDelivery(db, updated);
       await recordPendingEarnings(db, order);
       const store = await db.get<Entity>("stores", String(order.storeId));
       if (store?.ownerId) await db.create("notifications", {

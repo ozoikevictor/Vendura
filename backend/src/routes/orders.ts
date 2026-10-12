@@ -8,6 +8,7 @@ import { DELIVERY_METHODS, ORDER_STATUS, assertPayoutEligible, confirmationDeadl
 import { authenticate, authorize } from "../middleware/auth.js";
 import { orderSchema } from "../schemas.js";
 import type { AuthRequest, Database, Entity } from "../types.js";
+import { validateQuote } from "../lib/logistics.js";
 
 export const orderRoutes = (db: Database) => {
   const router = Router();
@@ -17,9 +18,25 @@ export const orderRoutes = (db: Database) => {
     const groups = new Map<string, typeof input.items>();
     for (const item of input.items) { const product = products.find((p) => p.id === item.productId); if (!product || product.status !== "active") throw new ApiError(400, `Product unavailable: ${item.productId}`); if (Number(product.stock) < item.quantity) throw new ApiError(409, `Insufficient stock: ${product.name}`); const list = groups.get(String(product.storeId)) ?? []; list.push(item); groups.set(String(product.storeId), list); }
     const createdOrders: Entity[] = [];
+    const deliveryQuotes = new Map<string, Entity>();
+    if (input.deliveryMethod === "provider") {
+      if (input.paymentMethod === "pay_on_delivery") throw new ApiError(400, "Provider delivery requires online payment.");
+      for (const [storeId, items] of groups) {
+        const quoteId = input.deliveryQuoteIds?.[storeId];
+        if (!quoteId) throw new ApiError(400, "Choose a delivery quotation for every vendor.");
+        deliveryQuotes.set(storeId, await validateQuote(db, quoteId, req.user!.id, storeId, input.deliveryAddress, items));
+      }
+    }
     for (const [storeId, items] of groups) { const store = await db.get<Entity>("stores", storeId); const orderItems = await Promise.all(items.map(async (item) => { const product = products.find((p) => p.id === item.productId)!; let unitPrice = Number(product.price); if (item.negotiated) { const offer = await db.get<Entity>("offers", item.negotiated.offerId); if (!offer || offer.status !== "accepted" || offer.productId !== item.productId) throw new ApiError(400, "Negotiated offer is invalid"); unitPrice = Number(offer.counterPrice ?? offer.offeredPrice); } const remainingStock = Number(product.stock) - item.quantity; await db.update("products", product.id, { stock: remainingStock, status: remainingStock === 0 ? "out_of_stock" : product.status, soldCount: Number(product.soldCount) + item.quantity, updatedAt: now() }); await notifyVendorAboutStock(db, store, product, remainingStock); return { id: id("order-item"), productId: product.id, productName: product.name, productImage: (product.images as string[])[0] ?? "", quantity: item.quantity, unitPrice, negotiated: Boolean(item.negotiated), subtotal: unitPrice * item.quantity }; }));
-      const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0); const deliveryFee = calculateDeliveryFee(subtotal, input.deliveryMethod); const placedAt = now();
+      const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0); const deliveryFee = deliveryQuotes.has(storeId) ? Number(deliveryQuotes.get(storeId)!.fee) : calculateDeliveryFee(subtotal, input.deliveryMethod); const placedAt = now();
       const order = await db.create("orders", { id: id("order"), orderNumber: `VND-${Date.now().toString().slice(-8)}-${createdOrders.length + 1}`, customerId: req.user!.id, customerName: user?.fullName ?? "Customer", customerPhone: user?.phone ?? input.deliveryAddress.phone, storeId, storeName: store?.name ?? "Store", items: orderItems, subtotal, deliveryFee, total: subtotal + deliveryFee, status: "placed", paymentStatus: "pending", paymentMethod: input.paymentMethod, deliveryAddress: input.deliveryAddress, deliveryMethod: input.deliveryMethod, timeline: [{ status: "placed", at: placedAt }], escrow: { status: "not_funded", amount: subtotal + deliveryFee }, placedAt, hiddenForCustomer: false, hiddenForVendor: false });
+      const quote = deliveryQuotes.get(storeId);
+      if (quote) {
+        await db.update("logistics", quote.id, { orderId: order.id });
+        await db.update("orders", order.id, { deliveryQuoteId: quote.id, deliverySandbox: true });
+        (order as Entity).deliveryQuoteId = quote.id;
+        (order as Entity).deliverySandbox = true;
+      }
       if (store?.ownerId) {
         await createNotification(db, {
           userId: String(store.ownerId),

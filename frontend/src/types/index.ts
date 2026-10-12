@@ -219,6 +219,8 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type PaymentMethod = "card" | "bank_transfer" | "pay_on_delivery" | "wallet";
 
 export interface DeliveryAddress {
+  instructions?: string;
+  coordinates?: { lat: number; lng: number };
   id: ID;
   label?: string;
   fullName: string;
@@ -294,6 +296,8 @@ export interface Escrow {
 }
 
 export interface Order {
+  deliveryQuoteId?: string;
+  deliverySandbox?: boolean;
   id: ID;
   orderNumber: string;
   customerId: ID;

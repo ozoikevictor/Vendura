@@ -27,6 +27,8 @@ import { HumanCheck } from "@/components/shared/HumanCheck";
 import * as authService from "@/services/authService";
 import { noindexMeta } from "@/lib/seo";
 import { DataLoader } from "@/components/shared/DataLoader";
+import { DeliveryOptions, type DeliverySelection } from "@/components/orders/DeliveryOptions";
+import type { DeliveryLocation } from "@/services/logisticsService";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -49,6 +51,9 @@ function CheckoutPage() {
     "idle" | "placing_order" | "loading_paystack" | "redirecting"
   >("idle");
   const [error, setError] = useState("");
+  const [deliverySelection, setDeliverySelection] = useState<DeliverySelection | null>(null);
+  const [coordinates, setCoordinates] = useState<DeliveryLocation | undefined>();
+  const [instructions, setInstructions] = useState("");
   const [success, setSuccess] = useState<{ orderId: string; orderNumber: string } | null>(null);
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPassword, setGuestPassword] = useState("");
@@ -75,15 +80,38 @@ function CheckoutPage() {
     totals[item.storeId] = (totals[item.storeId] ?? 0) + item.unitPrice * item.quantity;
     return totals;
   }, {});
-  const deliveryFee = Object.values(storeSubtotals).reduce(
-    (sum, storeSubtotal) => sum + calculateDeliveryFee(storeSubtotal, form.deliveryMethod),
-    0,
-  );
+  const logisticsAddress = {
+    fullName: form.fullName,
+    phone: form.phone,
+    street: form.street,
+    city: form.city,
+    state: form.state,
+    ...(form.landmark ? { landmark: form.landmark } : {}),
+    ...(instructions ? { instructions } : {}),
+    ...(coordinates ? { coordinates } : {}),
+  };
+  const logisticsItems = items.map(({ productId, quantity }) => ({ productId, quantity }));
+  const logisticsFingerprint = JSON.stringify({ address: logisticsAddress, items: logisticsItems });
+  const selectedQuotes =
+    deliverySelection?.fingerprint === logisticsFingerprint ? deliverySelection.quotes : {};
+  const courierComplete = Object.keys(storeSubtotals).every((storeId) => selectedQuotes[storeId]);
+  const deliveryFee =
+    form.deliveryMethod === "provider"
+      ? Object.values(selectedQuotes).reduce((sum, quote) => sum + quote.fee, 0)
+      : Object.values(storeSubtotals).reduce(
+          (sum, storeSubtotal) => sum + calculateDeliveryFee(storeSubtotal, form.deliveryMethod),
+          0,
+        );
   const total = subtotal + deliveryFee;
   const paymentAttemptKey = "vendura-paystack-attempt";
-  const cartFingerprint = JSON.stringify(
-    items.map((item) => ({ id: item.id, quantity: item.quantity, price: item.unitPrice })),
-  );
+  const cartFingerprint = JSON.stringify({
+    items: items.map((item) => ({ id: item.id, quantity: item.quantity, price: item.unitPrice })),
+    deliveryMethod: form.deliveryMethod,
+    address: logisticsAddress,
+    quoteIds: Object.values(selectedQuotes)
+      .map((quote) => quote.id)
+      .sort(),
+  });
 
   async function handleGuestLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -162,7 +190,16 @@ function CheckoutPage() {
       }
 
       setPaymentStage("placing_order");
+      if (form.deliveryMethod === "provider" && !courierComplete)
+        throw new Error("Choose a current delivery quote for each vendor before continuing.");
       const result = await placeOrder({
+        ...(form.deliveryMethod === "provider"
+          ? {
+              deliveryQuoteIds: Object.fromEntries(
+                Object.entries(selectedQuotes).map(([storeId, quote]) => [storeId, quote.id]),
+              ),
+            }
+          : {}),
         items: items.map((i) => ({
           productId: i.productId,
           ...(i.variantId ? { variantId: i.variantId } : {}),
@@ -178,6 +215,8 @@ function CheckoutPage() {
           city: form.city,
           state: form.state,
           ...(form.landmark ? { landmark: form.landmark } : {}),
+          ...(instructions ? { instructions } : {}),
+          ...(coordinates ? { coordinates } : {}),
         },
         deliveryMethod: form.deliveryMethod,
         paymentMethod: form.paymentMethod,
@@ -544,6 +583,30 @@ function CheckoutPage() {
             </section>
 
             {/* Delivery method */}
+            <label className="block text-sm font-medium">
+              Delivery instructions
+              <textarea
+                value={instructions}
+                maxLength={1000}
+                onChange={(event) => setInstructions(event.target.value)}
+                className="mt-2 w-full rounded-lg border border-input bg-card p-3"
+                placeholder="Entrance, floor or other delivery instructions"
+              />
+            </label>
+            <DeliveryOptions
+              address={logisticsAddress}
+              items={logisticsItems}
+              selection={deliverySelection}
+              onLocation={setCoordinates}
+              onSelect={(selection) => {
+                setDeliverySelection(selection);
+                setForm((current) => ({
+                  ...current,
+                  deliveryMethod: "provider",
+                  paymentMethod: "card",
+                }));
+              }}
+            />
             <section className="rounded-xl border border-border bg-card p-5">
               <h2 className="flex items-center gap-1.5 text-base font-semibold text-foreground">
                 <Truck className="h-4 w-4 text-primary" /> Delivery Method
