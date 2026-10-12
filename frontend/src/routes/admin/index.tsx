@@ -4,12 +4,34 @@ import { BadgeDollarSign, Gavel, Package, ReceiptText, Store, Users } from "luci
 import { AdminHeading, LoadingRows, Metric, Status, TableShell } from "@/components/admin/AdminUI";
 import { getAdminOverview } from "@/services/adminService";
 import { formatDateTime, formatNaira } from "@/utils/format";
+import { getErrorMessage } from "@/services/api";
 
 export const Route = createFileRoute("/admin/")({ component: AdminOverviewPage });
 
 function AdminOverviewPage() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-overview"], queryFn: getAdminOverview });
-  if (isLoading || !data) return <LoadingRows />;
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
+    queryKey: ["admin-overview"],
+    queryFn: getAdminOverview,
+    retry: false,
+  });
+  if (isLoading) return <LoadingRows />;
+  if (error || !data)
+    return (
+      <div role="alert" className="rounded-lg border border-border bg-card p-6">
+        <h1 className="text-lg font-semibold">Unable to load the admin overview</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {getErrorMessage(error, "The server returned no dashboard data.")}
+        </p>
+        <button
+          type="button"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+        >
+          {isFetching ? "Retrying..." : "Try again"}
+        </button>
+      </div>
+    );
   return (
     <>
       <AdminHeading

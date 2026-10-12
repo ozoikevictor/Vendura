@@ -51,7 +51,20 @@ export interface AdminFinance {
   recipientConfigured: boolean;
 }
 
-export const getAdminOverview = () => api<AdminOverview>("/admin/overview");
+export const getAdminOverview = async () => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    return await api<AdminOverview>("/admin/overview", { signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("The dashboard server took too long to respond. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
 export const getAdminUsers = () => api<AdminUser[]>("/admin/users");
 export const updateAdminUserStatus = (userId: string, status: "active" | "suspended") =>
   api<AdminUser>(`/admin/users/${encodeURIComponent(userId)}/status`, {
