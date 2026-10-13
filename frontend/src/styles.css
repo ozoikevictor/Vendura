@@ -123,7 +123,7 @@
 :root {
   --radius: 0.625rem;
 
-  --background: #f6f7f8;
+  --background: #f0f7f1;
   --foreground: #17211b;
   --card: #ffffff;
   --card-foreground: #17211b;
@@ -134,9 +134,9 @@
   --primary-foreground: #ffffff;
   --primary-soft: rgb(18 130 60 / 0.1);
 
-  --secondary: #f0f4f1;
+  --secondary: #f3f7ef;
   --secondary-foreground: #123524;
-  --muted: #f1f4f2;
+  --muted: #f2f5f0;
   --muted-foreground: #647067;
   --accent: #eef5f0;
   --accent-foreground: #123524;
@@ -256,13 +256,13 @@
   box-shadow: var(--shadow-card);
 }
 
-/* Page-wide paper wash behind marketplace content */
+/* Page-wide storefront wash behind marketplace content */
 @utility lagoon-wash {
-  background: #f6f7f8;
+  background: #f0f7f1;
 }
 
 @utility lagoon-wash-soft {
-  background: #f6f7f8;
+  background: #f0f7f1;
 }
 
 @utility eyebrow {

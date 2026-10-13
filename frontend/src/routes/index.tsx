@@ -28,9 +28,8 @@ import { StoreCard } from "@/components/shared/StoreCard";
 import { categories as fallbackCategories, popularCategorySlugs } from "@/data/categories";
 import { useStorefrontStore } from "@/store/storefront";
 import { getCategories } from "@/services/categoryService";
-import { getFeaturedProducts } from "@/services/productService";
+import { queryProducts } from "@/services/productService";
 import { getFeaturedStores, getStores } from "@/services/storeService";
-import { getPlans } from "@/services/vendorService";
 import { canonicalLink, seoMeta } from "@/lib/seo";
 import { discountPercent, formatNaira } from "@/utils/format";
 import type { Category, Product, Store as StoreModel, SubscriptionPlan } from "@/types";
@@ -134,20 +133,37 @@ function Index() {
     queryFn: getCategories,
     staleTime: 120_000,
   });
-  const { data: featuredProducts = [], isLoading: productsLoading } = useQuery({
-    queryKey: ["landing", "featured-products"],
-    queryFn: () => getFeaturedProducts(10),
+  const { data: featuredProducts = [], isLoading: productsLoading, isError: productsError, refetch: retryProducts, isFetching: productsFetching } = useQuery({
+    queryKey: ["landing", "latest-products"],
+    queryFn: async () => (await queryProducts({ sort: "newest", pageSize: 10 })).items,
+    staleTime: 60_000,
+  });
+  const fashionCollection = useQuery({
+    queryKey: ["landing", "collection", "fashion"],
+    queryFn: () => queryProducts({ categorySlug: "fashion", pageSize: 10 }),
+    staleTime: 60_000,
+  });
+  const beautyCollection = useQuery({
+    queryKey: ["landing", "collection", "health-beauty"],
+    queryFn: () => queryProducts({ categorySlug: "health-beauty", pageSize: 10 }),
+    staleTime: 60_000,
+  });
+  const homeCollection = useQuery({
+    queryKey: ["landing", "collection", "home-furniture"],
+    queryFn: () => queryProducts({ categorySlug: "home-furniture", pageSize: 10 }),
+    staleTime: 60_000,
+  });
+  const dealsCollection = useQuery({
+    queryKey: ["landing", "deals"],
+    queryFn: async () => (await queryProducts({ sort: "newest", pageSize: 100 })).items.filter(
+      (product) => discountPercent(product.price, product.oldPrice) != null,
+    ).slice(0, 10),
     staleTime: 60_000,
   });
   const { data: featuredStores = [], isLoading: storesLoading } = useQuery({
     queryKey: ["landing", "featured-stores"],
     queryFn: () => getFeaturedStores(3),
     staleTime: 120_000,
-  });
-  const { data: sellerPlans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ["landing", "seller-plans"],
-    queryFn: getPlans,
-    staleTime: 300_000,
   });
 
   const categorySource = liveCategories.length > 0 ? liveCategories : fallbackCategories;
@@ -195,10 +211,6 @@ function Index() {
 
       <main className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <MobileShoppingTop categories={visibleCategories} />
-        <div className="hidden sm:block">
-          <LaunchStrip />
-        </div>
-        <CategoryRail categories={visibleCategories} />
 
         <section className="mt-4 hidden gap-4 sm:grid lg:grid-cols-[15rem_minmax(0,1fr)_16rem]">
           <CategoryMenu categories={sideCategories} />
@@ -206,7 +218,7 @@ function Index() {
           <HomeSidePanels />
         </section>
 
-        <section className="mt-4 overflow-hidden rounded-2xl border border-border bg-accent shadow-card">
+        <section className="mt-4 overflow-hidden border-y border-border bg-white/70">
           <SectionTitleStrip eyebrow="Browse" title="Shop by category" to="/categories" />
           {categoriesLoading && liveCategories.length === 0 ? (
             <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 lg:grid-cols-6">
@@ -250,6 +262,14 @@ function Index() {
               <ProductGridSkeleton count={10} />
             </div>
           </section>
+        ) : productsError ? (
+          <section className="mt-4 border-y border-border bg-card p-6" role="alert">
+            <EmptyState
+              title="Products couldn't load"
+              description="Please try again to see the latest products."
+              action={<button type="button" disabled={productsFetching} onClick={() => void retryProducts()} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{productsFetching ? "Trying again..." : "Try again"}</button>}
+            />
+          </section>
         ) : featuredProducts.length > 0 ? (
           <>
             <ShoppingCollection
@@ -262,7 +282,7 @@ function Index() {
             <ShoppingCollection
               eyebrow="Deals"
               title="Real discounts"
-              products={dealProducts}
+              products={dealsCollection.data ?? dealProducts}
               storeById={storeById}
               to="/marketplace"
               dark
@@ -270,7 +290,7 @@ function Index() {
             <ShoppingCollection
               eyebrow="Style"
               title="Explore fashion"
-              products={fashionProducts}
+              products={fashionCollection.data?.items ?? fashionProducts}
               storeById={storeById}
               to="/categories/fashion"
               muted
@@ -278,14 +298,14 @@ function Index() {
             <ShoppingCollection
               eyebrow="Care"
               title="Beauty & hair"
-              products={beautyProducts}
+              products={beautyCollection.data?.items ?? beautyProducts}
               storeById={storeById}
               to="/categories/health-beauty"
             />
             <ShoppingCollection
               eyebrow="Home"
               title="Home essentials"
-              products={homeProducts}
+              products={homeCollection.data?.items ?? homeProducts}
               storeById={storeById}
               to="/categories/home-furniture"
               muted
@@ -345,14 +365,17 @@ function Index() {
           )}
         </section>
 
-        <SellerSignupCallout plans={sellerPlans} loading={plansLoading} />
+        <section className="mt-6 flex flex-wrap items-center justify-between gap-4 border-y border-border py-5">
+          <div><h2 className="text-xl font-bold">Sell on Vendraza</h2><p className="mt-1 text-sm text-muted-foreground">Bring your products to more shoppers.</p></div>
+          <Link to="/vendor-register" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Start selling <ArrowRight className="h-4 w-4" /></Link>
+        </section>
 
         <section className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-4 shadow-card sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { to: "/help", icon: ShoppingBag, label: "How to order" },
-            { to: "/help", icon: CreditCard, label: "Payment help" },
+            { to: "/delivery-policy", icon: Truck, label: "Delivery information" },
+            { to: "/returns", icon: ShoppingBag, label: "Returns & refunds" },
             { to: "/customer/orders", icon: Truck, label: "Track order" },
-            { to: "/vendor-register", icon: Store, label: "Start selling" },
+            { to: "/help", icon: BadgeHelp, label: "Get help" },
           ].map((item) => (
             <Link
               key={item.label}
@@ -738,7 +761,7 @@ function ShoppingCollection({
 
   return (
     <section
-      className={`mt-4 overflow-hidden rounded-2xl border border-border shadow-card ${
+      className={`mt-4 overflow-hidden border-y border-border ${
         muted ? "bg-secondary" : "bg-accent"
       }`}
     >
@@ -876,11 +899,11 @@ function ShoppingHero() {
       <div className="relative grid min-h-72 items-center gap-6 lg:grid-cols-[1fr_0.85fr]">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/70">Shop smarter</p>
-          <h2 className="mt-2 max-w-xl font-display text-4xl font-bold leading-none tracking-tight sm:text-5xl">
-            Everything you need from sellers you can trust.
-          </h2>
+          <h1 className="mt-2 max-w-xl font-display text-3xl font-bold leading-tight">
+            Shop Nigerian sellers.
+          </h1>
           <p className="mt-3 max-w-lg text-sm leading-6 text-white/82 sm:text-base">
-            Search, compare, add to cart, and buy from verified Nigerian vendors in one place.
+            Discover phones, fashion, and everyday essentials from Nigerian stores.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -900,13 +923,13 @@ function ShoppingHero() {
         <div className="hidden h-64 lg:block">
           <div className="relative h-full">
             <div className="absolute left-2 top-10 grid h-36 w-28 -rotate-6 place-items-center rounded-2xl bg-white text-primary shadow-frost">
-              <Smartphone className="h-14 w-14" />
+              <img src={phone} alt="Smartphone" className="h-full w-full rounded-xl object-cover" />
             </div>
             <div className="absolute right-6 top-3 grid h-28 w-40 rotate-6 place-items-center rounded-2xl bg-white text-primary shadow-frost">
-              <Shirt className="h-14 w-14" />
+              <img src={ankaraDress} alt="Ankara dress" className="h-full w-full rounded-xl object-cover" />
             </div>
             <div className="absolute bottom-2 right-24 grid h-32 w-36 -rotate-3 place-items-center rounded-2xl bg-white text-primary shadow-frost">
-              <ShoppingBag className="h-14 w-14" />
+              <img src={sneakers} alt="Sneakers" className="h-full w-full rounded-xl object-cover" />
             </div>
           </div>
         </div>
@@ -922,7 +945,7 @@ function HomeSidePanels() {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
           <ShieldCheck className="h-5 w-5" />
         </div>
-        <h3 className="mt-3 font-semibold text-foreground">Verified stores</h3>
+        <h3 className="mt-3 font-semibold text-foreground">Discover stores</h3>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Shop from vendors with real storefronts and visible product listings.
         </p>
@@ -931,7 +954,7 @@ function HomeSidePanels() {
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
           <BadgeHelp className="h-5 w-5" />
         </div>
-        <h3 className="mt-3 font-semibold text-foreground">Need help?</h3>
+        <Link to="/help" className="mt-3 block font-semibold text-foreground hover:text-primary">Need help?</Link>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Check how to order, pay, track delivery, and contact sellers.
         </p>
