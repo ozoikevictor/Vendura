@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Circle, Package, Truck, Home, XCircle, MapPin, Star } from "lucide-react";
 import { MarketplaceHeader } from "@/components/layout/MarketplaceHeader";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/shared/OrderStatusBadge";
-import { EscrowPanel } from "@/components/shared/EscrowPanel";
 import { DeliveryProtection } from "@/components/orders/DeliveryProtection";
 import { DataLoader } from "@/components/shared/DataLoader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -175,24 +174,21 @@ function OrderDetailPage() {
             </div>
           )}
 
-        <EscrowPanel
-          order={order}
-          onUpdated={(updated) => {
-            queryClient.setQueryData(["order", orderId], updated);
-            if (updated.status === "delivered" && updated.items[0]) {
-              setReviewingProductId(updated.items[0].productId);
-            }
-          }}
-        />
-        {order.deliveryQuoteId && (
+        {(order.paymentStatus === "paid" || order.shipment || order.deliveryQuoteId) && (
           <Link
             to="/orders/$orderId/tracking"
             params={{ orderId: order.id }}
-            className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             <Truck className="h-4 w-4" />
-            Track courier delivery
+            Track delivery
           </Link>
+        )}
+        {order.escrow?.status === "held" && (
+          <p className="mt-4 rounded-lg border border-primary/25 bg-primary-soft/40 p-4 text-sm">
+            Your payment is held. Track shipping below; confirm receipt only when the item is
+            physically with you.
+          </p>
         )}
         {order.shipment && (
           <section className="mt-4 rounded-xl border border-border bg-card p-5">

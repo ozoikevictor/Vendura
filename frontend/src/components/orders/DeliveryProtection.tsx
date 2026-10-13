@@ -123,7 +123,7 @@ export function DeliveryProtection({
             onClick={() => setMode("confirm")}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
-            I Received My Order
+            Confirm I Received My Order
           </button>
           <button
             onClick={() => setMode("problem")}

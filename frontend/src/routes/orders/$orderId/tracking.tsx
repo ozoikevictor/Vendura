@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/services/api";
 import { useAuthStore } from "@/store/auth";
 import { formatDateTime, formatNaira } from "@/utils/format";
 import { noindexMeta } from "@/lib/seo";
+import { ORDER_STATUS_LABEL } from "@/data/orders";
 
 export const Route = createFileRoute("/orders/$orderId/tracking")({
   component: TrackingPage,
@@ -28,8 +29,16 @@ function TrackingPage() {
   const cache = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
+  const orderQuery = useQuery({
+    queryKey: ["tracking-order", orderId, user?.id],
+    queryFn: () => getOrder(orderId),
+    enabled: !!user,
+    refetchInterval: 15_000,
+    retry: false,
+  });
+  const courierSelected = !!orderQuery.data?.deliveryQuoteId;
   useEffect(() => {
-    if (!user) return;
+    if (!user || !courierSelected) return;
     const controller = new AbortController();
     void subscribeDelivery(orderId, controller.signal, () => {
       void cache.invalidateQueries({ queryKey: ["delivery-tracking", orderId] });
@@ -37,18 +46,12 @@ function TrackingPage() {
       /* Periodic queries keep status available when streaming disconnects. */
     });
     return () => controller.abort();
-  }, [orderId, user, cache]);
+  }, [orderId, user, cache, courierSelected]);
   const tracking = useQuery({
     queryKey: ["delivery-tracking", orderId, user?.id],
     queryFn: () => getDeliveryTracking(orderId),
-    enabled: !!user,
+    enabled: !!user && courierSelected,
     refetchInterval: 10_000,
-    retry: false,
-  });
-  const orderQuery = useQuery({
-    queryKey: ["tracking-order", orderId, user?.id],
-    queryFn: () => getOrder(orderId),
-    enabled: !!user,
     retry: false,
   });
   async function act(action: "book" | "cancel") {
@@ -77,9 +80,9 @@ function TrackingPage() {
           <Link to="/login" className="text-primary underline">
             Sign in to view this delivery
           </Link>
-        ) : tracking.isLoading || orderQuery.isLoading ? (
+        ) : (courierSelected && tracking.isLoading) || orderQuery.isLoading ? (
           <DataLoader label="Loading delivery" />
-        ) : tracking.error || orderQuery.error ? (
+        ) : (courierSelected && tracking.error) || orderQuery.error ? (
           <p role="alert" className="text-destructive">
             {getErrorMessage(tracking.error ?? orderQuery.error, "Unable to load this delivery.")}
           </p>
@@ -97,9 +100,12 @@ function TrackingPage() {
                 {order?.deliveryAddress.street}, {order?.deliveryAddress.city},{" "}
                 {order?.deliveryAddress.state}
               </p>
-              <DeliveryMap position={booking?.destination.coordinates} />
+              {order?.deliveryAddress.coordinates && (
+                <DeliveryMap position={order.deliveryAddress.coordinates} />
+              )}
               <p className="mt-3 text-sm text-muted-foreground">
-                This courier supports status tracking only. No rider GPS location has been supplied.
+                No live rider location is connected. Shipping evidence records dispatch, not
+                receipt.
               </p>
               {booking?.destination.coordinates && (
                 <a
@@ -115,11 +121,38 @@ function TrackingPage() {
             <section className="rounded-lg border border-border bg-card p-5">
               <h2 className="flex items-center gap-2 font-semibold">
                 <Truck className="h-5 w-5 text-primary" />
-                {booking ? deliveryStatusLabel(booking.status) : "Delivery has not been booked"}
+                {booking
+                  ? deliveryStatusLabel(booking.status)
+                  : courierSelected
+                    ? "Delivery has not been booked"
+                    : order
+                      ? ORDER_STATUS_LABEL[order.status]
+                      : "Awaiting shipping updates"}
               </h2>
               <p className="mt-2 text-sm">
-                {order?.orderNumber} · {booking?.providerName ?? "No connected courier"}
+                {order?.orderNumber} ·{" "}
+                {booking?.providerName ??
+                  order?.shipment?.carrierName ??
+                  "Vendor-arranged delivery"}
               </p>
+              {!courierSelected && (
+                <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <p>
+                    {order?.shipment
+                      ? "The seller has submitted shipping details. Updates below are saved order events, not live courier locations."
+                      : "Waiting for the seller to prepare and dispatch your order."}
+                  </p>
+                  {order?.shipment?.trackingNumber && (
+                    <p className="break-all font-medium text-foreground">
+                      Courier reference: {order.shipment.trackingNumber}
+                    </p>
+                  )}
+                  {order?.shipment?.shippingDate && (
+                    <p>Shipping date: {formatDateTime(order.shipment.shippingDate)}</p>
+                  )}
+                  {order?.shipment?.additionalNote && <p>{order.shipment.additionalNote}</p>}
+                </div>
+              )}
               {booking?.failureReason && (
                 <p role="alert" className="mt-2 text-sm text-destructive">
                   {booking.failureReason}
@@ -131,6 +164,19 @@ function TrackingPage() {
                 </p>
               )}
               <ol className="mt-4 space-y-4">
+                {!courierSelected &&
+                  (order?.timeline ?? []).map((event, index) => (
+                    <li key={`${event.status}-${event.at}-${index}`} className="flex gap-3">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium">{ORDER_STATUS_LABEL[event.status]}</p>
+                        <p className="text-xs text-muted-foreground">{formatDateTime(event.at)}</p>
+                        {event.note && (
+                          <p className="text-xs text-muted-foreground">{event.note}</p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
                 {(booking?.events ?? []).map((event) => (
                   <li key={event.id} className="flex gap-3">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

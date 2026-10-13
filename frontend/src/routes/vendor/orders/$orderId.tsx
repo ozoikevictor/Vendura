@@ -170,7 +170,7 @@ function VendorOrderDetailPage() {
               disabled={loading}
               className="flex items-center gap-1.5 rounded-lg bg-success px-3 py-2 text-sm font-semibold text-success-foreground hover:opacity-90 disabled:opacity-60"
             >
-              <Check className="h-4 w-4" /> Request Order Confirmation
+              <Check className="h-4 w-4" /> Ask Customer to Confirm Receipt
             </button>
           )}
           {canCancel && (
@@ -181,6 +181,21 @@ function VendorOrderDetailPage() {
               <XCircle className="h-4 w-4" /> Cancel
             </button>
           )}
+        </div>
+      )}
+      {order.shipment && (
+        <div className="rounded-lg border border-border bg-card p-4 text-sm">
+          <p className="text-muted-foreground">
+            Shipping evidence records dispatch, not customer receipt. Only ask for receipt
+            confirmation after the item arrives. Tracking does not require customer confirmation.
+          </p>
+          <Link
+            to="/orders/$orderId/tracking"
+            params={{ orderId: order.id }}
+            className="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-primary hover:underline"
+          >
+            <Truck className="h-4 w-4" /> View delivery tracking
+          </Link>
         </div>
       )}
       {showShipping && (
@@ -234,8 +249,8 @@ function VendorOrderDetailPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {order.escrow.status === "held" && (
               <>
-                {formatNaira(order.escrow.amount)} is held by Vendraza. It moves to your balance once
-                the customer confirms delivery
+                {formatNaira(order.escrow.amount)} is held by Vendraza. It moves to your balance
+                once the customer confirms delivery
                 {order.escrow.autoReleaseAt
                   ? `, or automatically on ${formatDate(order.escrow.autoReleaseAt)}`
                   : ""}
