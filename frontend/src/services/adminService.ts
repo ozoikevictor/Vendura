@@ -107,3 +107,11 @@ export const resolveAdminDispute = (
     method: "POST",
     ...json({ resolution, note }),
   });
+
+export interface SupportRequest {
+  id: string; reference: string; name: string; email: string; category: string;
+  subject: string; message: string; status: "open" | "in_progress" | "resolved"; createdAt: string;
+}
+export const getSupportRequests = () => api<SupportRequest[]>("/admin/support-requests");
+export const updateSupportRequest = (id: string, status: SupportRequest["status"]) =>
+  api<SupportRequest>(`/admin/support-requests/${encodeURIComponent(id)}`, { method: "PATCH", ...json({ status }) });

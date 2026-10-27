@@ -31,7 +31,7 @@ function UsersPage() {
   const client = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-users"],
     queryFn: getAdminUsers,
   });
@@ -81,6 +81,14 @@ function UsersPage() {
       />
       {isLoading ? (
         <LoadingRows />
+      ) : error ? (
+        <div role="alert" className="rounded-lg border border-border bg-card p-6">
+          <p className="font-semibold">Unable to load users</p>
+          <p className="mt-2 text-sm text-muted-foreground">{getErrorMessage(error, "Please check your connection and try again.")}</p>
+          <button type="button" disabled={isFetching} onClick={() => void refetch()} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">{isFetching ? "Retrying..." : "Try again"}</button>
+        </div>
+      ) : data.length === 0 ? (
+        <p className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">No users found.</p>
       ) : (
         <TableShell>
           <table className="w-full min-w-[920px] text-sm">
